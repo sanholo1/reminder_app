@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 function App() {
 
   const [input, setInput] = useState('');
-  const [result, setResult] = useState<{ action: string; datetime: string | null } | null>(null);
+  const [result, setResult] = useState<{ activity: string; datetime: string | null; error?: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,11 +61,15 @@ function App() {
 
       {error && <div style={{ marginTop: 20, color: 'red' }}>{error}</div>}
 
-      {result && (
+      {result && result.error && (
+        <div style={{ marginTop: 20, color: 'red' }}>{result.error}</div>
+      )}
+
+      {result && !result.error && (
 
         <div style={{ marginTop: 20 }}>
 
-          <div><strong>Activity:</strong> {result.action}</div>
+          <div><strong>Activity:</strong> {result.activity}</div>
 
           <div><strong>Date and hour:</strong> {result.datetime ? result.datetime : 'Recognize failure...'}</div>
 
