@@ -5,7 +5,13 @@ const port = 3001;
 
 app.use(express.json());
 
-
+function clearText(text: string): string {
+  return text
+    .replace(/jutro/i, '')
+    .replace(/\b(w|o|na|o\s+godz|o\s+godzinie|o\s+godzine)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 
 //endp used to parse message, its not working like i would like to but it is what it is
 //its only working for really simple messages with 1. activity 2. day(jutro) 3. hour only like 00:00 
@@ -49,15 +55,11 @@ app.post('/parse', (req, res) => {
 
       }
       
-      action = text.split(hourMatch[0])[0]
-
-        .replace(/jutro/i, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
+      action = clearText(text.split(hourMatch[0])[0]);
 
     } else {
       
-      action = text.replace(/jutro/i, '').replace(/\s{2,}/g, ' ').trim();
+      action = clearText(text);
 
     }
   }
