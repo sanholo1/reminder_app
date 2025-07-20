@@ -31,26 +31,26 @@ export class CreateHandler {
     const clean = this.clearText(text.toLowerCase());
     
     if (!clean.trim()) {
-      return { activity: '', datetime: '', error: 'Please enter an activity and time' };
+      return { activity: '', datetime: '', error: 'Wprowadź aktywność i czas' };
     }
 
     const timeMatch = this.extractTime(clean);
     
     if (!timeMatch) {
-      return { activity: '', datetime: '', error: 'Please specify a valid time with the activity' };
+      return { activity: '', datetime: '', error: 'Podaj prawidłowy czas z aktywnością' };
     }
 
     const { hour, minute, timePattern } = timeMatch;
     const activity = this.extractActivity(clean, timePattern);
 
     if (!activity.trim()) {
-      return { activity: '', datetime: '', error: 'Please specify what you want to be reminded about' };
+      return { activity: '', datetime: '', error: 'Podaj o czym chcesz być przypomniany' };
     }
 
     const datetime = this.createDate(hour, minute, clean);
 
     if (datetime < new Date()) {
-      return { activity: '', datetime: '', error: 'Cannot create reminders for past dates' };
+      return { activity: '', datetime: '', error: 'Nie można tworzyć przypomnień dla dat z przeszłości' };
     }
 
     return {
@@ -199,29 +199,29 @@ export class CreateHandler {
       return new Date(calendarDate.getFullYear(), calendarDate.getMonth(), calendarDate.getDate(), hour, minute, 0, 0);
     }
 
-    if (text.includes('tomorrow') || text.includes('jutro')) {
+    if (text.includes('jutro')) {
       targetDate.setDate(targetDate.getDate() + 1);
-    } else if (text.includes('day after tomorrow') || text.includes('pojutrze')) {
+    } else if (text.includes('pojutrze')) {
       targetDate.setDate(targetDate.getDate() + 2);
-    } else if (text.includes('day after day after tomorrow') || text.includes('popojutrze')) {
+    } else if (text.includes('popojutrze')) {
       targetDate.setDate(targetDate.getDate() + 3);
-    } else if (text.includes('yesterday') || text.includes('wczoraj')) {
+    } else if (text.includes('wczoraj')) {
       targetDate.setDate(targetDate.getDate() - 1);
-    } else if (text.includes('day before yesterday') || text.includes('przedwczoraj')) {
+    } else if (text.includes('przedwczoraj')) {
       targetDate.setDate(targetDate.getDate() - 2);
-    } else if (text.includes('monday') || text.includes('poniedzialek')) {
+    } else if (text.includes('poniedziałek') || text.includes('poniedzialek')) {
       targetDate = this.getNextWeekday(targetDate, 1);
-    } else if (text.includes('tuesday') || text.includes('wtorek')) {
+    } else if (text.includes('wtorek')) {
       targetDate = this.getNextWeekday(targetDate, 2);
-    } else if (text.includes('wednesday') || text.includes('sroda')) {
+    } else if (text.includes('środa') || text.includes('sroda')) {
       targetDate = this.getNextWeekday(targetDate, 3);
-    } else if (text.includes('thursday') || text.includes('czwartek')) {
+    } else if (text.includes('czwartek')) {
       targetDate = this.getNextWeekday(targetDate, 4);
-    } else if (text.includes('friday') || text.includes('piatek')) {
+    } else if (text.includes('piątek') || text.includes('piatek')) {
       targetDate = this.getNextWeekday(targetDate, 5);
-    } else if (text.includes('saturday') || text.includes('sobota')) {
+    } else if (text.includes('sobota')) {
       targetDate = this.getNextWeekday(targetDate, 6);
-    } else if (text.includes('sunday') || text.includes('niedziela')) {
+    } else if (text.includes('niedziela')) {
       targetDate = this.getNextWeekday(targetDate, 0);
     } else {
       if (targetDate <= now) {

@@ -20,7 +20,7 @@ function App() {
       });
 
       if (!res.ok) {
-        throw new Error('Backend connection failure...');
+        throw new Error('Błąd połączenia z serwerem...');
       }
 
       const data = await res.json();
@@ -28,7 +28,7 @@ function App() {
       setResult(data);
 
     } catch (err: any) {
-      setError(err.message || 'Unknown error...');
+      setError(err.message || 'Nieznany błąd...');
     } finally {
       setLoading(false);
     }
@@ -36,8 +36,8 @@ function App() {
 
   return (
     <div className="container">
-      <h1 className="title">Reminder App</h1>
-      <p className="subtitle">Create smart reminders with natural language</p>
+      <h1 className="title">Aplikacja Przypomnień</h1>
+      <p className="subtitle">Twórz inteligentne przypomnienia używając języka naturalnego</p>
 
       <form onSubmit={handleSubmit} className="form">
         <input
@@ -45,19 +45,20 @@ function App() {
           value={input}
           onChange={e => setInput(e.target.value)}
           className="input"
+          placeholder="np. kup mleko jutro o 15"
         />
         <button 
           type="submit" 
           disabled={loading || !input.trim()} 
           className="button"
         >
-          {loading ? 'Creating...' : 'Create Reminder'}
+          {loading ? 'Tworzenie...' : 'Utwórz Przypomnienie'}
         </button>
       </form>
 
       {loading && (
         <div className="loading">
-          Processing your reminder...
+          Przetwarzanie przypomnienia...
         </div>
       )}
 
@@ -76,15 +77,15 @@ function App() {
       {result && !result.error && (
         <div className="result">
           <div className="result-item">
-            <div className="result-label">Activity:</div>
+            <div className="result-label">Aktywność:</div>
             <div className="result-value">
               {result.activity}
             </div>
           </div>
           <div className="result-item">
-            <div className="result-label">Date and Time:</div>
+            <div className="result-label">Data i Czas:</div>
             <div className="result-value">
-              {result.datetime ? result.datetime : 'Time not recognized'}
+              {result.datetime ? result.datetime : 'Czas nie został rozpoznany'}
             </div>
           </div>
         </div>
