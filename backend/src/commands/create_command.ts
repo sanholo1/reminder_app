@@ -24,7 +24,6 @@ export class CreateHandler {
     };
 
     await this.save(reminder);
-
     return parsed;
   }
 
@@ -32,42 +31,26 @@ export class CreateHandler {
     const clean = this.clearText(text.toLowerCase());
     
     if (!clean.trim()) {
-      return { 
-        activity: '', 
-        datetime: '', 
-        error: 'Please enter an activity and time' 
-      };
+      return { activity: '', datetime: '', error: 'Please enter an activity and time' };
     }
 
     const timeMatch = this.extractTime(clean);
     
     if (!timeMatch) {
-      return { 
-        activity: '', 
-        datetime: '', 
-        error: 'Please specify a valid time with the activity (e.g., "buy milk at 15", "meeting tomorrow at 10:30")' 
-      };
+      return { activity: '', datetime: '', error: 'Please specify a valid time with the activity' };
     }
 
     const { hour, minute, timePattern } = timeMatch;
     const activity = this.extractActivity(clean, timePattern);
 
     if (!activity.trim()) {
-      return { 
-        activity: '', 
-        datetime: '', 
-        error: 'Please specify what you want to be reminded about' 
-      };
+      return { activity: '', datetime: '', error: 'Please specify what you want to be reminded about' };
     }
 
     const datetime = this.createDate(hour, minute, clean);
 
     if (datetime < new Date()) {
-      return { 
-        activity: '', 
-        datetime: '', 
-        error: 'Cannot create reminders for past dates' 
-      };
+      return { activity: '', datetime: '', error: 'Cannot create reminders for past dates' };
     }
 
     return {
@@ -84,10 +67,7 @@ export class CreateHandler {
   }
 
   private clearText(text: string): string {
-    return text
-      .replace(/[^\w\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    return text.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   private extractTime(text: string): { hour: number; minute: number; timePattern: string } | null {
@@ -108,29 +88,72 @@ export class CreateHandler {
       }
     }
 
+    const relativeTime = this.extractRelativeTime(text);
+    if (relativeTime) {
+      return relativeTime;
+    }
+
+    return null;
+  }
+
+  private extractRelativeTime(text: string): { hour: number; minute: number; timePattern: string } | null {
+    const now = new Date();
+    
+    if (text.includes('za godzinę') || text.includes('za godzine')) {
+      const futureTime = new Date(now.getTime() + 60 * 60 * 1000);
+      return { 
+        hour: futureTime.getHours(), 
+        minute: futureTime.getMinutes(), 
+        timePattern: 'za godzinę' 
+      };
+    }
+    
+    if (text.includes('za 2 godziny')) {
+      const futureTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      return { 
+        hour: futureTime.getHours(), 
+        minute: futureTime.getMinutes(), 
+        timePattern: 'za 2 godziny' 
+      };
+    }
+    
+    if (text.includes('za 30 minut')) {
+      const futureTime = new Date(now.getTime() + 30 * 60 * 1000);
+      return { 
+        hour: futureTime.getHours(), 
+        minute: futureTime.getMinutes(), 
+        timePattern: 'za 30 minut' 
+      };
+    }
+    
+    if (text.includes('wieczorem')) {
+      return { hour: 20, minute: 0, timePattern: 'wieczorem' };
+    }
+    
+    if (text.includes('rano')) {
+      return { hour: 9, minute: 0, timePattern: 'rano' };
+    }
+    
+    if (text.includes('w południe') || text.includes('w poludnie')) {
+      return { hour: 12, minute: 0, timePattern: 'w południe' };
+    }
+
     return null;
   }
 
   private extractActivity(text: string, timePattern: string): string {
     let activity = text.replace(timePattern, '').trim();
-    
     activity = this.removeSingleLetters(activity);
     activity = this.removeExtraSpaces(activity);
-    
     return activity;
   }
 
   private removeSingleLetters(text: string): string {
-    return text
-      .split(' ')
-      .filter(word => word.length > 1)
-      .join(' ');
+    return text.split(' ').filter(word => word.length > 1).join(' ');
   }
 
   private removeExtraSpaces(text: string): string {
-    return text
-      .replace(/\s+/g, ' ')
-      .trim();
+    return text.replace(/\s+/g, ' ').trim();
   }
 
   private capitalizeFirstLetter(text: string): string {
@@ -171,6 +194,11 @@ export class CreateHandler {
     const now = new Date();
     let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
 
+    const calendarDate = this.extractCalendarDate(text);
+    if (calendarDate) {
+      return new Date(calendarDate.getFullYear(), calendarDate.getMonth(), calendarDate.getDate(), hour, minute, 0, 0);
+    }
+
     if (text.includes('tomorrow') || text.includes('jutro')) {
       targetDate.setDate(targetDate.getDate() + 1);
     } else if (text.includes('day after tomorrow') || text.includes('pojutrze')) {
@@ -202,6 +230,63 @@ export class CreateHandler {
     }
 
     return targetDate;
+  }
+
+  private extractCalendarDate(text: string): Date | null {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    const monthNames: { [key: string]: number } = {
+      'stycznia': 0, 'lutego': 1, 'marca': 2, 'kwietnia': 3, 'maja': 4, 'czerwca': 5,
+      'lipca': 6, 'sierpnia': 7, 'września': 8, 'października': 9, 'listopada': 10, 'grudnia': 11,
+      'wrzesnia': 8, 'pazdziernika': 9
+    };
+
+    const datePatterns = [
+      /(\d{1,2})\s+(stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia)/i,
+      /(\d{1,2})\.(\d{1,2})/,
+      /(\d{1,2})\/(\d{1,2})/
+    ];
+
+    for (const pattern of datePatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        if (pattern.source.includes('stycznia|lutego')) {
+          const day = parseInt(match[1]);
+          const monthName = match[2].toLowerCase();
+          const month = monthNames[monthName];
+          
+          if (month !== undefined && day >= 1 && day <= 31) {
+            const targetDate = new Date(currentYear, month, day);
+            if (targetDate < now) {
+              targetDate.setFullYear(currentYear + 1);
+            }
+            return targetDate;
+          }
+        } else {
+          const day = parseInt(match[1]);
+          const month = parseInt(match[2]) - 1;
+          
+          if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+            const targetDate = new Date(currentYear, month, day);
+            if (targetDate < now) {
+              targetDate.setFullYear(currentYear + 1);
+            }
+            return targetDate;
+          }
+        }
+      }
+    }
+
+    if (text.includes('za tydzień') || text.includes('za tydzien')) {
+      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    }
+
+    if (text.includes('za miesiąc') || text.includes('za miesiac')) {
+      return new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    }
+
+    return null;
   }
 
   private getNextWeekday(targetDate: Date, weekday: number): Date {
