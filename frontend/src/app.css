@@ -154,7 +154,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .result-item:last-child {
@@ -164,13 +164,15 @@ body {
 .result-label {
   font-weight: 600;
   color: #333;
-  min-width: 100px;
+  min-width: 120px;
+  text-align: right;
 }
 
 .result-value {
   color: #667eea;
   font-weight: 500;
   flex: 1;
+  text-align: left;
 }
 
 .success-icon {

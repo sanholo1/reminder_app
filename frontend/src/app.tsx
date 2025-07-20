@@ -19,10 +19,14 @@ function App() {
         body: JSON.stringify({ text: input }),
       });
 
-      if (!res.ok) throw new Error('Backend connection failure...');
+      if (!res.ok) {
+        throw new Error('Backend connection failure...');
+      }
 
       const data = await res.json();
+
       setResult(data);
+
     } catch (err: any) {
       setError(err.message || 'Unknown error...');
     } finally {
@@ -42,28 +46,46 @@ function App() {
           onChange={e => setInput(e.target.value)}
           className="input"
         />
-        <button type="submit" disabled={loading || !input.trim()} className="button">
+        <button 
+          type="submit" 
+          disabled={loading || !input.trim()} 
+          className="button"
+        >
           {loading ? 'Creating...' : 'Create Reminder'}
         </button>
       </form>
 
-      {loading && <div className="loading">Processing your reminder...</div>}
+      {loading && (
+        <div className="loading">
+          Processing your reminder...
+        </div>
+      )}
 
-      {error && <div className="error">{error}</div>}
+      {error && (
+        <div className="error">
+          {error}
+        </div>
+      )}
 
       {result && result.error && (
-        <div className="error">{result.error}</div>
+        <div className="error">
+          {result.error}
+        </div>
       )}
 
       {result && !result.error && (
         <div className="result">
           <div className="result-item">
-            <span className="result-label">Activity:</span>
-            <span className="result-value">{result.activity}</span>
+            <div className="result-label">Activity:</div>
+            <div className="result-value">
+              {result.activity}
+            </div>
           </div>
           <div className="result-item">
-            <span className="result-label">Date and Time:</span>
-            <span className="result-value">{result.datetime ? result.datetime : 'Time not recognized'}</span>
+            <div className="result-label">Date and Time:</div>
+            <div className="result-value">
+              {result.datetime ? result.datetime : 'Time not recognized'}
+            </div>
           </div>
         </div>
       )}
