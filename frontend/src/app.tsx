@@ -1,86 +1,74 @@
 import React, { useState } from 'react';
 
 function App() {
-
   const [input, setInput] = useState('');
   const [result, setResult] = useState<{ activity: string; datetime: string | null; error?: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-
     e.preventDefault();
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-
       const res = await fetch('/parse', {
-
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: input }),
-
       });
 
       if (!res.ok) throw new Error('Backend connection failure...');
 
       const data = await res.json();
-
       setResult(data);
-
     } catch (err: any) {
-
       setError(err.message || 'Unknown error...');
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 50 }}>
+    <div className="container">
+      <h1 className="title">Reminder App</h1>
+      <p className="subtitle">Create smart reminders with natural language</p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
-
+      <form onSubmit={handleSubmit} className="form">
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="Type something..."
+          className="input"
         />
-
-        <button type="submit" disabled={loading || !input.trim()}>Send</button>
-
+        <button type="submit" disabled={loading || !input.trim()} className="button">
+          {loading ? 'Creating...' : 'Create Reminder'}
+        </button>
       </form>
 
-      {loading && <div style={{ marginTop: 20 }}>Loading...</div>}
+      {loading && <div className="loading">Processing your reminder...</div>}
 
-      {error && <div style={{ marginTop: 20, color: 'red' }}>{error}</div>}
+      {error && <div className="error">{error}</div>}
 
       {result && result.error && (
-        <div style={{ marginTop: 20, color: 'red' }}>{result.error}</div>
+        <div className="error">{result.error}</div>
       )}
 
       {result && !result.error && (
-
-        <div style={{ marginTop: 20 }}>
-
-          <div><strong>Activity:</strong> {result.activity}</div>
-
-          <div><strong>Date and hour:</strong> {result.datetime ? result.datetime : 'Recognize failure...'}</div>
-
+        <div className="result">
+          <div className="result-item">
+            <span className="result-label">Activity:</span>
+            <span className="result-value">{result.activity}</span>
+          </div>
+          <div className="result-item">
+            <span className="result-label">Date and Time:</span>
+            <span className="result-value">{result.datetime ? result.datetime : 'Time not recognized'}</span>
+          </div>
         </div>
-
       )}
-
     </div>
-
   );
-
 }
 
 export default App;
