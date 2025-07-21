@@ -29,10 +29,10 @@ const getHandler = new GetHandler();
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
-    console.log('✅ Połączenie z bazą danych MySQL udane');
+    console.log('Połączenie z bazą danych MySQL udane');
     connection.release();
   } catch (error) {
-    console.error('❌ Błąd połączenia z bazą danych:', error);
+    console.error('Błąd połączenia z bazą danych:', error);
     throw error;
   }
 }
@@ -60,11 +60,11 @@ app.get('/reminders', async (req, res) => {
 app.listen(port, async () => {
   try {
     await testConnection();
-    console.log(`🚀 Serwer uruchomiony na porcie ${port}`);
-    console.log(`📝 Endpoint tworzenia: POST http://localhost:${port}/parse`);
-    console.log(`📋 Endpoint pobierania: GET http://localhost:${port}/reminders`);
+    console.log(`Serwer uruchomiony na porcie ${port}`);
+    console.log(`Endpoint tworzenia: POST http://localhost:${port}/parse`);
+    console.log(`Endpoint pobierania: GET http://localhost:${port}/reminders`);
   } catch (error) {
-    console.error('❌ Nie udało się uruchomić serwera:', error);
+    console.error('Nie udało się uruchomić serwera:', error);
     process.exit(1);
   }
 }); 

@@ -70,8 +70,8 @@ function App() {
 
   return (
     <div className="container">
-      <h1 className="title">Aplikacja Przypomnień</h1>
-      <p className="subtitle">Twórz inteligentne przypomnienia używając języka naturalnego</p>
+      <h1 className="title">Reminder App</h1>
+      <p className="subtitle">Twórz inteligentne przypomnienia używając naturalnego języka</p>
 
       <form onSubmit={handleSubmit} className="form">
         <input
@@ -79,7 +79,6 @@ function App() {
           value={input}
           onChange={e => setInput(e.target.value)}
           className="input"
-          placeholder="np. kup mleko jutro o 15"
         />
         <button 
           type="submit" 
@@ -89,6 +88,8 @@ function App() {
           {loading ? 'Tworzenie...' : 'Utwórz Przypomnienie'}
         </button>
       </form>
+
+      <div style={{ height: '1.5rem' }} />
 
       {loading && (
         <div className="loading">
@@ -105,13 +106,13 @@ function App() {
       {result && !result.error && (
         <div className="result">
           <div className="result-item">
-            <div className="result-label">Aktywność:</div>
+            <div className="result-label"><strong>Aktywność:</strong></div>
             <div className="result-value">
               {result.activity}
             </div>
           </div>
           <div className="result-item">
-            <div className="result-label">Data i Czas:</div>
+            <div className="result-label"><strong>Data i Czas:</strong></div>
             <div className="result-value">
               {result.datetime ? result.datetime : 'Czas nie został rozpoznany'}
             </div>
@@ -130,9 +131,8 @@ function App() {
           <div className="reminders-list">
             {reminders.map((reminder) => (
               <div key={reminder.id} className="reminder-item">
-                <div className="reminder-activity">{reminder.activity}</div>
+                <div className="reminder-activity"><strong>{reminder.activity}</strong></div>
                 <div className="reminder-datetime">{reminder.datetime}</div>
-                <div className="reminder-created">Utworzono: {reminder.created_at}</div>
               </div>
             ))}
           </div>

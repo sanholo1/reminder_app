@@ -28,13 +28,13 @@ export class CreateHandler {
     const parsed = this.parseText(command.text);
     
     if (parsed.error) {
-      return parsed;
+      return { activity: parsed.activity, datetime: '', error: parsed.error };
     }
 
     const reminder = {
       id: this.generateId(),
       activity: parsed.activity,
-      datetime: this.parseDateTime(parsed.datetime)
+      datetime: this.createDateFromFormatted(parsed.datetime)
     };
 
     await this.saveToDatabase(reminder);
@@ -259,36 +259,50 @@ export class CreateHandler {
       return new Date(calendarDate.getFullYear(), calendarDate.getMonth(), calendarDate.getDate(), hour, minute, 0, 0);
     }
 
-    if (text.includes('jutro')) {
-      targetDate.setDate(targetDate.getDate() + 1);
-    } else if (text.includes('pojutrze')) {
-      targetDate.setDate(targetDate.getDate() + 2);
-    } else if (text.includes('popojutrze')) {
-      targetDate.setDate(targetDate.getDate() + 3);
-    } else if (text.includes('wczoraj')) {
-      targetDate.setDate(targetDate.getDate() - 1);
-    } else if (text.includes('przedwczoraj')) {
-      targetDate.setDate(targetDate.getDate() - 2);
-    } else if (text.includes('poniedziałek') || text.includes('poniedzialek')) {
-      targetDate = this.getNextWeekday(targetDate, 1);
-    } else if (text.includes('wtorek')) {
-      targetDate = this.getNextWeekday(targetDate, 2);
-    } else if (text.includes('środa') || text.includes('sroda')) {
-      targetDate = this.getNextWeekday(targetDate, 3);
-    } else if (text.includes('czwartek')) {
-      targetDate = this.getNextWeekday(targetDate, 4);
-    } else if (text.includes('piątek') || text.includes('piatek')) {
-      targetDate = this.getNextWeekday(targetDate, 5);
-    } else if (text.includes('sobota')) {
-      targetDate = this.getNextWeekday(targetDate, 6);
-    } else if (text.includes('niedziela')) {
-      targetDate = this.getNextWeekday(targetDate, 0);
-    } else {
-      if (targetDate <= now) {
-        targetDate.setDate(targetDate.getDate() + 1);
+    // Dni tygodnia
+    const weekdays: { [key: string]: number } = {
+      'niedziela': 0,
+      'poniedziałek': 1, 'poniedzialek': 1,
+      'wtorek': 2,
+      'środa': 3, 'sroda': 3,
+      'czwartek': 4,
+      'piątek': 5, 'piatek': 5,
+      'sobota': 6
+    };
+    for (const [name, num] of Object.entries(weekdays)) {
+      if (text.includes(name)) {
+        // Jeśli dziś jest ten dzień tygodnia, ale godzina już minęła, ustaw na następny tydzień
+        const today = now.getDay();
+        let daysToAdd = (num - today + 7) % 7;
+        if (daysToAdd === 0 && (hour < now.getHours() || (hour === now.getHours() && minute <= now.getMinutes()))) {
+          daysToAdd = 7;
+        }
+        targetDate.setDate(now.getDate() + daysToAdd);
+        return targetDate;
       }
     }
 
+    if (text.includes('jutro')) {
+      targetDate.setDate(now.getDate() + 1);
+      return targetDate;
+    } else if (text.includes('pojutrze')) {
+      targetDate.setDate(now.getDate() + 2);
+      return targetDate;
+    } else if (text.includes('popojutrze')) {
+      targetDate.setDate(now.getDate() + 3);
+      return targetDate;
+    } else if (text.includes('wczoraj')) {
+      targetDate.setDate(now.getDate() - 1);
+      return targetDate;
+    } else if (text.includes('przedwczoraj')) {
+      targetDate.setDate(now.getDate() - 2);
+      return targetDate;
+    }
+
+    // Jeśli nie podano dnia, a godzina już minęła, ustaw na jutro
+    if (targetDate <= now) {
+      targetDate.setDate(targetDate.getDate() + 1);
+    }
     return targetDate;
   }
 
@@ -358,5 +372,28 @@ export class CreateHandler {
 
   private generateId(): string {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  }
+
+  // Pomocnicza funkcja do konwersji sformatowanego stringa na Date
+  private createDateFromFormatted(formatted: string): Date {
+    // Przykład: "poniedziałek, 21 lipca 16:35"
+    // Wyciągamy dzień, miesiąc, godzinę, minutę
+    const regex = /\d{1,2} (stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia) (\d{2}):(\d{2})/i;
+    const match = formatted.match(regex);
+    if (match) {
+      const day = parseInt(match[0]);
+      const monthName = match[1].toLowerCase();
+      const hour = parseInt(match[2]);
+      const minute = parseInt(match[3]);
+      const monthNames: { [key: string]: number } = {
+        'stycznia': 0, 'lutego': 1, 'marca': 2, 'kwietnia': 3, 'maja': 4, 'czerwca': 5,
+        'lipca': 6, 'sierpnia': 7, 'września': 8, 'października': 9, 'listopada': 10, 'grudnia': 11,
+        'wrzesnia': 8, 'pazdziernika': 9
+      };
+      const month = monthNames[monthName];
+      const now = new Date();
+      return new Date(now.getFullYear(), month, day, hour, minute, 0, 0);
+    }
+    return new Date();
   }
 } 
