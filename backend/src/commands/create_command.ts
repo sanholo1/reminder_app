@@ -1,3 +1,18 @@
+import mysql from 'mysql2/promise';
+
+const dbConfig = {
+  host: 'localhost',
+  port: 3306, 
+  user: 'app_user', 
+  password: 'password', 
+  database: 'reminder_app',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+};
+
+const pool = mysql.createPool(dbConfig);
+
 export interface CreateCommand {
   text: string;
 }
@@ -19,12 +34,24 @@ export class CreateHandler {
     const reminder = {
       id: this.generateId(),
       activity: parsed.activity,
-      datetime: parsed.datetime,
-      createdAt: new Date()
+      datetime: this.parseDateTime(parsed.datetime)
     };
 
-    await this.save(reminder);
+    await this.saveToDatabase(reminder);
     return parsed;
+  }
+
+  private async saveToDatabase(reminder: any): Promise<void> {
+    const query = `
+      INSERT INTO reminders (id, activity, datetime) 
+      VALUES (?, ?, ?)
+    `;
+    
+    await pool.execute(query, [
+      reminder.id,
+      reminder.activity,
+      reminder.datetime
+    ]);
   }
 
   private parseText(text: string): CreateResult {
@@ -64,6 +91,39 @@ export class CreateHandler {
         hour12: false
       })
     };
+  }
+
+  private parseDateTime(dateTimeString: string): Date {
+    const date = new Date();
+    const parts = dateTimeString.split(', ');
+    
+    if (parts.length >= 2) {
+      const datePart = parts[0];
+      const timePart = parts[1];
+      
+      const dateMatch = datePart.match(/(\d+) (\w+)/);
+      const timeMatch = timePart.match(/(\d{2}):(\d{2})/);
+      
+      if (dateMatch && timeMatch) {
+        const day = parseInt(dateMatch[1]);
+        const monthName = dateMatch[2];
+        const hour = parseInt(timeMatch[1]);
+        const minute = parseInt(timeMatch[2]);
+        
+        const monthNames: { [key: string]: number } = {
+          'stycznia': 0, 'lutego': 1, 'marca': 2, 'kwietnia': 3, 'maja': 4, 'czerwca': 5,
+          'lipca': 6, 'sierpnia': 7, 'września': 8, 'października': 9, 'listopada': 10, 'grudnia': 11,
+          'wrzesnia': 8, 'pazdziernika': 9
+        };
+        
+        const month = monthNames[monthName.toLowerCase()];
+        if (month !== undefined) {
+          return new Date(date.getFullYear(), month, day, hour, minute, 0, 0);
+        }
+      }
+    }
+    
+    return new Date();
   }
 
   private clearText(text: string): string {
@@ -298,9 +358,5 @@ export class CreateHandler {
 
   private generateId(): string {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-  }
-
-  private async save(reminder: any): Promise<void> {
-    console.log('Saving reminder:', reminder);
   }
 } 
