@@ -33,7 +33,7 @@ export class CreateHandler {
 
     const reminder = {
       id: this.generateId(),
-      activity: parsed.activity,
+      activity: parsed.activity, // już bez końcówki czasowej
       datetime: this.createDateFromFormatted(parsed.datetime)
     };
 
@@ -203,9 +203,34 @@ export class CreateHandler {
 
   private extractActivity(text: string, timePattern: string): string {
     let activity = text.replace(timePattern, '').trim();
-    activity = this.removeSingleLetters(activity);
-    activity = this.removeExtraSpaces(activity);
-    return activity;
+    // Zamiana polskich znaków na zwykłe litery
+    const normalize = (str: string) => str
+      .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
+      .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z').replace(/ż/g, 'z');
+    const normalizedActivity = normalize(activity.toLowerCase());
+    // Dni tygodnia i określenia czasowe (z polskimi znakami i bez)
+    const dayWords = [
+      'poniedzialek', 'wtorek', 'sroda', 'czwartek', 'piatek', 'sobota', 'niedziela',
+      'pon', 'wt', 'sr', 'czw', 'pt', 'sob', 'ndz',
+      'jutro', 'pojutrze', 'dzisiaj', 'dzis', 'popojutrze', 'wczoraj', 'przedwczoraj'
+    ];
+    let cleaned = activity;
+    dayWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      cleaned = cleaned.replace(regex, '');
+      // Usuwaj także wersje z polskimi znakami
+      const plWord = word
+        .replace('sroda', 'środa')
+        .replace('piatek', 'piątek')
+        .replace('poniedzialek', 'poniedziałek');
+      if (plWord !== word) {
+        const regexPl = new RegExp(`\\b${plWord}\\b`, 'gi');
+        cleaned = cleaned.replace(regexPl, '');
+      }
+    });
+    cleaned = this.removeSingleLetters(cleaned);
+    cleaned = this.removeExtraSpaces(cleaned);
+    return cleaned;
   }
 
   private removeSingleLetters(text: string): string {

@@ -1,144 +1,22 @@
-import React, { useState, useEffect } from 'react';
-
-interface Reminder {
-  id: string;
-  activity: string;
-  datetime: string;
-  created_at: string;
-}
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import AuthorPage from './pages/AuthorPage';
 
 function App() {
-  const [input, setInput] = useState('');
-  const [result, setResult] = useState<{ activity: string; datetime: string | null; error?: string | null } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [loadingReminders, setLoadingReminders] = useState(true);
-
-  useEffect(() => {
-    fetchReminders();
-  }, []);
-
-  const fetchReminders = async () => {
-    try {
-      const res = await fetch('/reminders');
-      if (!res.ok) {
-        throw new Error('Błąd pobierania przypomnień');
-      }
-      const data = await res.json();
-      setReminders(data.reminders || []);
-    } catch (err: any) {
-      console.error('Błąd pobierania przypomnień:', err);
-    } finally {
-      setLoadingReminders(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const res = await fetch('/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: input }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Błąd połączenia z serwerem...');
-      }
-
-      const data = await res.json();
-
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setResult(data);
-        setInput('');
-        await fetchReminders();
-      }
-
-    } catch (err: any) {
-      setError(err.message || 'Nieznany błąd...');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="container">
-      <h1 className="title">Reminder App</h1>
-      <p className="subtitle">Twórz inteligentne przypomnienia używając naturalnego języka</p>
-
-      <form onSubmit={handleSubmit} className="form">
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          className="input"
-        />
-        <button 
-          type="submit" 
-          disabled={loading || !input.trim()} 
-          className="button"
-        >
-          {loading ? 'Tworzenie...' : 'Utwórz Przypomnienie'}
-        </button>
-      </form>
-
-      <div style={{ height: '1.5rem' }} />
-
-      {loading && (
-        <div className="loading">
-          Przetwarzanie przypomnienia...
-        </div>
-      )}
-
-      {error && (
-        <div className="error">
-          {error}
-        </div>
-      )}
-
-      {result && !result.error && (
-        <div className="result">
-          <div className="result-item">
-            <div className="result-label"><strong>Aktywność:</strong></div>
-            <div className="result-value">
-              {result.activity}
-            </div>
-          </div>
-          <div className="result-item">
-            <div className="result-label"><strong>Data i Czas:</strong></div>
-            <div className="result-value">
-              {result.datetime ? result.datetime : 'Czas nie został rozpoznany'}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="reminders-section">
-        <h2 className="reminders-title">Lista Przypomnień</h2>
-        
-        {loadingReminders ? (
-          <div className="loading">Ładowanie przypomnień...</div>
-        ) : reminders.length === 0 ? (
-          <div className="no-reminders">Brak przypomnień</div>
-        ) : (
-          <div className="reminders-list">
-            {reminders.map((reminder) => (
-              <div key={reminder.id} className="reminder-item">
-                <div className="reminder-activity"><strong>{reminder.activity}</strong></div>
-                <div className="reminder-datetime">{reminder.datetime}</div>
-              </div>
-            ))}
-          </div>
-        )}
+    <Router>
+      <div className="container">
+        <nav style={{ marginBottom: '2rem', display: 'flex', gap: '1rem' }}>
+          <Link to="/">Strona główna</Link>
+          <Link to="/author">O autorze</Link>
+        </nav>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/author" element={<AuthorPage />} />
+        </Routes>
       </div>
-    </div>
+    </Router>
   );
 }
 
