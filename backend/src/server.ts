@@ -1,13 +1,34 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
 import { CreateHandler } from './commands/create_command';
 import { GetHandler } from './queries/get_query';
+import reminderRouter from './controllers/reminder_controller';
 
-const app = express();
-const port = 3001;
+class NotFoundError extends Error {
+  status: number;
+  constructor(message: string = 'Nie znaleziono zasobu') {
+    super(message);
+    this.name = 'NotFoundError';
+    this.status = 404;
+  }
+}
 
-const dbConfig = {
+class BadRequestError extends Error {
+  status: number;
+  constructor(message: string = 'Błędne żądanie') {
+    super(message);
+    this.name = 'BadRequestError';
+    this.status = 400;
+  }
+}
+
+export { NotFoundError, BadRequestError };
+
+const application = express();
+const applicationPort = 3001;
+
+const databaseConfiguration = {
   host: 'localhost',
   port: 3306,
   user: 'root',
@@ -18,17 +39,25 @@ const dbConfig = {
   queueLimit: 0
 };
 
-const pool = mysql.createPool(dbConfig);
+const databasePool = mysql.createPool(databaseConfiguration);
 
-app.use(cors());
-app.use(express.json());
+application.use(cors());
+application.use(express.json());
+application.use('/', reminderRouter);
+application.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Global error handler:', err);
+  if (err instanceof NotFoundError) {
+    return res.status(404).json({ error: err.message });
+  }
+  if (err instanceof BadRequestError) {
+    return res.status(400).json({ error: err.message });
+  }
+  res.status(500).json({ error: 'Błąd serwera', details: err.message || err.toString() });
+});
 
-const createHandler = new CreateHandler();
-const getHandler = new GetHandler();
-
-async function testConnection() {
+async function testDatabaseConnection() {
   try {
-    const connection = await pool.getConnection();
+    const connection = await databasePool.getConnection();
     console.log('Połączenie z bazą danych MySQL udane');
     connection.release();
   } catch (error) {
@@ -37,32 +66,12 @@ async function testConnection() {
   }
 }
 
-app.post('/parse', async (req, res) => {
+application.listen(applicationPort, async () => {
   try {
-    const result = await createHandler.execute({ text: req.body.text });
-    res.json(result);
-  } catch (error) {
-    console.error('Error creating reminder:', error);
-    res.status(500).json({ error: 'Błąd serwera podczas tworzenia przypomnienia' });
-  }
-});
-
-app.get('/reminders', async (req, res) => {
-  try {
-    const result = await getHandler.execute({});
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching reminders:', error);
-    res.status(500).json({ error: 'Błąd serwera podczas pobierania przypomnień' });
-  }
-});
-
-app.listen(port, async () => {
-  try {
-    await testConnection();
-    console.log(`Serwer uruchomiony na porcie ${port}`);
-    console.log(`Endpoint tworzenia: POST http://localhost:${port}/parse`);
-    console.log(`Endpoint pobierania: GET http://localhost:${port}/reminders`);
+    await testDatabaseConnection();
+    console.log(`Serwer uruchomiony na porcie ${applicationPort}`);
+    console.log(`Endpoint tworzenia: POST http://localhost:${applicationPort}/reminders`);
+    console.log(`Endpoint pobierania: GET http://localhost:${applicationPort}/reminders`);
   } catch (error) {
     console.error('Nie udało się uruchomić serwera:', error);
     process.exit(1);

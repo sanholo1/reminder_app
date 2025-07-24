@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
     setResult(null);
 
     try {
-      const data = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/parse', {
+      const data = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/reminders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: input }),

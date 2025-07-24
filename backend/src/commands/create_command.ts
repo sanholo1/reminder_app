@@ -33,7 +33,7 @@ export class CreateHandler {
 
     const reminder = {
       id: this.generateId(),
-      activity: parsed.activity, // już bez końcówki czasowej
+      activity: parsed.activity,
       datetime: this.createDateFromFormatted(parsed.datetime)
     };
 
@@ -67,8 +67,8 @@ export class CreateHandler {
       return { activity: '', datetime: '', error: 'Podaj prawidłowy czas z aktywnością' };
     }
 
-    const { hour, minute, timePattern } = timeMatch;
-    const activity = this.extractActivity(clean, timePattern);
+    const { hour, minute } = timeMatch;
+    const activity = this.extractActivity(clean);
 
     if (!activity.trim()) {
       return { activity: '', datetime: '', error: 'Podaj o czym chcesz być przypomniany' };
@@ -201,33 +201,40 @@ export class CreateHandler {
     return null;
   }
 
-  private extractActivity(text: string, timePattern: string): string {
-    let activity = text.replace(timePattern, '').trim();
-    // Zamiana polskich znaków na zwykłe litery
-    const normalize = (str: string) => str
-      .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
-      .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z').replace(/ż/g, 'z');
-    const normalizedActivity = normalize(activity.toLowerCase());
-    // Dni tygodnia i określenia czasowe (z polskimi znakami i bez)
-    const dayWords = [
-      'poniedzialek', 'wtorek', 'sroda', 'czwartek', 'piatek', 'sobota', 'niedziela',
-      'pon', 'wt', 'sr', 'czw', 'pt', 'sob', 'ndz',
-      'jutro', 'pojutrze', 'dzisiaj', 'dzis', 'popojutrze', 'wczoraj', 'przedwczoraj'
-    ];
-    let cleaned = activity;
-    dayWords.forEach(word => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi');
-      cleaned = cleaned.replace(regex, '');
-      // Usuwaj także wersje z polskimi znakami
-      const plWord = word
-        .replace('sroda', 'środa')
-        .replace('piatek', 'piątek')
-        .replace('poniedzialek', 'poniedziałek');
-      if (plWord !== word) {
-        const regexPl = new RegExp(`\\b${plWord}\\b`, 'gi');
-        cleaned = cleaned.replace(regexPl, '');
-      }
-    });
+  private extractActivity(text: string): string {
+    let cleaned = text;
+
+    // Usuwanie wyrażeń godzinowych typu 'o 18', 'o 15:30', 'o 7.00', 'o 7 00', 'o 7', 'o 7 rano', 'o 7 wieczorem'
+    cleaned = cleaned.replace(/\bo\s*\d{1,2}([:.,\s]\d{2})?(\s*(rano|wieczorem|południe|poludnie))?/gi, '');
+
+    // Usuwanie wyrażeń typu 'za X dni', 'za X tygodni', 'za X miesięcy', 'za X godzin', 'za X minut'
+    cleaned = cleaned.replace(/\bza\s*\d+\s*(dni|tygodni|miesi[ąa]ce?|godzin(y|e)?|minut(y|e)?)\b/gi, '');
+
+    // Usuwanie wyrażeń typu 'za tydzień', 'za miesiąc', 'za rok'
+    cleaned = cleaned.replace(/\bza\s*(tydzie[nń]|miesi[ąa]c|rok)\b/gi, '');
+
+    // Usuwanie wyrażeń typu 'jutro', 'pojutrze', 'dzisiaj', 'dzis', 'popojutrze', 'wczoraj', 'przedwczoraj'
+    cleaned = cleaned.replace(/\b(jutro|pojutrze|dzisiaj|dzis|popojutrze|wczoraj|przedwczoraj)\b/gi, '');
+
+    // Usuwanie wyrażeń typu 'wieczorem', 'rano', 'w południe', 'w poludnie'
+    cleaned = cleaned.replace(/\b(wieczorem|rano|w południe|w poludnie)\b/gi, '');
+
+    // Usuwanie dni tygodnia (z polskimi znakami i bez)
+    cleaned = cleaned.replace(/\b(poniedzia[łl]ek|wtorek|[śs]roda|czwartek|pi[ąa]tek|sobota|niedziela|pon|wt|sr|czw|pt|sob|ndz)\b/gi, '');
+
+    // Usuwanie miesięcy (z polskimi znakami i bez)
+    cleaned = cleaned.replace(/\b(stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|wrze[śs]nia|pa[źz]dziernika|listopada|grudnia|styczen|luty|marzec|kwiecien|maj|czerwiec|lipiec|sierpien|wrzesien|pazdziernik|listopad|grudzien)\b/gi, '');
+
+    // Usuwanie dat typu '21 lipca', '21.07', '21/07', '21-07', '21 sierpnia'
+    cleaned = cleaned.replace(/\b\d{1,2}[.\/\-]\d{1,2}\b/gi, '');
+    cleaned = cleaned.replace(/\b\d{1,2}\s+(stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|wrze[śs]nia|pa[źz]dziernika|listopada|grudnia|styczen|luty|marzec|kwiecien|maj|czerwiec|lipiec|sierpien|wrzesien|pazdziernik|listopad|grudzien)\b/gi, '');
+
+    // Usuwanie roku typu '2024', '2023', itp.
+    cleaned = cleaned.replace(/\b20\d{2}\b/g, '');
+
+    // Usuwanie pojedynczych liczb (np. 'o 7', 'za 2') jeśli nie są częścią słowa
+    cleaned = cleaned.replace(/\b\d{1,2}\b/g, '');
+
     cleaned = this.removeSingleLetters(cleaned);
     cleaned = this.removeExtraSpaces(cleaned);
     return cleaned;
@@ -284,7 +291,6 @@ export class CreateHandler {
       return new Date(calendarDate.getFullYear(), calendarDate.getMonth(), calendarDate.getDate(), hour, minute, 0, 0);
     }
 
-    // Dni tygodnia
     const weekdays: { [key: string]: number } = {
       'niedziela': 0,
       'poniedziałek': 1, 'poniedzialek': 1,
@@ -296,7 +302,6 @@ export class CreateHandler {
     };
     for (const [name, num] of Object.entries(weekdays)) {
       if (text.includes(name)) {
-        // Jeśli dziś jest ten dzień tygodnia, ale godzina już minęła, ustaw na następny tydzień
         const today = now.getDay();
         let daysToAdd = (num - today + 7) % 7;
         if (daysToAdd === 0 && (hour < now.getHours() || (hour === now.getHours() && minute <= now.getMinutes()))) {
@@ -324,7 +329,6 @@ export class CreateHandler {
       return targetDate;
     }
 
-    // Jeśli nie podano dnia, a godzina już minęła, ustaw na jutro
     if (targetDate <= now) {
       targetDate.setDate(targetDate.getDate() + 1);
     }
@@ -399,10 +403,7 @@ export class CreateHandler {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
-  // Pomocnicza funkcja do konwersji sformatowanego stringa na Date
   private createDateFromFormatted(formatted: string): Date {
-    // Przykład: "poniedziałek, 21 lipca 16:35"
-    // Wyciągamy dzień, miesiąc, godzinę, minutę
     const regex = /\d{1,2} (stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia) (\d{2}):(\d{2})/i;
     const match = formatted.match(regex);
     if (match) {
