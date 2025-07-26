@@ -1,60 +1,45 @@
-import mysql from 'mysql2/promise';
+import { ReminderRepository, ReminderEntity } from '../repositories/reminder_repository';
 
-const dbConfig = {
-  host: 'localhost',
-  port: 3306, 
-  user: 'app_user', 
-  password: 'password', 
-  database: 'reminder_app',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-};
-
-const pool = mysql.createPool(dbConfig);
-
-export interface CreateCommand {
+export interface CreateReminderCommand {
   text: string;
 }
 
-export interface CreateResult {
+export interface CreateReminderResult {
   activity: string;
   datetime: string;
   error?: string;
 }
 
-export class CreateHandler {
-  async execute(command: CreateCommand): Promise<CreateResult> {
+export class CreateReminderHandler {
+  private reminderRepository: ReminderRepository;
+
+  constructor() {
+    this.reminderRepository = new ReminderRepository();
+  }
+
+  async execute(command: CreateReminderCommand): Promise<CreateReminderResult> {
     const parsed = this.parseText(command.text);
     
     if (parsed.error) {
       return { activity: parsed.activity, datetime: '', error: parsed.error };
     }
 
-    const reminder = {
+    const clean = this.clearText(command.text.toLowerCase());
+    const timeMatch = this.extractTime(clean);
+    const { hour, minute } = timeMatch!;
+    const datetime = this.createDate(hour, minute, command.text.toLowerCase());
+
+    const reminder: ReminderEntity = {
       id: this.generateId(),
       activity: parsed.activity,
-      datetime: this.createDateFromFormatted(parsed.datetime)
+      datetime: datetime
     };
 
-    await this.saveToDatabase(reminder);
+    await this.reminderRepository.create(reminder);
     return parsed;
   }
 
-  private async saveToDatabase(reminder: any): Promise<void> {
-    const query = `
-      INSERT INTO reminders (id, activity, datetime) 
-      VALUES (?, ?, ?)
-    `;
-    
-    await pool.execute(query, [
-      reminder.id,
-      reminder.activity,
-      reminder.datetime
-    ]);
-  }
-
-  private parseText(text: string): CreateResult {
+  private parseText(text: string): CreateReminderResult {
     const clean = this.clearText(text.toLowerCase());
     
     if (!clean.trim()) {
@@ -82,48 +67,8 @@ export class CreateHandler {
 
     return {
       activity: this.capitalizeFirstLetter(activity),
-      datetime: datetime.toLocaleString('pl-PL', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      })
+      datetime: datetime.toISOString()
     };
-  }
-
-  private parseDateTime(dateTimeString: string): Date {
-    const date = new Date();
-    const parts = dateTimeString.split(', ');
-    
-    if (parts.length >= 2) {
-      const datePart = parts[0];
-      const timePart = parts[1];
-      
-      const dateMatch = datePart.match(/(\d+) (\w+)/);
-      const timeMatch = timePart.match(/(\d{2}):(\d{2})/);
-      
-      if (dateMatch && timeMatch) {
-        const day = parseInt(dateMatch[1]);
-        const monthName = dateMatch[2];
-        const hour = parseInt(timeMatch[1]);
-        const minute = parseInt(timeMatch[2]);
-        
-        const monthNames: { [key: string]: number } = {
-          'stycznia': 0, 'lutego': 1, 'marca': 2, 'kwietnia': 3, 'maja': 4, 'czerwca': 5,
-          'lipca': 6, 'sierpnia': 7, 'września': 8, 'października': 9, 'listopada': 10, 'grudnia': 11,
-          'wrzesnia': 8, 'pazdziernika': 9
-        };
-        
-        const month = monthNames[monthName.toLowerCase()];
-        if (month !== undefined) {
-          return new Date(date.getFullYear(), month, day, hour, minute, 0, 0);
-        }
-      }
-    }
-    
-    return new Date();
   }
 
   private clearText(text: string): string {
@@ -204,35 +149,25 @@ export class CreateHandler {
   private extractActivity(text: string): string {
     let cleaned = text;
 
-    // Usuwanie wyrażeń godzinowych typu 'o 18', 'o 15:30', 'o 7.00', 'o 7 00', 'o 7', 'o 7 rano', 'o 7 wieczorem'
     cleaned = cleaned.replace(/\bo\s*\d{1,2}([:.,\s]\d{2})?(\s*(rano|wieczorem|południe|poludnie))?/gi, '');
 
-    // Usuwanie wyrażeń typu 'za X dni', 'za X tygodni', 'za X miesięcy', 'za X godzin', 'za X minut'
     cleaned = cleaned.replace(/\bza\s*\d+\s*(dni|tygodni|miesi[ąa]ce?|godzin(y|e)?|minut(y|e)?)\b/gi, '');
 
-    // Usuwanie wyrażeń typu 'za tydzień', 'za miesiąc', 'za rok'
     cleaned = cleaned.replace(/\bza\s*(tydzie[nń]|miesi[ąa]c|rok)\b/gi, '');
 
-    // Usuwanie wyrażeń typu 'jutro', 'pojutrze', 'dzisiaj', 'dzis', 'popojutrze', 'wczoraj', 'przedwczoraj'
     cleaned = cleaned.replace(/\b(jutro|pojutrze|dzisiaj|dzis|popojutrze|wczoraj|przedwczoraj)\b/gi, '');
 
-    // Usuwanie wyrażeń typu 'wieczorem', 'rano', 'w południe', 'w poludnie'
     cleaned = cleaned.replace(/\b(wieczorem|rano|w południe|w poludnie)\b/gi, '');
 
-    // Usuwanie dni tygodnia (z polskimi znakami i bez)
     cleaned = cleaned.replace(/\b(poniedzia[łl]ek|wtorek|[śs]roda|czwartek|pi[ąa]tek|sobota|niedziela|pon|wt|sr|czw|pt|sob|ndz)\b/gi, '');
 
-    // Usuwanie miesięcy (z polskimi znakami i bez)
     cleaned = cleaned.replace(/\b(stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|wrze[śs]nia|pa[źz]dziernika|listopada|grudnia|styczen|luty|marzec|kwiecien|maj|czerwiec|lipiec|sierpien|wrzesien|pazdziernik|listopad|grudzien)\b/gi, '');
 
-    // Usuwanie dat typu '21 lipca', '21.07', '21/07', '21-07', '21 sierpnia'
     cleaned = cleaned.replace(/\b\d{1,2}[.\/\-]\d{1,2}\b/gi, '');
     cleaned = cleaned.replace(/\b\d{1,2}\s+(stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|wrze[śs]nia|pa[źz]dziernika|listopada|grudnia|styczen|luty|marzec|kwiecien|maj|czerwiec|lipiec|sierpien|wrzesien|pazdziernik|listopad|grudzien)\b/gi, '');
 
-    // Usuwanie roku typu '2024', '2023', itp.
     cleaned = cleaned.replace(/\b20\d{2}\b/g, '');
 
-    // Usuwanie pojedynczych liczb (np. 'o 7', 'za 2') jeśli nie są częścią słowa
     cleaned = cleaned.replace(/\b\d{1,2}\b/g, '');
 
     cleaned = this.removeSingleLetters(cleaned);
@@ -407,10 +342,10 @@ export class CreateHandler {
     const regex = /\d{1,2} (stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia) (\d{2}):(\d{2})/i;
     const match = formatted.match(regex);
     if (match) {
-      const day = parseInt(match[0]);
-      const monthName = match[1].toLowerCase();
-      const hour = parseInt(match[2]);
-      const minute = parseInt(match[3]);
+      const day = parseInt(match[1]);
+      const monthName = match[2].toLowerCase();
+      const hour = parseInt(match[3]);
+      const minute = parseInt(match[4]);
       const monthNames: { [key: string]: number } = {
         'stycznia': 0, 'lutego': 1, 'marca': 2, 'kwietnia': 3, 'maja': 4, 'czerwca': 5,
         'lipca': 6, 'sierpnia': 7, 'września': 8, 'października': 9, 'listopada': 10, 'grudnia': 11,

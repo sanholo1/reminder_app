@@ -27,7 +27,31 @@ const HomePage: React.FC = () => {
   const fetchReminders = async () => {
     try {
       const data = await connectionService.request<{ reminders: Reminder[] }>('/reminders');
-      setReminders(data.reminders || []);
+      console.log('Daty z backendu:', data.reminders.map(r => ({ id: r.id, datetime: r.datetime })));
+      const remindersWithLocalTime = data.reminders.map(reminder => {
+        const localDateTime = new Date(reminder.datetime).toLocaleString('pl-PL', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        console.log(`Konwersja: ${reminder.datetime} -> ${localDateTime}`);
+        return {
+          ...reminder,
+          datetime: localDateTime,
+          created_at: reminder.created_at ? new Date(reminder.created_at).toLocaleString('pl-PL', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }) : ''
+        };
+      });
+      setReminders(remindersWithLocalTime || []);
     } catch (err: any) {
       if (err instanceof ConnectionError) {
         console.error('Błąd połączenia:', err.message);
@@ -55,7 +79,18 @@ const HomePage: React.FC = () => {
       if (data.error) {
         setError(data.error);
       } else {
-        setResult(data);
+        const resultWithLocalTime = {
+          ...data,
+          datetime: data.datetime ? new Date(data.datetime).toLocaleString('pl-PL', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }) : null
+        };
+        setResult(resultWithLocalTime);
         setInput('');
         await fetchReminders();
       }

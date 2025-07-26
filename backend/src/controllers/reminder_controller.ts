@@ -1,11 +1,11 @@
 import { Request, Response, Router, NextFunction } from 'express';
-import { CreateHandler } from '../commands/create_command';
-import { GetHandler } from '../queries/get_query';
+import { CreateReminderHandler } from '../commands/create_command';
+import { GetRemindersHandler } from '../queries/get_query';
 import { NotFoundError, BadRequestError } from '../server';
 
 const reminderRouter = Router();
-const createReminderHandler = new CreateHandler();
-const getRemindersHandler = new GetHandler();
+const createReminderHandler = new CreateReminderHandler();
+const getRemindersHandler = new GetRemindersHandler();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
