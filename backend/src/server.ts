@@ -1,6 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import "reflect-metadata";
 import reminderRouter from './controllers/reminder_controller';
+import { AppDataSource } from './config/database';
 
 class NotFoundError extends Error {
   status: number;
@@ -39,11 +41,20 @@ application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ error: 'Błąd serwera', details: err.message || err.toString() });
 });
 
-application.listen(applicationPort, async () => {
-  console.log(`Serwer uruchomiony na porcie ${applicationPort}`);
-  console.log(`Endpoint tworzenia: POST http://localhost:${applicationPort}/reminders`);
-  console.log(`Endpoint pobierania: GET http://localhost:${applicationPort}/reminders`);
-}); 
+// Inicjalizacja TypeORM
+AppDataSource.initialize()
+  .then(() => {
+    console.log("Połączenie z bazą danych zostało zainicjalizowane");
+    
+    application.listen(applicationPort, async () => {
+      console.log(`Serwer uruchomiony na porcie ${applicationPort}`);
+      console.log(`Endpoint tworzenia: POST http://localhost:${applicationPort}/reminders`);
+      console.log(`Endpoint pobierania: GET http://localhost:${applicationPort}/reminders`);
+    });
+  })
+  .catch((error) => {
+    console.error("Błąd podczas inicjalizacji bazy danych:", error);
+  }); 
 
 
 

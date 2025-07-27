@@ -4,7 +4,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/server.ts"
+    "start": "ts-node src/server.ts",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "migration:generate": "npm run typeorm migration:generate -- -d ormconfig.ts",
+    "migration:run": "npm run typeorm migration:run -- -d ormconfig.ts",
+    "migration:revert": "npm run typeorm migration:revert -- -d ormconfig.ts",
+    "schema:sync": "npm run typeorm schema:sync -- -d ormconfig.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +19,9 @@
     "@types/cors": "^2.8.19",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "mysql2": "^3.14.2"
+    "mysql2": "^3.14.2",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.25"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",

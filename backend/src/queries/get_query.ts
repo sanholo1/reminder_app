@@ -1,4 +1,4 @@
-import { ReminderRepository, ReminderEntity } from '../repositories/reminder_repository';
+import { ReminderRepositoryTypeORM, ReminderEntity } from '../repositories/reminder_repository_typeorm';
 
 export interface GetRemindersQuery {
 }
@@ -13,10 +13,10 @@ export interface GetRemindersResult {
 }
 
 export class GetRemindersHandler {
-  private reminderRepository: ReminderRepository;
+  private reminderRepository: ReminderRepositoryTypeORM;
 
   constructor() {
-    this.reminderRepository = new ReminderRepository();
+    this.reminderRepository = new ReminderRepositoryTypeORM();
   }
 
   async execute(query: GetRemindersQuery): Promise<GetRemindersResult> {

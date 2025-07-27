@@ -1,4 +1,4 @@
-import { ReminderRepository, ReminderEntity } from '../repositories/reminder_repository';
+import { ReminderRepositoryTypeORM, ReminderEntity } from '../repositories/reminder_repository_typeorm';
 
 export interface CreateReminderCommand {
   text: string;
@@ -11,10 +11,10 @@ export interface CreateReminderResult {
 }
 
 export class CreateReminderHandler {
-  private reminderRepository: ReminderRepository;
+  private reminderRepository: ReminderRepositoryTypeORM;
 
   constructor() {
-    this.reminderRepository = new ReminderRepository();
+    this.reminderRepository = new ReminderRepositoryTypeORM();
   }
 
   async execute(command: CreateReminderCommand): Promise<CreateReminderResult> {
