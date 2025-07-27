@@ -1,7 +1,7 @@
 import { Request, Response, Router, NextFunction } from 'express';
 import { CreateReminderHandler } from '../commands/create_command';
 import { GetRemindersHandler } from '../queries/get_query';
-import { NotFoundError, BadRequestError } from '../server';
+import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
@@ -37,12 +37,20 @@ reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: N
   }
 });
 
-reminderRouter.put('/reminders/:id', async (req: Request, res: Response) => {
-  res.status(501).json({ error: 'Not implemented' });
+reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    throw new MethodNotAllowedError('Aktualizacja przypomnień nie jest jeszcze zaimplementowana');
+  } catch (error) {
+    next(error);
+  }
 });
 
-reminderRouter.delete('/reminders/:id', async (req: Request, res: Response) => {
-  res.status(501).json({ error: 'Not implemented' });
+reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    throw new MethodNotAllowedError('Usuwanie przypomnień nie jest jeszcze zaimplementowane');
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default reminderRouter; 

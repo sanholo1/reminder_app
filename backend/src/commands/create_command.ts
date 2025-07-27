@@ -1,4 +1,5 @@
 import { ReminderRepositoryTypeORM, ReminderEntity } from '../repositories/reminder_repository_typeorm';
+import { EmptyInputError, InvalidTimeError, EmptyActivityError, PastDateError } from '../exceptions/exception_handler';
 
 export interface CreateReminderCommand {
   text: string;
@@ -7,7 +8,6 @@ export interface CreateReminderCommand {
 export interface CreateReminderResult {
   activity: string;
   datetime: string;
-  error?: string;
 }
 
 export class CreateReminderHandler {
@@ -19,10 +19,6 @@ export class CreateReminderHandler {
 
   async execute(command: CreateReminderCommand): Promise<CreateReminderResult> {
     const parsed = this.parseText(command.text);
-    
-    if (parsed.error) {
-      return { activity: parsed.activity, datetime: '', error: parsed.error };
-    }
 
     const clean = this.clearText(command.text.toLowerCase());
     const timeMatch = this.extractTime(clean);
@@ -43,26 +39,26 @@ export class CreateReminderHandler {
     const clean = this.clearText(text.toLowerCase());
     
     if (!clean.trim()) {
-      return { activity: '', datetime: '', error: 'Wprowadź aktywność i czas' };
+      throw new EmptyInputError();
     }
 
     const timeMatch = this.extractTime(clean);
     
     if (!timeMatch) {
-      return { activity: '', datetime: '', error: 'Podaj prawidłowy czas z aktywnością' };
+      throw new InvalidTimeError();
     }
 
     const { hour, minute } = timeMatch;
     const activity = this.extractActivity(clean);
 
     if (!activity.trim()) {
-      return { activity: '', datetime: '', error: 'Podaj o czym chcesz być przypomniany' };
+      throw new EmptyActivityError();
     }
 
     const datetime = this.createDate(hour, minute, clean);
 
     if (datetime < new Date()) {
-      return { activity: '', datetime: '', error: 'Nie można tworzyć przypomnień dla dat z przeszłości' };
+      throw new PastDateError();
     }
 
     return {

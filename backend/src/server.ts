@@ -3,26 +3,20 @@ import cors from 'cors';
 import "reflect-metadata";
 import reminderRouter from './controllers/reminder_controller';
 import { AppDataSource } from './config/database';
-
-class NotFoundError extends Error {
-  status: number;
-  constructor(message: string = 'Nie znaleziono zasobu') {
-    super(message);
-    this.name = 'NotFoundError';
-    this.status = 404;
-  }
-}
-
-class BadRequestError extends Error {
-  status: number;
-  constructor(message: string = 'Błędne żądanie') {
-    super(message);
-    this.name = 'BadRequestError';
-    this.status = 400;
-  }
-}
-
-export { NotFoundError, BadRequestError };
+import { 
+  ValidationError, 
+  HttpError,
+  BadRequestError, 
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+  MethodNotAllowedError,
+  ConflictError,
+  UnprocessableEntityError,
+  TooManyRequestsError,
+  InternalServerError,
+  ServiceUnavailableError
+} from './exceptions/exception_handler';
 
 const application = express();
 const applicationPort = 3001;
@@ -32,13 +26,32 @@ application.use(express.json());
 application.use('/', reminderRouter);
 application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Global error handler:', err);
-  if (err instanceof NotFoundError) {
-    return res.status(404).json({ error: err.message });
+  
+  // Handle all HTTP errors
+  if (err instanceof HttpError) {
+    return res.status(err.status).json({ 
+      error: err.message,
+      status: err.status,
+      name: err.name 
+    });
   }
-  if (err instanceof BadRequestError) {
-    return res.status(400).json({ error: err.message });
+  
+  // Handle validation errors
+  if (err instanceof ValidationError) {
+    return res.status(400).json({ 
+      error: err.message,
+      status: 400,
+      name: err.name 
+    });
   }
-  res.status(500).json({ error: 'Błąd serwera', details: err.message || err.toString() });
+  
+  // Handle unknown errors
+  res.status(500).json({ 
+    error: 'Błąd serwera', 
+    status: 500,
+    name: 'InternalServerError',
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 // Inicjalizacja TypeORM
