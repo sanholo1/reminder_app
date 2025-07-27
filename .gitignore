@@ -50,4 +50,10 @@ yarn.lock
 pnpm-lock.yaml
 tmp/
 temp/
+
+# Ignoruj wszystkie pliki README
 README*
+**/README*
+**/README*.md
+**/README*.txt
+**/README*.rst
