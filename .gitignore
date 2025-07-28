@@ -65,7 +65,27 @@ README*
 **/ormconfig.ts
 **/ormconfig.js
 **/ormconfig.json
+
+# Pliki środowiskowe i API keys
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
 backend/.env
 backend/.env.local
 backend/.env.development
 backend/.env.production
+frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
+
+# API Keys i sekrety
+*api*.key
+*api*.secret
+*secret*
+*key*
+api_keys.txt
+secrets.txt

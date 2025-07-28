@@ -28,9 +28,7 @@ reminderRouter.get('/reminders', async (req: Request, res: Response, next: NextF
 reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new BadRequestError('Brak identyfikatora przypomnienia');
-    }
+    if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
     throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
   } catch (error) {
     next(error);

@@ -10,15 +10,11 @@ const ReminderResult: React.FC<ReminderResultProps> = ({ result }) => {
     <div className="result">
       <div className="result-item">
         <div className="result-label"><strong>Aktywność:</strong></div>
-        <div className="result-value">
-          {result.activity}
-        </div>
+        <div className="result-value">{result.activity}</div>
       </div>
       <div className="result-item">
         <div className="result-label"><strong>Data i Czas:</strong></div>
-        <div className="result-value">
-          {result.datetime ? result.datetime : 'Czas nie został rozpoznany'}
-        </div>
+        <div className="result-value">{result.datetime ? result.datetime : 'Czas nie został rozpoznany'}</div>
       </div>
     </div>
   );

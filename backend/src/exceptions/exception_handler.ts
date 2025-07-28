@@ -14,28 +14,13 @@ export class EmptyInputError extends ValidationError {
   }
 }
 
-export class InvalidTimeError extends ValidationError {
-  constructor(message: string = 'Podaj prawidłowy czas z aktywnością') {
+export class LLMParsingError extends ValidationError {
+  constructor(message: string = 'Nie udało się sparsować tekstu przez AI') {
     super(message);
-    this.name = 'InvalidTimeError';
+    this.name = 'LLMParsingError';
   }
 }
 
-export class EmptyActivityError extends ValidationError {
-  constructor(message: string = 'Podaj o czym chcesz być przypomniany') {
-    super(message);
-    this.name = 'EmptyActivityError';
-  }
-}
-
-export class PastDateError extends ValidationError {
-  constructor(message: string = 'Nie można tworzyć przypomnień dla dat z przeszłości') {
-    super(message);
-    this.name = 'PastDateError';
-  }
-}
-
-// HTTP Error Classes
 export class HttpError extends Error {
   status: number;
   constructor(message: string, status: number = 500) {
