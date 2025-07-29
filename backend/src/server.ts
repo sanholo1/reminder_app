@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import reminderRouter from './controllers/reminder_controller';
+import { AppDataSource } from './config/database';
 import {
   ValidationError,
   HttpError,
@@ -8,7 +9,7 @@ import {
 } from './exceptions/exception_handler';
 
 const application = express();
-const applicationPort = 3001;
+const applicationPort = process.env.PORT || 3001;
 
 application.use(cors());
 application.use(express.json());
@@ -23,7 +24,18 @@ application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ error: 'Internal Server Error', status: 500 });
 });
 
-application.listen(applicationPort); 
+// Initialize database connection
+AppDataSource.initialize()
+  .then(() => {
+    console.log("Database connection established successfully");
+    application.listen(applicationPort, () => {
+      console.log(`Server is running on port ${applicationPort}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Error during database initialization:", error);
+    process.exit(1);
+  }); 
 
 
 
