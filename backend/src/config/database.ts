@@ -1,9 +1,18 @@
 import { DataSource } from "typeorm";
 import { Reminder } from "../entities/Reminder";
 import * as dotenv from "dotenv";
+import { InternalServerError } from "../exceptions/exception_handler";
 
 // Load environment variables
 dotenv.config();
+
+// Validate required environment variables
+const requiredEnvVars = ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  throw new InternalServerError(`Brak wymaganych zmiennych środowiskowych: ${missingVars.join(', ')}`);
+}
 
 export const AppDataSource = new DataSource({
   type: "mysql",

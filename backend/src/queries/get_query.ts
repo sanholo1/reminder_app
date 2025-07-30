@@ -1,4 +1,5 @@
 import { ReminderRepositoryTypeORM, ReminderEntity } from '../repositories/reminder_repository_typeorm';
+import { InternalServerError } from '../exceptions/exception_handler';
 
 export interface GetRemindersQuery {
 }
@@ -20,15 +21,19 @@ export class GetRemindersHandler {
   }
 
   async execute(query: GetRemindersQuery): Promise<GetRemindersResult> {
-    const reminders = await this.reminderRepository.findAll();
-    
-    return {
-      reminders: reminders.map(reminder => ({
-        id: reminder.id,
-        activity: reminder.activity,
-        datetime: reminder.datetime.toISOString(),
-        created_at: reminder.created_at ? reminder.created_at.toISOString() : ''
-      }))
-    };
+    try {
+      const reminders = await this.reminderRepository.findAll();
+      
+      return {
+        reminders: reminders.map(reminder => ({
+          id: reminder.id,
+          activity: reminder.activity,
+          datetime: reminder.datetime.toISOString(),
+          created_at: reminder.created_at ? reminder.created_at.toISOString() : ''
+        }))
+      };
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas pobierania przypomnień z bazy danych');
+    }
   }
 } 

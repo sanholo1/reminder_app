@@ -1,6 +1,7 @@
 import { Repository } from "typeorm";
 import { AppDataSource } from "../config/database";
 import { Reminder } from "../entities/Reminder";
+import { InternalServerError, NotFoundError } from "../exceptions/exception_handler";
 
 export interface ReminderEntity {
   id: string;
@@ -17,37 +18,49 @@ export class ReminderRepositoryTypeORM {
   }
 
   async create(reminder: ReminderEntity): Promise<void> {
-    const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime);
-    await this.repository.save(newReminder);
+    try {
+      const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime);
+      await this.repository.save(newReminder);
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas tworzenia przypomnienia w bazie danych');
+    }
   }
 
   async findAll(): Promise<ReminderEntity[]> {
-    const reminders = await this.repository.find({
-      order: {
-        datetime: "ASC"
-      }
-    });
-    
-    return reminders.map(reminder => ({
-      id: reminder.id,
-      activity: reminder.activity,
-      datetime: reminder.datetime,
-      created_at: reminder.created_at
-    }));
+    try {
+      const reminders = await this.repository.find({
+        order: {
+          datetime: "ASC"
+        }
+      });
+      
+      return reminders.map(reminder => ({
+        id: reminder.id,
+        activity: reminder.activity,
+        datetime: reminder.datetime,
+        created_at: reminder.created_at
+      }));
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas pobierania przypomnień z bazy danych');
+    }
   }
 
   async findById(id: string): Promise<ReminderEntity | null> {
-    const reminder = await this.repository.findOne({
-      where: { id }
-    });
-    
-    if (!reminder) return null;
-    
-    return {
-      id: reminder.id,
-      activity: reminder.activity,
-      datetime: reminder.datetime,
-      created_at: reminder.created_at
-    };
+    try {
+      const reminder = await this.repository.findOne({
+        where: { id }
+      });
+      
+      if (!reminder) return null;
+      
+      return {
+        id: reminder.id,
+        activity: reminder.activity,
+        datetime: reminder.datetime,
+        created_at: reminder.created_at
+      };
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas wyszukiwania przypomnienia w bazie danych');
+    }
   }
 } 
