@@ -24,7 +24,6 @@ application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ error: 'Internal Server Error', status: 500 });
 });
 
-// Initialize database connection
 AppDataSource.initialize()
   .then(() => {
     console.log("Database connection established successfully");

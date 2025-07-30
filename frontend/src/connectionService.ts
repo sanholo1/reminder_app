@@ -10,7 +10,6 @@ export class ConnectionService {
     try {
       const res = await fetch(url, options);
       if (!res.ok) {
-        // Try to read error message from response
         let errorMessage = `Błąd połączenia: ${res.status} ${res.statusText}`;
         
         try {
@@ -19,7 +18,6 @@ export class ConnectionService {
             errorMessage = errorData.error;
           }
         } catch (parseError) {
-          // If we can't parse the error response, use generic message
         }
         
         throw new ConnectionError(errorMessage);

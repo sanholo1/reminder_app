@@ -3,10 +3,8 @@ import { Reminder } from "../entities/Reminder";
 import * as dotenv from "dotenv";
 import { InternalServerError } from "../exceptions/exception_handler";
 
-// Load environment variables
 dotenv.config();
 
-// Validate required environment variables
 const requiredEnvVars = ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
@@ -21,7 +19,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || "app_user",
   password: process.env.DB_PASSWORD || "password",
   database: process.env.DB_DATABASE || "reminder_app",
-  synchronize: process.env.NODE_ENV === "development", // Only in development
+  synchronize: process.env.NODE_ENV === "development",
   logging: process.env.NODE_ENV === "development",
   entities: [Reminder],
   subscribers: [],
