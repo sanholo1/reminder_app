@@ -21,6 +21,41 @@ export class LLMParsingError extends ValidationError {
   }
 }
 
+export class InvalidGPTConversationError extends ValidationError {
+  constructor(message: string = 'GPT może odpowiadać tylko na pytania dotyczące ustawiania przypomnień') {
+    super(message);
+    this.name = 'InvalidGPTConversationError';
+  }
+}
+
+export class NoTimeError extends ValidationError {
+  constructor(message: string = 'Nie podano godziny przypomnienia') {
+    super(message);
+    this.name = 'NoTimeError';
+  }
+}
+
+export class NoActivityError extends ValidationError {
+  constructor(message: string = 'Nie podano aktywności') {
+    super(message);
+    this.name = 'NoActivityError';
+  }
+}
+
+export class PastTimeError extends ValidationError {
+  constructor(message: string = 'Nie można ustawić przypomnienia w przeszłości') {
+    super(message);
+    this.name = 'PastTimeError';
+  }
+}
+
+export class NoActivityAndTimeError extends ValidationError {
+  constructor(message: string = 'Nie podano aktywności ani czasu') {
+    super(message);
+    this.name = 'NoActivityAndTimeError';
+  }
+}
+
 export class HttpError extends Error {
   status: number;
   constructor(message: string, status: number = 500) {

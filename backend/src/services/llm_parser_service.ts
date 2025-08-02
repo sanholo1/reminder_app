@@ -1,4 +1,12 @@
 import OpenAI from 'openai';
+import { DateTime } from 'luxon';
+import { 
+  InvalidGPTConversationError, 
+  NoTimeError, 
+  NoActivityError, 
+  PastTimeError, 
+  NoActivityAndTimeError 
+} from '../exceptions/exception_handler';
 
 export interface LLMParseResult {
   activity: string;
@@ -45,6 +53,13 @@ export class LLMParserService {
       
       return { activity: patternResult.activity, datetime };
     } catch (error) {
+      if (error instanceof InvalidGPTConversationError ||
+          error instanceof NoTimeError ||
+          error instanceof NoActivityError ||
+          error instanceof PastTimeError ||
+          error instanceof NoActivityAndTimeError) {
+        throw error;
+      }
       throw new Error('Nie udało się sparsować tekstu przez AI');
     }
   }
@@ -57,14 +72,14 @@ export class LLMParserService {
     const minute = now.getMinutes();
 
     return `Przeanalizuj poniższy tekst i wyciągnij informacje o aktywności oraz wzorcu czasowym.
-Użytkownik podaje czas w strefie czasowej Europe/Warsaw.
 
 WAŻNE ZASADY:
 1. Zwróć DOKŁADNIE wzorzec czasowy z listy poniżej, nie naturalny język
-2. Jeśli użytkownik nie poda godziny, zwróć błąd: {"error": "Nie podano godziny przypomnienia"}
-3. Jeśli użytkownik nie poda aktywności, zwróć błąd: {"error": "Nie podano aktywności"}
-4. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek"), zwróć błąd: {"error": "Nie można ustawić przypomnienia w przeszłości"}
-5. Jeśli użytkownik poda tylko godzinę bez dnia (np. "o 15:00"), sprawdź czy godzina już minęła - jeśli tak, ustaw na jutro
+2. Jeśli użytkownik nie poda godziny, zwróć błąd: {"error": "NO_TIME"}
+3. Jeśli użytkownik nie poda aktywności, zwróć błąd: {"error": "NO_ACTIVITY"}
+4. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek"), zwróć błąd: {"error": "PAST_TIME"}
+5. Jeśli użytkownik nie poda ani aktywności ani czasu, zwróć błąd: {"error": "NO_ACTIVITY_AND_TIME"}
+6. Jeśli użytkownik poda tylko godzinę bez dnia (np. "o 15:00"), sprawdź czy godzina już minęła - jeśli tak, ustaw na jutro
 
 Tekst: "${text}"
 
@@ -72,9 +87,8 @@ Odpowiedz w formacie JSON:
 {"activity": "nazwa aktywności", "timePattern": "wzorzec czasowy"}
 
 DOKŁADNE WZORCE CZASOWE (używaj tylko tych):
-- "za Xh" - za X godzin (np. "za 2h", "za 1h", "za 3h")
-- "za Xm" - za X minut (np. "za 15m", "za 30m", "za 45m")
-- "za Xh Ym" - za X godzin i Y minut (np. "za 1h 30m", "za 2h 15m")
+- "+HH:MM" - za określoną liczbę godzin i minut (np. "+00:30", "+02:15", "+05:05")
+- "-HH:MM" - dla czasu w przeszłości (np. "-03:30")
 - "jutro HH:MM" - jutro o konkretnej godzinie (np. "jutro 15:00", "jutro 09:00")
 - "dziś HH:MM" - dziś o konkretnej godzinie (np. "dziś 15:00", "dziś 08:00")
 - "poniedziałek HH:MM" - najbliższy poniedziałek o HH:MM
@@ -85,44 +99,60 @@ DOKŁADNE WZORCE CZASOWE (używaj tylko tych):
 - "sobota HH:MM" - najbliższa sobota o HH:MM
 - "niedziela HH:MM" - najbliższa niedziela o HH:MM
 - "za tydzień HH:MM" - za tydzień o HH:MM
-- "za tydzień dzień HH:MM" - za tydzień w konkretny dzień o HH:MM
+- "za tydzień dzień HH:MM" - za tydzień w konkretny dzień o HH:MM (np. "za 2 tygodnie poniedziałek 12:00")
+- "za X tygodnie dzień HH:MM" - za X tygodni w konkretny dzień o HH:MM (np. "za 2 tygodnie poniedziałek 12:00")
 
 PRZYKŁADY KONWERSJI:
-- "za dwie godziny" → "za 2h"
-- "za godzinę" → "za 1h"
-- "za trzy godziny" → "za 3h"
-- "za 15 minut" → "za 15m"
-- "za godzinę i 30 minut" → "za 1h 30m"
-- "za dwie godziny i piętnaście minut" → "za 2h 15m"
+- "za dwie godziny" → "+02:00"
+- "za godzinę" → "+01:00"
+- "za trzy godziny" → "+03:00"
+- "za 15 minut" → "+00:15"
+- "za godzinę i 30 minut" → "+01:30"
+- "za dwie godziny i piętnaście minut" → "+02:15"
+- "za 5 godzin i 5 minut" → "+05:05"
+- "za 30 minut" → "+00:30"
 - "jutro o 9 rano" → "jutro 09:00"
 - "jutro o 15:00" → "jutro 15:00"
 - "dziś o 8" → "dziś 08:00"
 - "w poniedziałek o 8:00" → "poniedziałek 08:00"
+- "w sobote za dwa tygodnie o 12" → "za 2 tygodnie sobota 12:00"
+- "za tydzień w poniedziałek o 9" → "za tydzień poniedziałek 09:00"
+- "za 3 tygodnie w piątek o 18" → "za 3 tygodnie piątek 18:00"
+- "za tydzień w środę o 10" → "za tydzień środa 10:00"
+- "za 4 tygodnie w niedzielę o 15" → "za 4 tygodnie niedziela 15:00"
+- "za 2 tygodnie w poniedziałek o 8" → "za 2 tygodnie poniedziałek 08:00"
+- "za 5 tygodni w czwartek o 14" → "za 5 tygodnie czwartek 14:00"
 
 Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(minute)}):
-- "za godzinę i 30 minut wyłączyć pralkę" → {"activity": "wyłączyć pralkę", "timePattern": "za 1h 30m"}
-- "za 15 minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "za 15m"}
-- "za dwie godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "za 2h"}
-- "podlej kwiaty za dwie godziny" → {"activity": "podlej kwiaty", "timePattern": "za 2h"}
-- "wyjdz z psem za 2 godziny" → {"activity": "wyjdz z psem", "timePattern": "za 2h"}
+- "za godzinę i 30 minut wyłączyć pralkę" → {"activity": "wyłączyć pralkę", "timePattern": "+01:30"}
+- "za 15 minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "+00:15"}
+- "za dwie godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "+02:00"}
+- "podlej kwiaty za dwie godziny" → {"activity": "podlej kwiaty", "timePattern": "+02:00"}
+- "wyjdz z psem za 2 godziny" → {"activity": "wyjdz z psem", "timePattern": "+02:00"}
+- "za 5 godzin i 5 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+05:05"}
+- "za 30 minut sprawdź piekarnik" → {"activity": "sprawdź piekarnik", "timePattern": "+00:30"}
 - "jutro o 9 rano kupić chleb" → {"activity": "kupić chleb", "timePattern": "jutro 09:00"}
 - "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"} (jeśli przed 15:00) lub {"activity": "spotkanie", "timePattern": "jutro 15:00"} (jeśli po 15:00)
 - "w poniedziałek o 8:00 spotkanie" → {"activity": "spotkanie", "timePattern": "poniedziałek 08:00"}
 - "narysuj obraz w niedzielę za tydzień w południe" → {"activity": "narysuj obraz", "timePattern": "za tydzień niedziela 12:00"}
 - "narysuj obraz w najbliższą niedzielę w południe" → {"activity": "narysuj obraz", "timePattern": "niedziela 12:00"}
 - "odkurz mieszkanie dziś o 8" (jeśli jest już po 8) → {"activity": "odkurz mieszkanie", "timePattern": "jutro 08:00"}
-- "zadzwoń do taty za 15 minut" → {"activity": "zadzwoń do taty", "timePattern": "za 15m"}
-- "za trzy godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "za 3h"}
-- "za pięć minut sprawdź piekarnik" → {"activity": "sprawdź piekarnik", "timePattern": "za 5m"}
-- "za 10 minut podlać kwiaty" → {"activity": "podlać kwiaty", "timePattern": "za 10m"}
-- "za dwie godziny i piętnaście minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "za 2h 15m"}
-- "za 2 godziny i 30 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "za 2h 30m"}
+- "zadzwoń do taty za 15 minut" → {"activity": "zadzwoń do taty", "timePattern": "+00:15"}
+- "za trzy godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "+03:00"}
+- "za pięć minut sprawdź piekarnik" → {"activity": "sprawdź piekarnik", "timePattern": "+00:05"}
+- "za 10 minut podlać kwiaty" → {"activity": "podlać kwiaty", "timePattern": "+00:10"}
+- "za dwie godziny i piętnaście minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "+02:15"}
+- "za 2 godziny i 30 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+02:30"}
 - "w przyszły piątek o 17:00 kino" → {"activity": "kino", "timePattern": "piątek 17:00"}
-- "przypomnij mi" → {"error": "Nie podano aktywności ani czasu"}
-- "zrób zakupy wczoraj o 12" → {"error": "Nie można ustawić przypomnienia w przeszłości"}
-- "dodaj przypomnienie jutro" → {"error": "Nie podano godziny przypomnienia"}
-- "za godzinę" → {"error": "Nie podano aktywności"}
-- "jutro o 15:00" → {"error": "Nie podano aktywności"}
+- "w sobote za dwa tygodnie o 12 wyprowadz psa" → {"activity": "wyprowadz psa", "timePattern": "za 2 tygodnie sobota 12:00"}
+- "za tydzień w poniedziałek o 9 spotkanie" → {"activity": "spotkanie", "timePattern": "za tydzień poniedziałek 09:00"}
+- "za 3 tygodnie w piątek o 18 kino" → {"activity": "kino", "timePattern": "za 3 tygodnie piątek 18:00"}
+- "za 4 tygodnie w niedzielę o 15 obiad" → {"activity": "obiad", "timePattern": "za 4 tygodnie niedziela 15:00"}
+- "przypomnij mi" → {"error": "NO_ACTIVITY_AND_TIME"}
+- "zrób zakupy wczoraj o 12" → {"error": "PAST_TIME"}
+- "dodaj przypomnienie jutro" → {"error": "NO_TIME"}
+- "za godzinę" → {"error": "NO_ACTIVITY"}
+- "jutro o 15:00" → {"error": "NO_ACTIVITY"}
 
 SPECJALNE PRZYPADKI DLA GODZINY BEZ DNIA:
 - Jeśli teraz jest przed 15:00, "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"}
@@ -137,118 +167,146 @@ Odpowiedz tylko w formacie JSON.`;
     try {
       const cleanResponse = response.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleanResponse);
-      if (parsed.error) return { error: parsed.error };
-      if (!parsed.activity || !parsed.timePattern) return { error: 'Nie podano aktywności lub czasu' };
+      
+      if (parsed.error) {
+        // Convert error codes to custom exceptions
+        switch (parsed.error) {
+          case 'NO_TIME':
+            throw new NoTimeError();
+          case 'NO_ACTIVITY':
+            throw new NoActivityError();
+          case 'PAST_TIME':
+            throw new PastTimeError();
+          case 'NO_ACTIVITY_AND_TIME':
+            throw new NoActivityAndTimeError();
+          default:
+            return { error: parsed.error };
+        }
+      }
+      
+      if (!parsed.activity || !parsed.timePattern) {
+        throw new NoActivityAndTimeError();
+      }
+      
       return { activity: parsed.activity, timePattern: parsed.timePattern };
-    } catch {
+    } catch (error) {
+      // Re-throw custom exceptions
+      if (error instanceof NoTimeError || 
+          error instanceof NoActivityError || 
+          error instanceof PastTimeError || 
+          error instanceof NoActivityAndTimeError) {
+        throw error;
+      }
       return { error: 'Nieprawidłowa odpowiedź od AI' };
     }
   }
 
   private convertTimePatternToDateTime(timePattern: string): string | null {
-    const now = new Date();
+    const now = DateTime.now();
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     
-    const relativeTimeMatch = timePattern.match(/za (\d+)h(?: (\d+)m)?/);
-    if (relativeTimeMatch) {
-      const hours = parseInt(relativeTimeMatch[1]) + 2;
-      const minutes = relativeTimeMatch[2] ? parseInt(relativeTimeMatch[2]) : 0;
-      const targetTime = new Date(now.getTime() + (hours * 60 + minutes) * 60 * 1000);
-      return targetTime.toISOString().slice(0, 19) + '.000';
-    }
-    
-    const minutesMatch = timePattern.match(/za (\d+)m/);
-    if (minutesMatch) {
-      const minutes = parseInt(minutesMatch[1]) + 120;
-      const targetTime = new Date(now.getTime() + minutes * 60 * 1000);
-      return targetTime.toISOString().slice(0, 19) + '.000';
-    }
-    
-    const hoursMatch = timePattern.match(/za (\d+)h/);
-    if (hoursMatch) {
-      const hours = parseInt(hoursMatch[1]) + 2;
-      const targetTime = new Date(now.getTime() + hours * 60 * 60 * 1000);
-      return targetTime.toISOString().slice(0, 19) + '.000';
+    // Handle new format: +HH:MM or -HH:MM
+    const newFormatMatch = timePattern.match(/^([+-])(\d{2}):(\d{2})$/);
+    if (newFormatMatch) {
+      const sign = newFormatMatch[1];
+      const hours = parseInt(newFormatMatch[2]);
+      const minutes = parseInt(newFormatMatch[3]);
+      
+      if (sign === '-') {
+        // Past time - return null to indicate error
+        return null;
+      } else if (sign === '+') {
+        // Future time - add the specified hours and minutes
+        const targetTime = now.plus({ hours, minutes });
+        return targetTime.toISO();
+      }
     }
     
     const tomorrowMatch = timePattern.match(/jutro (\d{1,2}):(\d{2})/);
     if (tomorrowMatch) {
-      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const hours = parseInt(tomorrowMatch[1]) + 2;
+      const hours = parseInt(tomorrowMatch[1]);
       const minutes = parseInt(tomorrowMatch[2]);
-      tomorrow.setHours(hours, minutes, 0, 0);
-      return tomorrow.toISOString().slice(0, 19) + '.000';
+      const tomorrow = now.plus({ days: 1 }).setZone(userTimeZone);
+      const targetTime = tomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      return targetTime.toISO();
     }
     
     const todayMatch = timePattern.match(/dziś (\d{1,2}):(\d{2})/);
     if (todayMatch) {
-      const hours = parseInt(todayMatch[1]) + 2;
+      const hours = parseInt(todayMatch[1]);
       const minutes = parseInt(todayMatch[2]);
-      const targetTime = new Date(now);
-      targetTime.setHours(hours, minutes, 0, 0);
+      const targetTime = now.setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const targetHour = hours;
-      const targetMinute = minutes;
-      
-      if (targetHour < currentHour || (targetHour === currentHour && targetMinute <= currentMinute)) {
+      if (targetTime <= now) {
         return null;
       }
       
-      return targetTime.toISOString().slice(0, 19) + '.000';
+      return targetTime.toISO();
     }
     
     const dayNames = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela'];
     const dayMatch = timePattern.match(/(poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
     if (dayMatch) {
       const dayName = dayMatch[1];
-      const hours = parseInt(dayMatch[2]) + 2;
+      const hours = parseInt(dayMatch[2]);
       const minutes = parseInt(dayMatch[3]);
       const dayIndex = dayNames.indexOf(dayName);
       
       if (dayIndex !== -1) {
-        const targetTime = this.getNextDayOfWeek(dayIndex, hours, minutes);
-        return targetTime.toISOString().slice(0, 19) + '.000';
+        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
+        return targetTime.toISO();
       }
     }
     
     const weekMatch = timePattern.match(/za tydzień (\d{1,2}):(\d{2})/);
     if (weekMatch) {
-      const hours = parseInt(weekMatch[1]) + 2;
+      const hours = parseInt(weekMatch[1]);
       const minutes = parseInt(weekMatch[2]);
-      const targetTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      targetTime.setHours(hours, minutes, 0, 0);
-      return targetTime.toISOString().slice(0, 19) + '.000';
+      const targetTime = now.plus({ weeks: 1 }).setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      return targetTime.toISO();
     }
     
     const weekDayMatch = timePattern.match(/za tydzień (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
     if (weekDayMatch) {
       const dayName = weekDayMatch[1];
-      const hours = parseInt(weekDayMatch[2]) + 2;
+      const hours = parseInt(weekDayMatch[2]);
       const minutes = parseInt(weekDayMatch[3]);
       const dayIndex = dayNames.indexOf(dayName);
       
       if (dayIndex !== -1) {
-        const targetTime = this.getNextDayOfWeek(dayIndex, hours, minutes);
-        targetTime.setDate(targetTime.getDate() + 7);
-        return targetTime.toISOString().slice(0, 19) + '.000';
+        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone).plus({ weeks: 1 });
+        return targetTime.toISO();
+      }
+    }
+    
+    // Handle "za X tygodnie dzień HH:MM" pattern
+    const weeksMatch = timePattern.match(/za (\d+) tygodnie (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
+    if (weeksMatch) {
+      const weeks = parseInt(weeksMatch[1]);
+      const dayName = weeksMatch[2];
+      const hours = parseInt(weeksMatch[3]);
+      const minutes = parseInt(weeksMatch[4]);
+      const dayIndex = dayNames.indexOf(dayName);
+      
+      if (dayIndex !== -1) {
+        // First get the next occurrence of the day
+        const nextDay = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
+        // Then add the specified number of weeks
+        const targetTime = nextDay.plus({ weeks });
+        return targetTime.toISO();
       }
     }
     
     return null;
   }
   
-  private getNextDayOfWeek(targetDayIndex: number, hours: number, minutes: number): Date {
-    const now = new Date();
-    const currentDayIndex = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  private getNextDayOfWeekLuxon(targetDayIndex: number, hours: number, minutes: number, timeZone: string): DateTime {
+    const now = DateTime.now().setZone(timeZone);
+    const currentDayIndex = now.weekday === 7 ? 6 : now.weekday - 1; // Convert Sunday=7 to Sunday=6
     
     let daysToAdd = targetDayIndex - currentDayIndex;
     if (daysToAdd <= 0) daysToAdd += 7;
     
-    const targetDate = new Date(now);
-    targetDate.setDate(now.getDate() + daysToAdd);
-    targetDate.setHours(hours, minutes, 0, 0);
-    
-    return targetDate;
+    return now.plus({ days: daysToAdd }).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
   }
 }
