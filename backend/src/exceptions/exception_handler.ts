@@ -56,6 +56,13 @@ export class NoActivityAndTimeError extends ValidationError {
   }
 }
 
+export class InvalidTimeFormatError extends ValidationError {
+  constructor(message: string = 'Nieprawidłowy format godziny. Użyj formatu HH:MM lub HH (np. 14:00, 15:30, 14)') {
+    super(message);
+    this.name = 'InvalidTimeFormatError';
+  }
+}
+
 export class HttpError extends Error {
   status: number;
   constructor(message: string, status: number = 500) {

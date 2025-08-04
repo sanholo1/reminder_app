@@ -5,7 +5,8 @@ import {
   NoTimeError, 
   NoActivityError, 
   PastTimeError, 
-  NoActivityAndTimeError 
+  NoActivityAndTimeError,
+  InvalidTimeFormatError
 } from '../exceptions/exception_handler';
 
 export interface LLMParseResult {
@@ -57,7 +58,8 @@ export class LLMParserService {
           error instanceof NoTimeError ||
           error instanceof NoActivityError ||
           error instanceof PastTimeError ||
-          error instanceof NoActivityAndTimeError) {
+          error instanceof NoActivityAndTimeError ||
+          error instanceof InvalidTimeFormatError) {
         throw error;
       }
       throw new Error('Nie udało się sparsować tekstu przez AI');
@@ -80,6 +82,14 @@ WAŻNE ZASADY:
 4. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek"), zwróć błąd: {"error": "PAST_TIME"}
 5. Jeśli użytkownik nie poda ani aktywności ani czasu, zwróć błąd: {"error": "NO_ACTIVITY_AND_TIME"}
 6. Jeśli użytkownik poda tylko godzinę bez dnia (np. "o 15:00"), sprawdź czy godzina już minęła - jeśli tak, ustaw na jutro
+7. Jeśli użytkownik poda nieprawidłowy format godziny, zwróć błąd: {"error": "INVALID_TIME_FORMAT"}
+
+WALIDACJA FORMATU GODZINY:
+- Prawidłowe formaty: "14", "14:00", "15:30", "09:15", "23:45"
+- Nieprawidłowe formaty: "134", "25:00", "14:60", "99", "14:99", "25:30", "14:70"
+- Godzina musi być w zakresie 0-23
+- Minuty muszą być w zakresie 0-59
+- Jeśli podano tylko godzinę bez minut (np. "14"), automatycznie dodaj ":00"
 
 Tekst: "${text}"
 
@@ -153,6 +163,13 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 - "dodaj przypomnienie jutro" → {"error": "NO_TIME"}
 - "za godzinę" → {"error": "NO_ACTIVITY"}
 - "jutro o 15:00" → {"error": "NO_ACTIVITY"}
+- "spotkanie o 134" → {"error": "INVALID_TIME_FORMAT"}
+- "zadzwoń o 25:00" → {"error": "INVALID_TIME_FORMAT"}
+- "kup chleb o 14:60" → {"error": "INVALID_TIME_FORMAT"}
+- "wyprowadź psa o 99" → {"error": "INVALID_TIME_FORMAT"}
+- "obiad o 14:99" → {"error": "INVALID_TIME_FORMAT"}
+- "spotkanie o 25:30" → {"error": "INVALID_TIME_FORMAT"}
+- "kino o 14:70" → {"error": "INVALID_TIME_FORMAT"}
 
 SPECJALNE PRZYPADKI DLA GODZINY BEZ DNIA:
 - Jeśli teraz jest przed 15:00, "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"}
@@ -179,6 +196,8 @@ Odpowiedz tylko w formacie JSON.`;
             throw new PastTimeError();
           case 'NO_ACTIVITY_AND_TIME':
             throw new NoActivityAndTimeError();
+          case 'INVALID_TIME_FORMAT':
+            throw new InvalidTimeFormatError();
           default:
             return { error: parsed.error };
         }
@@ -194,7 +213,8 @@ Odpowiedz tylko w formacie JSON.`;
       if (error instanceof NoTimeError || 
           error instanceof NoActivityError || 
           error instanceof PastTimeError || 
-          error instanceof NoActivityAndTimeError) {
+          error instanceof NoActivityAndTimeError ||
+          error instanceof InvalidTimeFormatError) {
         throw error;
       }
       return { error: 'Nieprawidłowa odpowiedź od AI' };
