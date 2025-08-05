@@ -6,7 +6,8 @@ import {
   NoActivityError, 
   PastTimeError, 
   NoActivityAndTimeError,
-  InvalidTimeFormatError
+  InvalidTimeFormatError,
+  DuplicateDataError
 } from '../exceptions/exception_handler';
 
 export interface LLMParseResult {
@@ -59,7 +60,8 @@ export class LLMParserService {
           error instanceof NoActivityError ||
           error instanceof PastTimeError ||
           error instanceof NoActivityAndTimeError ||
-          error instanceof InvalidTimeFormatError) {
+          error instanceof InvalidTimeFormatError ||
+          error instanceof DuplicateDataError) {
         throw error;
       }
       throw new Error('Nie udało się sparsować tekstu przez AI');
@@ -79,10 +81,12 @@ WAŻNE ZASADY:
 1. Zwróć DOKŁADNIE wzorzec czasowy z listy poniżej, nie naturalny język
 2. Jeśli użytkownik nie poda godziny, zwróć błąd: {"error": "NO_TIME"}
 3. Jeśli użytkownik nie poda aktywności, zwróć błąd: {"error": "NO_ACTIVITY"}
-4. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek"), zwróć błąd: {"error": "PAST_TIME"}
+4. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek", "pół godziny temu"), zwróć błąd: {"error": "PAST_TIME"}
 5. Jeśli użytkownik nie poda ani aktywności ani czasu, zwróć błąd: {"error": "NO_ACTIVITY_AND_TIME"}
 6. Jeśli użytkownik poda tylko godzinę bez dnia (np. "o 15:00"), sprawdź czy godzina już minęła - jeśli tak, ustaw na jutro
 7. Jeśli użytkownik poda nieprawidłowy format godziny, zwróć błąd: {"error": "INVALID_TIME_FORMAT"}
+8. Jeśli użytkownik poda kilka różnych aktywności lub czasów lub dni, zwróć błąd: {"error": "DUPLICATE_DATA"}
+
 
 WALIDACJA FORMATU GODZINY:
 - Prawidłowe formaty: "14", "14:00", "15:30", "09:15", "23:45"
@@ -170,6 +174,14 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 - "obiad o 14:99" → {"error": "INVALID_TIME_FORMAT"}
 - "spotkanie o 25:30" → {"error": "INVALID_TIME_FORMAT"}
 - "kino o 14:70" → {"error": "INVALID_TIME_FORMAT"}
+- "spotkanie i kino za godzinę" → {"error": "DUPLICATE_DATA"}
+- "zadzwoń do mamy i taty za 2 godziny" → {"error": "DUPLICATE_DATA"}
+- "kup chleb za godzinę i za 2 godziny" → {"error": "DUPLICATE_DATA"}
+- "spotkanie jutro i w poniedziałek" → {"error": "DUPLICATE_DATA"}
+- "zadzwoń do mamy za godzinę i kup chleb za 2 godziny" → {"error": "DUPLICATE_DATA"}
+- "spotkanie o 15:00 i kino o 18:00" → {"error": "DUPLICATE_DATA"}
+- "zadzwoń do mamy i taty jutro o 10:00" → {"activity": "zadzwoń do mamy i taty", "timePattern": "jutro 10:00"}
+- "spotkanie i kino jutro o 15:00" → {"activity": "spotkanie i kino", "timePattern": "jutro 15:00"}
 
 SPECJALNE PRZYPADKI DLA GODZINY BEZ DNIA:
 - Jeśli teraz jest przed 15:00, "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"}
@@ -198,6 +210,8 @@ Odpowiedz tylko w formacie JSON.`;
             throw new NoActivityAndTimeError();
           case 'INVALID_TIME_FORMAT':
             throw new InvalidTimeFormatError();
+          case 'DUPLICATE_DATA':
+            throw new DuplicateDataError();
           default:
             return { error: parsed.error };
         }
@@ -214,7 +228,8 @@ Odpowiedz tylko w formacie JSON.`;
           error instanceof NoActivityError || 
           error instanceof PastTimeError || 
           error instanceof NoActivityAndTimeError ||
-          error instanceof InvalidTimeFormatError) {
+          error instanceof InvalidTimeFormatError ||
+          error instanceof DuplicateDataError) {
         throw error;
       }
       return { error: 'Nieprawidłowa odpowiedź od AI' };

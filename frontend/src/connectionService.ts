@@ -5,8 +5,14 @@ export class ConnectionError extends Error {
   }
 }
 
+export interface ConnectionResponse<T = any> {
+  data: T;
+  remainingAttempts?: number;
+  warning?: string;
+}
+
 export class ConnectionService {
-  async request<T = any>(url: string, options?: RequestInit): Promise<T> {
+  async request<T = any>(url: string, options?: RequestInit): Promise<ConnectionResponse<T>> {
     try {
       const res = await fetch(url, options);
       if (!res.ok) {
@@ -23,7 +29,13 @@ export class ConnectionService {
         throw new ConnectionError(errorMessage);
       }
       const data = await res.json();
-      return data;
+      
+      return {
+        data,
+        remainingAttempts: res.headers.get('X-Remaining-Attempts') ? 
+          parseInt(res.headers.get('X-Remaining-Attempts')!) : undefined,
+        warning: res.headers.get('X-Warning') || undefined
+      };
     } catch (err: any) {
       if (err instanceof ConnectionError) {
         throw err;

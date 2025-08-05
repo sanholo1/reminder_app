@@ -8,7 +8,7 @@ function App() {
   return (
     <Router>
       <div className="container">
-        <nav style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <nav className="nav">
           <Link to="/">Strona główna</Link>
           <Link to="/author">O autorze</Link>
         </nav>

@@ -63,6 +63,13 @@ export class InvalidTimeFormatError extends ValidationError {
   }
 }
 
+export class DuplicateDataError extends ValidationError {
+  constructor(message: string = 'Wykryto duplikaty w danych. Podaj tylko jedną aktywność i jeden czas') {
+    super(message);
+    this.name = 'DuplicateDataError';
+  }
+}
+
 export class HttpError extends Error {
   status: number;
   constructor(message: string, status: number = 500) {

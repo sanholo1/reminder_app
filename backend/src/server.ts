@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import reminderRouter from './controllers/reminder_controller';
 import { AppDataSource } from './config/database';
+import { SessionMiddleware } from './middleware/session_middleware';
 import {
   ValidationError,
   HttpError,
@@ -10,9 +11,15 @@ import {
 
 const application = express();
 const applicationPort = process.env.PORT || 3001;
+const sessionMiddleware = new SessionMiddleware();
 
 application.use(cors());
 application.use(express.json());
+
+// Session middleware
+application.use(sessionMiddleware.extractSessionId);
+application.use(sessionMiddleware.checkBlocked);
+
 application.use('/', reminderRouter);
 application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof HttpError) {

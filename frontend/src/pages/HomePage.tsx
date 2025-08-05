@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ConnectionService, ConnectionError } from '../connectionService';
+import { ConnectionService, ConnectionError, ConnectionResponse } from '../connectionService';
 import ReminderList from '../components/ReminderList';
 import ReminderForm from '../components/ReminderForm';
 import ReminderResult from '../components/ReminderResult';
@@ -16,6 +16,8 @@ const HomePage: React.FC = () => {
   const [result, setResult] = useState<{ activity: string; datetime: string | null; error?: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loadingReminders, setLoadingReminders] = useState(true);
   const connectionService = new ConnectionService();
@@ -26,7 +28,8 @@ const HomePage: React.FC = () => {
 
   const fetchReminders = async () => {
     try {
-      const data = await connectionService.request<{ reminders: Reminder[] }>('/reminders');
+      const response = await connectionService.request<{ reminders: Reminder[] }>('/reminders');
+      const data = response.data;
       console.log('Daty z backendu:', data.reminders.map(r => ({ id: r.id, datetime: r.datetime })));
       const remindersWithLocalTime = data.reminders.map(reminder => {
         const localDateTime = new Date(reminder.datetime).toLocaleString('pl-PL', {
@@ -67,14 +70,25 @@ const HomePage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setWarning(null);
     setResult(null);
 
     try {
-      const data = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/reminders', {
+      const response = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/reminders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: input }),
       });
+
+      const data = response.data;
+      
+      // Handle warnings and remaining attempts
+      if (response.warning) {
+        setWarning(response.warning);
+      }
+      if (response.remainingAttempts !== undefined) {
+        setRemainingAttempts(response.remainingAttempts);
+      }
 
       if (data.error) {
         setError(data.error);
@@ -105,6 +119,8 @@ const HomePage: React.FC = () => {
     }
   };
 
+
+
   const filteredReminders = reminders;
   const filteredResult = result;
 
@@ -116,6 +132,12 @@ const HomePage: React.FC = () => {
       <div style={{ height: '1.5rem' }} />
       {loading && <div className="loading">Przetwarzanie przypomnienia...</div>}
       {error && <div className="error">{error}</div>}
+      {warning && <div className="warning">{warning}</div>}
+      {remainingAttempts !== null && remainingAttempts < 3 && (
+        <div className="attempts-info">
+          Pozostało prób: {remainingAttempts}
+        </div>
+      )}
       <ReminderResult result={filteredResult} />
       <div className="reminders-section">
         <ReminderList reminders={filteredReminders} loadingReminders={loadingReminders} />

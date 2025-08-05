@@ -1,14 +1,19 @@
 import { Request, Response, Router, NextFunction } from 'express';
 import { CreateReminderHandler } from '../commands/create_command';
 import { GetRemindersHandler } from '../queries/get_query';
+import { SessionMiddleware } from '../middleware/session_middleware';
 import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
 const getRemindersHandler = new GetRemindersHandler();
+const sessionMiddleware = new SessionMiddleware();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Record attempt before processing
+    await sessionMiddleware.recordAttemptForRequest(req, res);
+    
     const result = await createReminderHandler.execute({ text: req.body.text });
     res.json(result);
   } catch (error) {
