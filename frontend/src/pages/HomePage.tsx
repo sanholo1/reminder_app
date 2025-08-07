@@ -72,6 +72,7 @@ const HomePage: React.FC = () => {
     setError(null);
     setWarning(null);
     setResult(null);
+    setRemainingAttempts(null);
 
     try {
       const response = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/reminders', {
@@ -92,6 +93,10 @@ const HomePage: React.FC = () => {
 
       if (data.error) {
         setError(data.error);
+        // If it's an abuse error, show remaining attempts
+        if (response.remainingAttempts !== undefined) {
+          setRemainingAttempts(response.remainingAttempts);
+        }
       } else {
         const resultWithLocalTime = {
           ...data,
@@ -111,6 +116,13 @@ const HomePage: React.FC = () => {
     } catch (err: any) {
       if (err instanceof ConnectionError) {
         setError(err.message);
+        // Try to extract remaining attempts from error message if it's an abuse error
+        if (err.message.includes('Pozostało') && err.message.includes('prób')) {
+          const match = err.message.match(/Pozostało (\d+) prób/);
+          if (match) {
+            setRemainingAttempts(parseInt(match[1]));
+          }
+        }
       } else {
         setError(err.message || 'Nieznany błąd...');
       }
@@ -135,7 +147,7 @@ const HomePage: React.FC = () => {
       {warning && <div className="warning">{warning}</div>}
       {remainingAttempts !== null && remainingAttempts < 3 && (
         <div className="attempts-info">
-          Pozostało prób: {remainingAttempts}
+          ⚠️ Pozostało prób: {remainingAttempts}
         </div>
       )}
       <ReminderResult result={filteredResult} />

@@ -147,4 +147,11 @@ export class ServiceUnavailableError extends HttpError {
     super(message, 503);
     this.name = 'ServiceUnavailableError';
   }
+}
+
+export class AbuseError extends HttpError {
+  constructor(message: string = 'Wykryto nieprawidłowe użycie aplikacji') {
+    super(message, 403);
+    this.name = 'AbuseError';
+  }
 } 

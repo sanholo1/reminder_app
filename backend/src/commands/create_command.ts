@@ -1,14 +1,21 @@
 import { ReminderRepositoryTypeORM, ReminderEntity } from '../repositories/reminder_repository_typeorm';
-import { EmptyInputError, LLMParsingError } from '../exceptions/exception_handler';
-import { LLMParserService, LLMErrorResult } from '../services/llm_parser_service';
+import { EmptyInputError, LLMParsingError, AbuseError } from '../exceptions/exception_handler';
+import { LLMParserService, LLMErrorResult, LLMAbuseResult } from '../services/llm_parser_service';
 
 export interface CreateReminderCommand {
   text: string;
+  sessionId?: string;
 }
 
 export interface CreateReminderResult {
   activity: string;
   datetime: string;
+}
+
+export interface CreateReminderAbuseResult {
+  error: string;
+  remainingAttempts: number;
+  isBlocked: boolean;
 }
 
 export class CreateReminderHandler {
@@ -20,10 +27,25 @@ export class CreateReminderHandler {
     this.llmParser = new LLMParserService();
   }
 
-  async execute(command: CreateReminderCommand): Promise<CreateReminderResult> {
+  async execute(command: CreateReminderCommand): Promise<CreateReminderResult | CreateReminderAbuseResult> {
     if (!command.text || !command.text.trim()) throw new EmptyInputError();
-    const llmResult = await this.llmParser.parseReminderText(command.text);
-    if ('error' in llmResult) throw new LLMParsingError(llmResult.error);
+    
+    const llmResult = await this.llmParser.parseReminderText(command.text, command.sessionId);
+    
+    if ('error' in llmResult) {
+      // Check if it's an abuse result
+      if ('remainingAttempts' in llmResult && 'isBlocked' in llmResult) {
+        const abuseResult = llmResult as LLMAbuseResult;
+        return {
+          error: abuseResult.error,
+          remainingAttempts: abuseResult.remainingAttempts,
+          isBlocked: abuseResult.isBlocked
+        };
+      }
+      // Regular error
+      throw new LLMParsingError(llmResult.error);
+    }
+    
     const reminder: ReminderEntity = {
       id: this.generateId(),
       activity: llmResult.activity,

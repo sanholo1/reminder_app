@@ -7,8 +7,10 @@ import {
   PastTimeError, 
   NoActivityAndTimeError,
   InvalidTimeFormatError,
-  DuplicateDataError
+  DuplicateDataError,
+  AbuseError
 } from '../exceptions/exception_handler';
+import { UserSessionService } from './user_session_service';
 
 export interface LLMParseResult {
   activity: string;
@@ -19,6 +21,12 @@ export interface LLMErrorResult {
   error: string;
 }
 
+export interface LLMAbuseResult {
+  error: string;
+  remainingAttempts: number;
+  isBlocked: boolean;
+}
+
 export interface LLMTimePattern {
   activity: string;
   timePattern: string;
@@ -26,13 +34,21 @@ export interface LLMTimePattern {
 
 export class LLMParserService {
   private openai: OpenAI;
+  private userSessionService: UserSessionService;
 
   constructor() {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.userSessionService = new UserSessionService();
   }
 
-  async parseReminderText(text: string): Promise<LLMParseResult | LLMErrorResult> {
+  async parseReminderText(text: string, sessionId?: string): Promise<LLMParseResult | LLMErrorResult | LLMAbuseResult> {
     try {
+      // First check if this is an abuse attempt
+      const abuseCheck = await this.checkForAbuse(text, sessionId);
+      if (abuseCheck) {
+        return abuseCheck;
+      }
+
       const prompt = this.buildPrompt(text);
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4.1',
@@ -61,10 +77,86 @@ export class LLMParserService {
           error instanceof PastTimeError ||
           error instanceof NoActivityAndTimeError ||
           error instanceof InvalidTimeFormatError ||
-          error instanceof DuplicateDataError) {
+          error instanceof DuplicateDataError ||
+          error instanceof AbuseError) {
         throw error;
       }
       throw new Error('Nie udało się sparsować tekstu przez AI');
+    }
+  }
+
+  private async checkForAbuse(text: string, sessionId?: string): Promise<LLMAbuseResult | null> {
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4.1',
+        messages: [
+          {
+            role: 'system',
+            content: `Jesteś ekspertem w wykrywaniu nadużyć w aplikacji przypomnień. Twoim zadaniem jest sprawdzenie, czy użytkownik używa aplikacji zgodnie z jej przeznaczeniem.
+
+Aplikacja służy TYLKO do ustawiania przypomnień. Użytkownik powinien podawać:
+- Aktywność do wykonania
+- Czas wykonania (za X godzin/minut, jutro o X, w poniedziałek o X, etc.)
+
+Jeśli użytkownik pyta o coś innego niż ustawienie przypomnienia, to jest to nadużycie.
+
+Odpowiedz TYLKO w formacie JSON:
+{"isAbuse": true/false}
+
+Przykłady nadużyć:
+- "Jak się masz?" - pytania osobiste
+- "Opowiedz mi żart" - prośby o rozrywkę
+- "Pomóż mi z matematyką" - prośby o pomoc
+- "Co myślisz o polityce?" - pytania o opinie
+- "Przetłumacz to" - prośby o tłumaczenie
+- "Napisz mi wiersz" - prośby o kreatywność
+- "Oblicz 2+2" - prośby o obliczenia
+- "Jak napisać kod?" - prośby o pomoc programistyczną
+
+Przykłady prawidłowego użycia:
+- "Przypomnij mi za godzinę" - OK
+- "Zadzwoń do mamy jutro o 15:00" - OK
+- "Kup chleb za 30 minut" - OK
+- "Spotkanie w poniedziałek o 9:00" - OK`
+          },
+          {
+            role: 'user',
+            content: `Sprawdź czy to nadużycie: "${text}"`
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 100
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) return null;
+
+      const cleanResponse = content.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleanResponse);
+
+      if (parsed.isAbuse && sessionId) {
+        // Record the abuse attempt
+        const attemptResult = await this.userSessionService.recordAttempt(sessionId, true);
+        
+        if (attemptResult.isBlocked) {
+          return {
+            error: 'Twoje konto zostało zablokowane na 24 godziny z powodu nieprawidłowego użycia.',
+            remainingAttempts: 0,
+            isBlocked: true
+          };
+        } else {
+          return {
+            error: `To pytanie nie dotyczy tworzenia przypomnień. Używaj aplikacji tylko do ustawiania przypomnień. Pozostało ${attemptResult.remainingAttempts} prób przed zablokowaniem.`,
+            remainingAttempts: attemptResult.remainingAttempts,
+            isBlocked: false
+          };
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error checking for abuse:', error);
+      return null;
     }
   }
 
@@ -86,6 +178,7 @@ WAŻNE ZASADY:
 6. Jeśli użytkownik poda tylko godzinę bez dnia (np. "o 15:00"), sprawdź czy godzina już minęła - jeśli tak, ustaw na jutro
 7. Jeśli użytkownik poda nieprawidłowy format godziny, zwróć błąd: {"error": "INVALID_TIME_FORMAT"}
 8. Jeśli użytkownik poda kilka różnych aktywności lub czasów lub dni, zwróć błąd: {"error": "DUPLICATE_DATA"}
+
 
 
 WALIDACJA FORMATU GODZINY:
@@ -129,6 +222,9 @@ PRZYKŁADY KONWERSJI:
 - "jutro o 15:00" → "jutro 15:00"
 - "dziś o 8" → "dziś 08:00"
 - "w poniedziałek o 8:00" → "poniedziałek 08:00"
+
+
+
 - "w sobote za dwa tygodnie o 12" → "za 2 tygodnie sobota 12:00"
 - "za tydzień w poniedziałek o 9" → "za tydzień poniedziałek 09:00"
 - "za 3 tygodnie w piątek o 18" → "za 3 tygodnie piątek 18:00"
@@ -136,6 +232,8 @@ PRZYKŁADY KONWERSJI:
 - "za 4 tygodnie w niedzielę o 15" → "za 4 tygodnie niedziela 15:00"
 - "za 2 tygodnie w poniedziałek o 8" → "za 2 tygodnie poniedziałek 08:00"
 - "za 5 tygodni w czwartek o 14" → "za 5 tygodnie czwartek 14:00"
+
+
 
 Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(minute)}):
 - "za godzinę i 30 minut wyłączyć pralkę" → {"activity": "wyłączyć pralkę", "timePattern": "+01:30"}

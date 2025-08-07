@@ -1,20 +1,43 @@
 import { Request, Response, Router, NextFunction } from 'express';
 import { CreateReminderHandler } from '../commands/create_command';
 import { GetRemindersHandler } from '../queries/get_query';
-import { SessionMiddleware } from '../middleware/session_middleware';
 import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
 const getRemindersHandler = new GetRemindersHandler();
-const sessionMiddleware = new SessionMiddleware();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Record attempt before processing
-    await sessionMiddleware.recordAttemptForRequest(req, res);
+    const sessionId = (req as any).sessionId;
+    const result = await createReminderHandler.execute({ 
+      text: req.body.text,
+      sessionId: sessionId
+    });
     
-    const result = await createReminderHandler.execute({ text: req.body.text });
+    // Check if it's an abuse result
+    if ('isBlocked' in result && 'remainingAttempts' in result) {
+      const abuseResult = result as any;
+      
+      // Set headers
+      res.setHeader('X-Remaining-Attempts', abuseResult.remainingAttempts.toString());
+      
+      if (abuseResult.isBlocked) {
+        return res.status(403).json({
+          error: abuseResult.error,
+          status: 403,
+          name: 'AbuseError'
+        });
+      } else {
+        return res.status(403).json({
+          error: abuseResult.error,
+          status: 403,
+          name: 'AbuseError'
+        });
+      }
+    }
+    
+    // Regular success result
     res.json(result);
   } catch (error) {
     next(error);
