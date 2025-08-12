@@ -337,16 +337,20 @@ Odpowiedz tylko w formacie JSON.`;
   private convertTimePatternToDateTime(timePattern: string): string | null {
     const now = DateTime.now();
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const dayNames = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela'];
     
     // Handle new format: +HH:MM or -HH:MM
     const newFormatMatch = timePattern.match(/^([+-])(\d{2}):(\d{2})$/);
+    
     if (newFormatMatch) {
+      console.log(`[LLM Parser] Text matched new format pattern: ${timePattern}`);
       const sign = newFormatMatch[1];
       const hours = parseInt(newFormatMatch[2]);
       const minutes = parseInt(newFormatMatch[3]);
       
       if (sign === '-') {
         // Past time - return null to indicate error
+        console.log(`[LLM Parser] Past time detected: ${timePattern}`);
         return null;
       } else if (sign === '+') {
         // Future time - add the specified hours and minutes
@@ -357,6 +361,7 @@ Odpowiedz tylko w formacie JSON.`;
     
     const tomorrowMatch = timePattern.match(/jutro (\d{1,2}):(\d{2})/);
     if (tomorrowMatch) {
+      console.log(`[LLM Parser] Text matched tomorrow pattern: ${timePattern}`);
       const hours = parseInt(tomorrowMatch[1]);
       const minutes = parseInt(tomorrowMatch[2]);
       const tomorrow = now.plus({ days: 1 }).setZone(userTimeZone);
@@ -366,6 +371,7 @@ Odpowiedz tylko w formacie JSON.`;
     
     const todayMatch = timePattern.match(/dziś (\d{1,2}):(\d{2})/);
     if (todayMatch) {
+      console.log(`[LLM Parser] Text matched today pattern: ${timePattern}`);
       const hours = parseInt(todayMatch[1]);
       const minutes = parseInt(todayMatch[2]);
       const targetTime = now.setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
@@ -377,44 +383,10 @@ Odpowiedz tylko w formacie JSON.`;
       return targetTime.toISO();
     }
     
-    const dayNames = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela'];
-    const dayMatch = timePattern.match(/(poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
-    if (dayMatch) {
-      const dayName = dayMatch[1];
-      const hours = parseInt(dayMatch[2]);
-      const minutes = parseInt(dayMatch[3]);
-      const dayIndex = dayNames.indexOf(dayName);
-      
-      if (dayIndex !== -1) {
-        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
-        return targetTime.toISO();
-      }
-    }
-    
-    const weekMatch = timePattern.match(/za tydzień (\d{1,2}):(\d{2})/);
-    if (weekMatch) {
-      const hours = parseInt(weekMatch[1]);
-      const minutes = parseInt(weekMatch[2]);
-      const targetTime = now.plus({ weeks: 1 }).setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
-      return targetTime.toISO();
-    }
-    
-    const weekDayMatch = timePattern.match(/za tydzień (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
-    if (weekDayMatch) {
-      const dayName = weekDayMatch[1];
-      const hours = parseInt(weekDayMatch[2]);
-      const minutes = parseInt(weekDayMatch[3]);
-      const dayIndex = dayNames.indexOf(dayName);
-      
-      if (dayIndex !== -1) {
-        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone).plus({ weeks: 1 });
-        return targetTime.toISO();
-      }
-    }
-    
-    // Handle "za X tygodnie dzień HH:MM" pattern
+    // Handle "za X tygodnie dzień HH:MM" pattern - MUST BE BEFORE day of week pattern
     const weeksMatch = timePattern.match(/za (\d+) tygodnie (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
     if (weeksMatch) {
+      console.log(`[LLM Parser] Text matched weeks day pattern: ${timePattern}`);
       const weeks = parseInt(weeksMatch[1]);
       const dayName = weeksMatch[2];
       const hours = parseInt(weeksMatch[3]);
@@ -426,6 +398,43 @@ Odpowiedz tylko w formacie JSON.`;
         const nextDay = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
         // Then add the specified number of weeks
         const targetTime = nextDay.plus({ weeks });
+        return targetTime.toISO();
+      }
+    }
+    
+    const weekMatch = timePattern.match(/za tydzień (\d{1,2}):(\d{2})/);
+    if (weekMatch) {
+      console.log(`[LLM Parser] Text matched week pattern: ${timePattern}`);
+      const hours = parseInt(weekMatch[1]);
+      const minutes = parseInt(weekMatch[2]);
+      const targetTime = now.plus({ weeks: 1 }).setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      return targetTime.toISO();
+    }
+    
+    const weekDayMatch = timePattern.match(/za tydzień (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
+    if (weekDayMatch) {
+      console.log(`[LLM Parser] Text matched week day pattern: ${timePattern}`);
+      const dayName = weekDayMatch[1];
+      const hours = parseInt(weekDayMatch[2]);
+      const minutes = parseInt(weekDayMatch[3]);
+      const dayIndex = dayNames.indexOf(dayName);
+      
+      if (dayIndex !== -1) {
+        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone).plus({ weeks: 1 });
+        return targetTime.toISO();
+      }
+    }
+    
+    const dayMatch = timePattern.match(/(poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
+    if (dayMatch) {
+      console.log(`[LLM Parser] Text matched day of week pattern: ${timePattern}`);
+      const dayName = dayMatch[1];
+      const hours = parseInt(dayMatch[2]);
+      const minutes = parseInt(dayMatch[3]);
+      const dayIndex = dayNames.indexOf(dayName);
+      
+      if (dayIndex !== -1) {
+        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
         return targetTime.toISO();
       }
     }
