@@ -98,7 +98,9 @@ Aplikacja służy TYLKO do ustawiania przypomnień. Użytkownik powinien podawa�
 - Aktywność do wykonania
 - Czas wykonania (za X godzin/minut, jutro o X, w poniedziałek o X, etc.)
 
-Jeśli użytkownik pyta o coś innego niż ustawienie przypomnienia, to jest to nadużycie.
+WAŻNE: Jeśli użytkownik próbuje ustawić przypomnienie w przeszłości (np. "wczoraj", "ubiegły poniedziałek"), to NIE jest to nadużycie - to jest błąd, który zostanie obsłużony przez główny parser.
+
+Nadużycie to tylko pytania/żądania niezwiązane z ustawianiem przypomnień.
 
 Odpowiedz TYLKO w formacie JSON:
 {"isAbuse": true/false}
@@ -113,11 +115,13 @@ Przykłady nadużyć:
 - "Oblicz 2+2" - prośby o obliczenia
 - "Jak napisać kod?" - prośby o pomoc programistyczną
 
-Przykłady prawidłowego użycia:
+Przykłady prawidłowego użycia (NIE nadużycia):
 - "Przypomnij mi za godzinę" - OK
 - "Zadzwoń do mamy jutro o 15:00" - OK
 - "Kup chleb za 30 minut" - OK
-- "Spotkanie w poniedziałek o 9:00" - OK`
+- "Spotkanie w poniedziałek o 9:00" - OK
+- "wczoraj o 15:00 spotkanie" - OK (błąd przeszłości, ale nie nadużycie)
+- "ubiegły poniedziałek o 10:00" - OK (błąd przeszłości, ale nie nadużycie)`
           },
           {
             role: 'user',
@@ -420,7 +424,7 @@ Odpowiedz tylko w formacie JSON.`;
       const dayIndex = dayNames.indexOf(dayName);
       
       if (dayIndex !== -1) {
-        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone).plus({ weeks: 1 });
+        const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
         return targetTime.toISO();
       }
     }
