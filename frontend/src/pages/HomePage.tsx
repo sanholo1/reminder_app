@@ -11,7 +11,11 @@ interface Reminder {
   created_at: string;
 }
 
-const HomePage: React.FC = () => {
+type HomePageProps = {
+  onRefreshUsage?: () => void;
+};
+
+const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const [input, setInput] = useState('');
   const [result, setResult] = useState<{ activity: string; datetime: string | null; error?: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,6 +59,7 @@ const HomePage: React.FC = () => {
         };
       });
       setReminders(remindersWithLocalTime || []);
+      if (onRefreshUsage) onRefreshUsage();
     } catch (err: any) {
       if (err instanceof ConnectionError) {
         console.error('Błąd połączenia:', err.message);
@@ -112,6 +117,7 @@ const HomePage: React.FC = () => {
         setResult(resultWithLocalTime);
         setInput('');
         await fetchReminders();
+        if (onRefreshUsage) onRefreshUsage();
       }
     } catch (err: any) {
       if (err instanceof ConnectionError) {
@@ -127,6 +133,7 @@ const HomePage: React.FC = () => {
         setError(err.message || 'Nieznany błąd...');
       }
     } finally {
+      if (onRefreshUsage) onRefreshUsage();
       setLoading(false);
     }
   };

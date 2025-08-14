@@ -318,6 +318,23 @@ a:hover {
   border-top: 1px solid rgba(93, 42, 42, 0.3);
 }
 
+.usage-badge {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  background: var(--cuba-transparent);
+  color: var(--cuba-lime-fresh);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  z-index: 1000;
+  border: 1px solid rgba(93, 42, 42, 0.4);
+  box-shadow: 0 2px 8px rgba(26, 15, 15, 0.35);
+  backdrop-filter: blur(6px);
+  letter-spacing: 0.2px;
+  text-shadow: none;
+}
+
 /* Custom scrollbar for Cuba Libre theme */
 ::-webkit-scrollbar {
   width: 8px;

@@ -8,6 +8,8 @@ export class ConnectionError extends Error {
 export interface ConnectionResponse<T = any> {
   data: T;
   remainingAttempts?: number;
+  dailyRemaining?: number;
+  dailyResetAt?: string;
   warning?: string;
 }
 
@@ -34,6 +36,9 @@ export class ConnectionService {
         data,
         remainingAttempts: res.headers.get('X-Remaining-Attempts') ? 
           parseInt(res.headers.get('X-Remaining-Attempts')!) : undefined,
+        dailyRemaining: res.headers.get('X-Daily-Remaining') ? 
+          parseInt(res.headers.get('X-Daily-Remaining')!) : undefined,
+        dailyResetAt: res.headers.get('X-Daily-Reset-At') || undefined,
         warning: res.headers.get('X-Warning') || undefined
       };
     } catch (err: any) {
