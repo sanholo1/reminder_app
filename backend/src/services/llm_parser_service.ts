@@ -53,7 +53,7 @@ export class LLMParserService {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4.1',
         messages: [
-          { role: 'system', content: 'Jesteś ekspertem w parsowaniu tekstu w języku polskim. Twoim zadaniem jest wyciągnięcie z tekstu informacji o aktywności i wzorcu czasowym. Odpowiadaj TYLKO w formacie JSON.' },
+          { role: 'system', content: 'Jesteś ekspertem w parsowaniu tekstu. Twoim zadaniem jest wyciągnięcie z tekstu informacji o aktywności i wzorcu czasowym. Odpowiadaj TYLKO w formacie JSON.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.1,
@@ -88,7 +88,7 @@ export class LLMParserService {
   private async checkForAbuse(text: string, sessionId?: string): Promise<LLMAbuseResult | null> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4.1',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -177,11 +177,15 @@ WAŻNE ZASADY:
 1. Zwróć DOKŁADNIE wzorzec czasowy z listy poniżej, nie naturalny język
 2. Jeśli użytkownik nie poda godziny, zwróć błąd: {"error": "NO_TIME"}
 3. Jeśli użytkownik nie poda aktywności, zwróć błąd: {"error": "NO_ACTIVITY"}
-4. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek", "pół godziny temu"), zwróć błąd: {"error": "PAST_TIME"}
+4. Jeśli użytkownik poda tylko godzinę bez dnia (np. "spotkanie o 15"), sprawdź czy godzina już minęła - jeśli tak, ustaw na tą godzinę, ale na jutro
 5. Jeśli użytkownik nie poda ani aktywności ani czasu, zwróć błąd: {"error": "NO_ACTIVITY_AND_TIME"}
-6. Jeśli użytkownik poda tylko godzinę bez dnia (np. "o 15:00"), sprawdź czy godzina już minęła - jeśli tak, ustaw na jutro
+6. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek", "pół godziny temu"), zwróć błąd: {"error": "PAST_TIME"}
 7. Jeśli użytkownik poda nieprawidłowy format godziny, zwróć błąd: {"error": "INVALID_TIME_FORMAT"}
 8. Jeśli użytkownik poda kilka różnych aktywności lub czasów lub dni, zwróć błąd: {"error": "DUPLICATE_DATA"}
+
+FORMAT ODPOWIEDZI:
+- Zwróć tylko czysty JSON bez dodatkowego tekstu i bez backticków
+- Używaj małych liter i polskich znaków zgodnie z listą wzorców poniżej
 
 
 
@@ -197,7 +201,7 @@ Tekst: "${text}"
 Odpowiedz w formacie JSON:
 {"activity": "nazwa aktywności", "timePattern": "wzorzec czasowy"}
 
-DOKŁADNE WZORCE CZASOWE (używaj tylko tych):
+ DOKŁADNE WZORCE CZASOWE (używaj tylko tych):
 - "+HH:MM" - za określoną liczbę godzin i minut (np. "+00:30", "+02:15", "+05:05")
 - "-HH:MM" - dla czasu w przeszłości (np. "-03:30")
 - "jutro HH:MM" - jutro o konkretnej godzinie (np. "jutro 15:00", "jutro 09:00")
@@ -210,8 +214,8 @@ DOKŁADNE WZORCE CZASOWE (używaj tylko tych):
 - "sobota HH:MM" - najbliższa sobota o HH:MM
 - "niedziela HH:MM" - najbliższa niedziela o HH:MM
 - "za tydzień HH:MM" - za tydzień o HH:MM
-- "za tydzień dzień HH:MM" - za tydzień w konkretny dzień o HH:MM (np. "za 2 tygodnie poniedziałek 12:00")
-- "za X tygodnie dzień HH:MM" - za X tygodni w konkretny dzień o HH:MM (np. "za 2 tygodnie poniedziałek 12:00")
+ - "za tydzień dzień HH:MM" - za tydzień w konkretny dzień o HH:MM (np. "za tydzień poniedziałek 12:00")
+ - "za X tygodnie dzień HH:MM" - za X tygodni w konkretny dzień o HH:MM (np. "za 2 tygodnie poniedziałek 12:00")
 
 PRZYKŁADY KONWERSJI:
 - "za dwie godziny" → "+02:00"
@@ -259,7 +263,7 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 - "za 10 minut podlać kwiaty" → {"activity": "podlać kwiaty", "timePattern": "+00:10"}
 - "za dwie godziny i piętnaście minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "+02:15"}
 - "za 2 godziny i 30 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+02:30"}
-- "w przyszły piątek o 17:00 kino" → {"activity": "kino", "timePattern": "piątek 17:00"}
+ - "w przyszły piątek o 17:00 kino" → {"activity": "kino", "timePattern": "za tydzień piątek 17:00"}
 - "w sobote za dwa tygodnie o 12 wyprowadz psa" → {"activity": "wyprowadz psa", "timePattern": "za 2 tygodnie sobota 12:00"}
 - "za tydzień w poniedziałek o 9 spotkanie" → {"activity": "spotkanie", "timePattern": "za tydzień poniedziałek 09:00"}
 - "za 3 tygodnie w piątek o 18 kino" → {"activity": "kino", "timePattern": "za 3 tygodnie piątek 18:00"}
@@ -339,12 +343,14 @@ Odpowiedz tylko w formacie JSON.`;
   }
 
   private convertTimePatternToDateTime(timePattern: string): string | null {
-    const now = DateTime.now();
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const now = DateTime.now();
+    const nowZoned = now.setZone(userTimeZone);
+    const normalized = timePattern.trim().toLowerCase().replace(/\s+/g, ' ');
     const dayNames = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela'];
     
     // Handle new format: +HH:MM or -HH:MM
-    const newFormatMatch = timePattern.match(/^([+-])(\d{2}):(\d{2})$/);
+    const newFormatMatch = normalized.match(/^([+-])(\d{2}):(\d{2})$/);
     
     if (newFormatMatch) {
       console.log(`[LLM Parser] Text matched new format pattern: ${timePattern}`);
@@ -358,43 +364,75 @@ Odpowiedz tylko w formacie JSON.`;
         return null;
       } else if (sign === '+') {
         // Future time - add the specified hours and minutes
-        const targetTime = now.plus({ hours, minutes });
+        const targetTime = nowZoned.plus({ hours, minutes });
         return targetTime.toISO();
       }
     }
     
-    const tomorrowMatch = timePattern.match(/jutro (\d{1,2}):(\d{2})/);
+    // jutro HH[:MM] (minutes optional -> default 00)
+    const tomorrowMatch = normalized.match(/^jutro (\d{1,2})(?::(\d{2}))?$/);
     if (tomorrowMatch) {
       console.log(`[LLM Parser] Text matched tomorrow pattern: ${timePattern}`);
       const hours = parseInt(tomorrowMatch[1]);
-      const minutes = parseInt(tomorrowMatch[2]);
-      const tomorrow = now.plus({ days: 1 }).setZone(userTimeZone);
+      const minutes = tomorrowMatch[2] ? parseInt(tomorrowMatch[2]) : 0;
+      const tomorrow = nowZoned.plus({ days: 1 });
       const targetTime = tomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       return targetTime.toISO();
     }
     
-    const todayMatch = timePattern.match(/dziś (\d{1,2}):(\d{2})/);
+    // Support "dziś", "dzis", and "dzisiaj" with optional minutes
+    const todayMatch = normalized.match(/^dzi(?:ś|s(?:iaj)?) (\d{1,2})(?::(\d{2}))?$/);
     if (todayMatch) {
       console.log(`[LLM Parser] Text matched today pattern: ${timePattern}`);
       const hours = parseInt(todayMatch[1]);
-      const minutes = parseInt(todayMatch[2]);
-      const targetTime = now.setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      const minutes = todayMatch[2] ? parseInt(todayMatch[2]) : 0;
+      let targetTime = nowZoned.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       
-      if (targetTime <= now) {
-        return null;
+      if (targetTime <= nowZoned) {
+        targetTime = targetTime.plus({ days: 1 });
       }
-      
+
+      return targetTime.toISO();
+    }
+
+    // Handle plain "HH:MM" without explicit day by assuming today if in the future,
+    // otherwise schedule for tomorrow at the same time
+    const plainTimeMatch = normalized.match(/^(\d{1,2}):(\d{2})$/);
+    if (plainTimeMatch) {
+      console.log(`[LLM Parser] Text matched plain time pattern: ${timePattern}`);
+      const hours = parseInt(plainTimeMatch[1]);
+      const minutes = parseInt(plainTimeMatch[2]);
+      let targetTime = nowZoned.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+
+      if (targetTime <= nowZoned) {
+        targetTime = targetTime.plus({ days: 1 });
+      }
+
+      return targetTime.toISO();
+    }
+
+    // Handle plain "HH" without minutes by treating it as "HH:00"
+    const plainHourMatch = normalized.match(/^(\d{1,2})$/);
+    if (plainHourMatch) {
+      console.log(`[LLM Parser] Text matched plain hour pattern: ${timePattern}`);
+      const hours = parseInt(plainHourMatch[1]);
+      let targetTime = nowZoned.set({ hour: hours, minute: 0, second: 0, millisecond: 0 });
+
+      if (targetTime <= nowZoned) {
+        targetTime = targetTime.plus({ days: 1 });
+      }
+
       return targetTime.toISO();
     }
     
     // Handle "za X tygodnie dzień HH:MM" pattern - MUST BE BEFORE day of week pattern
-    const weeksMatch = timePattern.match(/za (\d+) tygodnie (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
+    const weeksMatch = normalized.match(/^za (\d+) tygodnie (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/);
     if (weeksMatch) {
       console.log(`[LLM Parser] Text matched weeks day pattern: ${timePattern}`);
       const weeks = parseInt(weeksMatch[1]);
       const dayName = weeksMatch[2];
       const hours = parseInt(weeksMatch[3]);
-      const minutes = parseInt(weeksMatch[4]);
+      const minutes = weeksMatch[4] ? parseInt(weeksMatch[4]) : 0;
       const dayIndex = dayNames.indexOf(dayName);
       
       if (dayIndex !== -1) {
@@ -406,21 +444,21 @@ Odpowiedz tylko w formacie JSON.`;
       }
     }
     
-    const weekMatch = timePattern.match(/za tydzień (\d{1,2}):(\d{2})/);
+    const weekMatch = normalized.match(/^za tydzień (\d{1,2})(?::(\d{2}))?$/);
     if (weekMatch) {
       console.log(`[LLM Parser] Text matched week pattern: ${timePattern}`);
       const hours = parseInt(weekMatch[1]);
-      const minutes = parseInt(weekMatch[2]);
+      const minutes = weekMatch[2] ? parseInt(weekMatch[2]) : 0;
       const targetTime = now.plus({ weeks: 1 }).setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       return targetTime.toISO();
     }
     
-    const weekDayMatch = timePattern.match(/za tydzień (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
+    const weekDayMatch = normalized.match(/^za tydzień (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/);
     if (weekDayMatch) {
       console.log(`[LLM Parser] Text matched week day pattern: ${timePattern}`);
       const dayName = weekDayMatch[1];
       const hours = parseInt(weekDayMatch[2]);
-      const minutes = parseInt(weekDayMatch[3]);
+      const minutes = weekDayMatch[3] ? parseInt(weekDayMatch[3]) : 0;
       const dayIndex = dayNames.indexOf(dayName);
       
       if (dayIndex !== -1) {
@@ -429,12 +467,12 @@ Odpowiedz tylko w formacie JSON.`;
       }
     }
     
-    const dayMatch = timePattern.match(/(poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2}):(\d{2})/);
+    const dayMatch = normalized.match(/^(poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/);
     if (dayMatch) {
       console.log(`[LLM Parser] Text matched day of week pattern: ${timePattern}`);
       const dayName = dayMatch[1];
       const hours = parseInt(dayMatch[2]);
-      const minutes = parseInt(dayMatch[3]);
+      const minutes = dayMatch[3] ? parseInt(dayMatch[3]) : 0;
       const dayIndex = dayNames.indexOf(dayName);
       
       if (dayIndex !== -1) {
