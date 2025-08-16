@@ -1,11 +1,13 @@
 import { Request, Response, Router, NextFunction } from 'express';
 import { CreateReminderHandler } from '../commands/create_command';
 import { GetRemindersHandler } from '../queries/get_query';
+import { DeleteReminderHandler } from '../commands/delete_command';
 import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
 const getRemindersHandler = new GetRemindersHandler();
+const deleteReminderHandler = new DeleteReminderHandler();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -73,7 +75,11 @@ reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: N
 
 reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    throw new MethodNotAllowedError('Usuwanie przypomnień nie jest jeszcze zaimplementowane');
+    const { id } = req.params;
+    if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
+    
+    const result = await deleteReminderHandler.execute({ id });
+    res.json(result);
   } catch (error) {
     next(error);
   }

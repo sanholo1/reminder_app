@@ -138,7 +138,19 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     }
   };
 
-
+  const handleDeleteReminder = async (id: string) => {
+    try {
+      await connectionService.deleteReminder(id);
+      // Refresh the reminders list after successful deletion
+      await fetchReminders();
+    } catch (err: any) {
+      if (err instanceof ConnectionError) {
+        setError(err.message);
+      } else {
+        setError('Błąd podczas usuwania przypomnienia');
+      }
+    }
+  };
 
   const filteredReminders = reminders;
   const filteredResult = result;
@@ -159,7 +171,11 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       )}
       <ReminderResult result={filteredResult} />
       <div className="reminders-section">
-        <ReminderList reminders={filteredReminders} loadingReminders={loadingReminders} />
+        <ReminderList 
+          reminders={filteredReminders} 
+          loadingReminders={loadingReminders} 
+          onDeleteReminder={handleDeleteReminder}
+        />
       </div>
     </>
   );

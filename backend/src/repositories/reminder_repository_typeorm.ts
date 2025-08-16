@@ -63,4 +63,23 @@ export class ReminderRepositoryTypeORM {
       throw new InternalServerError('Błąd podczas wyszukiwania przypomnienia w bazie danych');
     }
   }
+
+  async delete(id: string): Promise<void> {
+    try {
+      const reminder = await this.repository.findOne({
+        where: { id }
+      });
+      
+      if (!reminder) {
+        throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
+      }
+      
+      await this.repository.remove(reminder);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new InternalServerError('Błąd podczas usuwania przypomnienia z bazy danych');
+    }
+  }
 } 

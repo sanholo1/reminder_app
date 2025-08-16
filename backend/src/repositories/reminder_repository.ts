@@ -1,5 +1,5 @@
 import mysql, { Pool } from 'mysql2/promise';
-import { InternalServerError } from '../exceptions/exception_handler';
+import { InternalServerError, NotFoundError } from '../exceptions/exception_handler';
 
 const databaseConfiguration = {
   host: 'localhost',
@@ -75,6 +75,25 @@ export class ReminderRepository {
       };
     } catch (error) {
       throw new InternalServerError('Błąd podczas wyszukiwania przypomnienia w bazie danych');
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      const db = await getDatabasePool();
+      const [result] = await db.execute(
+        'DELETE FROM reminders WHERE id = ?',
+        [id]
+      );
+      
+      if ((result as any).affectedRows === 0) {
+        throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
+      }
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new InternalServerError('Błąd podczas usuwania przypomnienia z bazy danych');
     }
   }
 } 

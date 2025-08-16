@@ -205,6 +205,8 @@ Odpowiedz w formacie JSON:
 - "+HH:MM" - za określoną liczbę godzin i minut (np. "+00:30", "+02:15", "+05:05")
 - "-HH:MM" - dla czasu w przeszłości (np. "-03:30")
 - "jutro HH:MM" - jutro o konkretnej godzinie (np. "jutro 15:00", "jutro 09:00")
+- "po jutrze HH:MM" - pojutrze o konkretnej godzinie (np. "po jutrze 15:00", "po jutrze 09:00")
+- "pojutrze HH:MM" - pojutrze o konkretnej godzinie (np. "pojutrze 15:00", "pojutrze 09:00")
 - "dziś HH:MM" - dziś o konkretnej godzinie (np. "dziś 15:00", "dziś 08:00")
 - "poniedziałek HH:MM" - najbliższy poniedziałek o HH:MM
 - "wtorek HH:MM" - najbliższy wtorek o HH:MM
@@ -228,6 +230,10 @@ PRZYKŁADY KONWERSJI:
 - "za 30 minut" → "+00:30"
 - "jutro o 9 rano" → "jutro 09:00"
 - "jutro o 15:00" → "jutro 15:00"
+- "po jutrze o 9 rano" → "po jutrze 09:00"
+- "po jutrze o 15:00" → "po jutrze 15:00"
+- "pojutrze o 9 rano" → "pojutrze 09:00"
+- "pojutrze o 15:00" → "pojutrze 15:00"
 - "dziś o 8" → "dziś 08:00"
 - "w poniedziałek o 8:00" → "poniedziałek 08:00"
 
@@ -263,6 +269,10 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 - "za 10 minut podlać kwiaty" → {"activity": "podlać kwiaty", "timePattern": "+00:10"}
 - "za dwie godziny i piętnaście minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "+02:15"}
 - "za 2 godziny i 30 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+02:30"}
+- "po jutrze o 9 rano kupić chleb" → {"activity": "kupić chleb", "timePattern": "po jutrze 09:00"}
+- "pojutrze o 15:00 spotkanie" → {"activity": "spotkanie", "timePattern": "pojutrze 15:00"}
+- "po jutrze o 8 rano pobudka" → {"activity": "pobudka", "timePattern": "po jutrze 08:00"}
+- "pojutrze o 12:30 obiad" → {"activity": "obiad", "timePattern": "pojutrze 12:30"}
  - "w przyszły piątek o 17:00 kino" → {"activity": "kino", "timePattern": "za tydzień piątek 17:00"}
 - "w sobote za dwa tygodnie o 12 wyprowadz psa" → {"activity": "wyprowadz psa", "timePattern": "za 2 tygodnie sobota 12:00"}
 - "za tydzień w poniedziałek o 9 spotkanie" → {"activity": "spotkanie", "timePattern": "za tydzień poniedziałek 09:00"}
@@ -377,6 +387,28 @@ Odpowiedz tylko w formacie JSON.`;
       const minutes = tomorrowMatch[2] ? parseInt(tomorrowMatch[2]) : 0;
       const tomorrow = nowZoned.plus({ days: 1 });
       const targetTime = tomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      return targetTime.toISO();
+    }
+    
+    // po jutrze HH[:MM] (minutes optional -> default 00)
+    const dayAfterTomorrowMatch = normalized.match(/^po jutrze (\d{1,2})(?::(\d{2}))?$/);
+    if (dayAfterTomorrowMatch) {
+      console.log(`[LLM Parser] Text matched day after tomorrow pattern: ${timePattern}`);
+      const hours = parseInt(dayAfterTomorrowMatch[1]);
+      const minutes = dayAfterTomorrowMatch[2] ? parseInt(dayAfterTomorrowMatch[2]) : 0;
+      const dayAfterTomorrow = nowZoned.plus({ days: 2 });
+      const targetTime = dayAfterTomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      return targetTime.toISO();
+    }
+    
+    // pojutrze HH[:MM] (minutes optional -> default 00)
+    const pojutrzeMatch = normalized.match(/^pojutrze (\d{1,2})(?::(\d{2}))?$/);
+    if (pojutrzeMatch) {
+      console.log(`[LLM Parser] Text matched pojutrze pattern: ${timePattern}`);
+      const hours = parseInt(pojutrzeMatch[1]);
+      const minutes = pojutrzeMatch[2] ? parseInt(pojutrzeMatch[2]) : 0;
+      const dayAfterTomorrow = nowZoned.plus({ days: 2 });
+      const targetTime = dayAfterTomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       return targetTime.toISO();
     }
     

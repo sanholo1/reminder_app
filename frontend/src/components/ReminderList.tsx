@@ -11,9 +11,10 @@ interface Reminder {
 interface ReminderListProps {
   reminders: Reminder[];
   loadingReminders: boolean;
+  onDeleteReminder: (id: string) => void;
 }
 
-const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders }) => (
+const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders, onDeleteReminder }) => (
   <div className="reminders-section">
     <h2 className="reminders-title">Lista Przypomnień</h2>
     {loadingReminders ? (
@@ -23,7 +24,13 @@ const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders
     ) : (
       <div className="reminders-list">
         {reminders.map((reminder) => (
-          <ReminderListItem key={reminder.id} activity={reminder.activity} datetime={reminder.datetime} />
+          <ReminderListItem 
+            key={reminder.id} 
+            id={reminder.id}
+            activity={reminder.activity} 
+            datetime={reminder.datetime}
+            onDelete={onDeleteReminder}
+          />
         ))}
       </div>
     )}

@@ -48,4 +48,13 @@ export class ConnectionService {
       throw new ConnectionError(err.message || 'Nieznany błąd połączenia');
     }
   }
+
+  async deleteReminder(id: string): Promise<ConnectionResponse> {
+    return this.request(`/reminders/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 } 
