@@ -3,18 +3,21 @@ import { CreateReminderHandler } from '../commands/create_command';
 import { GetRemindersHandler } from '../queries/get_query';
 import { DeleteReminderHandler } from '../commands/delete_command';
 import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
+import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
 const getRemindersHandler = new GetRemindersHandler();
 const deleteReminderHandler = new DeleteReminderHandler();
+const reminderRepository = new ReminderRepositoryTypeORM();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sessionId = (req as any).sessionId;
     const result = await createReminderHandler.execute({ 
       text: req.body.text,
-      sessionId: sessionId
+      sessionId: sessionId,
+      category: req.body.category || null
     });
     
     // Check if it's an abuse result
@@ -80,6 +83,29 @@ reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next
     
     const result = await deleteReminderHandler.execute({ id });
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get all categories
+reminderRouter.get('/categories', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const categories = await reminderRepository.getCategories();
+    res.json({ categories });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get reminders by category
+reminderRouter.get('/reminders/category/:category', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { category } = req.params;
+    if (!category) throw new BadRequestError('Brak nazwy kategorii');
+    
+    const reminders = await reminderRepository.findByCategory(category);
+    res.json({ reminders });
   } catch (error) {
     next(error);
   }

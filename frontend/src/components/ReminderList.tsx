@@ -5,6 +5,7 @@ interface Reminder {
   id: string;
   activity: string;
   datetime: string;
+  category?: string | null;
   created_at: string;
 }
 
@@ -29,6 +30,7 @@ const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders
             id={reminder.id}
             activity={reminder.activity} 
             datetime={reminder.datetime}
+            category={reminder.category}
             onDelete={onDeleteReminder}
           />
         ))}

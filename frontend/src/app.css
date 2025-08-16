@@ -311,6 +311,23 @@ a:hover {
   color: var(--cuba-cream);
 }
 
+.reminder-category {
+  margin-top: 0.5rem;
+}
+
+.category-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-dark) 100%);
+  color: var(--cuba-white);
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 255, 0, 0.3);
+}
+
 .delete-button {
   background: none;
   border: none;
@@ -390,6 +407,154 @@ a:hover {
   background: var(--cuba-lime-light);
 }
 
+/* Category Navigation Styles */
+.category-navigation {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: rgba(93, 42, 42, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(93, 42, 42, 0.4);
+}
+
+.back-button {
+  background: linear-gradient(135deg, var(--cuba-cola-medium) 0%, var(--cuba-cola-light) 100%);
+  color: var(--cuba-cream);
+  border: 1px solid rgba(93, 42, 42, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.back-button:hover {
+  background: linear-gradient(135deg, var(--cuba-cola-light) 0%, var(--cuba-cola-medium) 100%);
+  transform: translateY(-1px);
+}
+
+.category-selector {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-select {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.75rem;
+  border: 1px solid rgba(93, 42, 42, 0.4);
+  border-radius: 8px;
+  background: rgba(93, 42, 42, 0.2);
+  color: var(--cuba-cream);
+  font-size: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: var(--cuba-lime-fresh);
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3);
+}
+
+.category-select option {
+  background: var(--cuba-cola-dark);
+  color: var(--cuba-cream);
+}
+
+.new-category-button {
+  background: linear-gradient(135deg, var(--cuba-lime-dark) 0%, var(--cuba-lime-fresh) 100%);
+  color: var(--cuba-white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.new-category-button:hover {
+  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-light) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+}
+
+.category-form {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.75rem;
+  border: 1px solid rgba(93, 42, 42, 0.4);
+  border-radius: 8px;
+  background: rgba(93, 42, 42, 0.2);
+  color: var(--cuba-cream);
+  font-size: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.category-input:focus {
+  outline: none;
+  border-color: var(--cuba-lime-fresh);
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3);
+}
+
+.category-input::placeholder {
+  color: rgba(245, 245, 220, 0.6);
+}
+
+.category-submit {
+  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-dark) 100%);
+  color: var(--cuba-white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.category-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--cuba-lime-light) 0%, var(--cuba-lime-fresh) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+}
+
+.category-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(93, 42, 42, 0.3);
+}
+
+.current-category {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: rgba(0, 255, 0, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.current-category h2 {
+  color: var(--cuba-lime-fresh);
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -399,5 +564,17 @@ a:hover {
   }
   .input {
     min-width: auto;
+  }
+  .category-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .category-select,
+  .category-input {
+    min-width: auto;
+  }
+  .category-form {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

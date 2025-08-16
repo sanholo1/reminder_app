@@ -9,6 +9,7 @@ export interface GetRemindersResult {
     id: string;
     activity: string;
     datetime: string;
+    category?: string | null;
     created_at: string;
   }>;
 }
@@ -29,6 +30,7 @@ export class GetRemindersHandler {
           id: reminder.id,
           activity: reminder.activity,
           datetime: reminder.datetime.toISOString(),
+          category: reminder.category,
           created_at: reminder.created_at ? reminder.created_at.toISOString() : ''
         }))
       };

@@ -7,6 +7,7 @@ export interface ReminderEntity {
   id: string;
   activity: string;
   datetime: Date;
+  category?: string | null;
   created_at?: Date;
 }
 
@@ -19,7 +20,7 @@ export class ReminderRepositoryTypeORM {
 
   async create(reminder: ReminderEntity): Promise<void> {
     try {
-      const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime);
+      const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime, reminder.category);
       await this.repository.save(newReminder);
     } catch (error) {
       throw new InternalServerError('Błąd podczas tworzenia przypomnienia w bazie danych');
@@ -38,6 +39,7 @@ export class ReminderRepositoryTypeORM {
         id: reminder.id,
         activity: reminder.activity,
         datetime: reminder.datetime,
+        category: reminder.category,
         created_at: reminder.created_at
       }));
     } catch (error) {
@@ -57,10 +59,49 @@ export class ReminderRepositoryTypeORM {
         id: reminder.id,
         activity: reminder.activity,
         datetime: reminder.datetime,
+        category: reminder.category,
         created_at: reminder.created_at
       };
     } catch (error) {
       throw new InternalServerError('Błąd podczas wyszukiwania przypomnienia w bazie danych');
+    }
+  }
+
+  async findByCategory(category: string): Promise<ReminderEntity[]> {
+    try {
+      const reminders = await this.repository.find({
+        where: { category },
+        order: {
+          datetime: "ASC"
+        }
+      });
+      
+      return reminders.map(reminder => ({
+        id: reminder.id,
+        activity: reminder.activity,
+        datetime: reminder.datetime,
+        category: reminder.category,
+        created_at: reminder.created_at
+      }));
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas pobierania przypomnień z kategorii z bazy danych');
+    }
+  }
+
+  async getCategories(): Promise<string[]> {
+    try {
+      const reminders = await this.repository.find({
+        select: ['category']
+      });
+      
+      const categories = reminders
+        .map(reminder => reminder.category)
+        .filter((category): category is string => category !== null && category !== undefined)
+        .filter((category, index, self) => self.indexOf(category) === index); // Remove duplicates
+      
+      return categories;
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas pobierania kategorii z bazy danych');
     }
   }
 

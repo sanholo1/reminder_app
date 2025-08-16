@@ -1,16 +1,20 @@
 import { DataSource } from "typeorm";
 import { Reminder } from "./src/entities/Reminder";
+import { UserSession } from "./src/entities/UserSession";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 export default new DataSource({
   type: "mysql",
-  host: "localhost",
-  port: 3306,
-  username: "app_user",
-  password: "password",
-  database: "reminder_app",
+  host: process.env.DB_HOST || "localhost",
+  port: parseInt(process.env.DB_PORT || "3306"),
+  username: process.env.DB_USERNAME || "app_user",
+  password: process.env.DB_PASSWORD || "password",
+  database: process.env.DB_DATABASE || "reminder_app",
   synchronize: false,
-  logging: true,
-  entities: [Reminder],
+  logging: process.env.NODE_ENV === "development",
+  entities: [Reminder, UserSession],
   migrations: ["src/migrations/*.ts"],
   subscribers: [],
 }); 
