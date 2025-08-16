@@ -2,6 +2,7 @@ import { Repository } from "typeorm";
 import { AppDataSource } from "../config/database";
 import { Reminder } from "../entities/Reminder";
 import { InternalServerError, NotFoundError } from "../exceptions/exception_handler";
+import { TrashRepositoryTypeORM, TrashItemEntity } from "./trash_repository_typeorm";
 
 export interface ReminderEntity {
   id: string;
@@ -13,9 +14,11 @@ export interface ReminderEntity {
 
 export class ReminderRepositoryTypeORM {
   private repository: Repository<Reminder>;
+  private trashRepository: TrashRepositoryTypeORM;
 
   constructor() {
     this.repository = AppDataSource.getRepository(Reminder);
+    this.trashRepository = new TrashRepositoryTypeORM();
   }
 
   async create(reminder: ReminderEntity): Promise<void> {
@@ -115,7 +118,21 @@ export class ReminderRepositoryTypeORM {
         throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
       }
       
+      // Dodaj do kosza przed usunięciem
+      await this.trashRepository.addToTrash({
+        id: reminder.id,
+        activity: reminder.activity,
+        datetime: reminder.datetime,
+        category: reminder.category,
+        deleted_at: new Date(),
+        created_at: reminder.created_at
+      });
+      
+      // Usuń z głównej tabeli
       await this.repository.remove(reminder);
+      
+      // Wyczyść stare elementy z kosza (zachowaj tylko 10 najnowszych)
+      await this.trashRepository.clearOldItems();
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
@@ -134,10 +151,59 @@ export class ReminderRepositoryTypeORM {
         return 0;
       }
       
+      // Dodaj wszystkie przypomnienia z kategorii do kosza
+      for (const reminder of reminders) {
+        await this.trashRepository.addToTrash({
+          id: reminder.id,
+          activity: reminder.activity,
+          datetime: reminder.datetime,
+          category: reminder.category,
+          deleted_at: new Date(),
+          created_at: reminder.created_at
+        });
+      }
+      
       await this.repository.remove(reminders);
+      
+      // Wyczyść stare elementy z kosza
+      await this.trashRepository.clearOldItems();
+      
       return reminders.length;
     } catch (error) {
       throw new InternalServerError('Błąd podczas usuwania kategorii z bazy danych');
+    }
+  }
+
+  async getTrashItems(): Promise<TrashItemEntity[]> {
+    try {
+      return await this.trashRepository.getTrashItems();
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas pobierania elementów z kosza');
+    }
+  }
+
+  async restoreFromTrash(id: string): Promise<void> {
+    try {
+      const itemToRestore = await this.trashRepository.restoreFromTrash(id);
+      
+      if (!itemToRestore) {
+        throw new NotFoundError('Element nie został znaleziony w koszu');
+      }
+      
+      // Przywróć przypomnienie do głównej tabeli
+      const restoredReminder = new Reminder(
+        itemToRestore.id,
+        itemToRestore.activity,
+        itemToRestore.datetime,
+        itemToRestore.category
+      );
+      
+      await this.repository.save(restoredReminder);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new InternalServerError('Błąd podczas przywracania z kosza');
     }
   }
 } 

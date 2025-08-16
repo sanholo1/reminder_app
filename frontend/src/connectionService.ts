@@ -66,4 +66,22 @@ export class ConnectionService {
       },
     });
   }
+
+  async getTrashItems(): Promise<ConnectionResponse> {
+    return this.request('/trash', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  async restoreFromTrash(id: string): Promise<ConnectionResponse> {
+    return this.request(`/trash/${id}/restore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 } 

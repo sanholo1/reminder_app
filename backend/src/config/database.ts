@@ -1,6 +1,7 @@
 import { DataSource } from "typeorm";
 import { Reminder } from "../entities/Reminder";
 import { UserSession } from "../entities/UserSession";
+import { TrashItem } from "../entities/TrashItem";
 import * as dotenv from "dotenv";
 import { InternalServerError } from "../exceptions/exception_handler";
 
@@ -22,7 +23,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_DATABASE || "reminder_app",
   synchronize: process.env.NODE_ENV === "development",
   logging: process.env.NODE_ENV === "development",
-  entities: [Reminder, UserSession],
+  entities: [Reminder, UserSession, TrashItem],
   subscribers: [],
   migrations: ["src/migrations/*.ts"],
 }); 

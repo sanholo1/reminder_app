@@ -127,4 +127,27 @@ reminderRouter.delete('/categories/:category', async (req: Request, res: Respons
   }
 });
 
+// Get trash items
+reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const trashItems = await reminderRepository.getTrashItems();
+    res.json({ trashItems });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Restore item from trash
+reminderRouter.post('/trash/:id/restore', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    if (!id) throw new BadRequestError('Brak identyfikatora elementu');
+    
+    await reminderRepository.restoreFromTrash(id);
+    res.json({ message: 'Przypomnienie zostało przywrócone' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default reminderRouter; 

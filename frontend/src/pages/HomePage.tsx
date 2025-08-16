@@ -4,12 +4,22 @@ import ReminderList from '../components/ReminderList';
 import ReminderForm from '../components/ReminderForm';
 import ReminderResult from '../components/ReminderResult';
 import DeleteCategoryModal from '../components/DeleteCategoryModal';
+import TrashList from '../components/TrashList';
 
 interface Reminder {
   id: string;
   activity: string;
   datetime: string;
   category?: string | null;
+  created_at: string;
+}
+
+interface TrashItem {
+  id: string;
+  activity: string;
+  datetime: string;
+  category?: string | null;
+  deleted_at: string;
   created_at: string;
 }
 
@@ -33,11 +43,15 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+  const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
+  const [loadingTrash, setLoadingTrash] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
   const connectionService = new ConnectionService();
 
   useEffect(() => {
     fetchReminders();
     fetchCategories();
+    fetchTrashItems();
   }, []);
 
   useEffect(() => {
@@ -102,6 +116,52 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       } else {
         console.error('Błąd pobierania kategorii:', err);
       }
+    }
+  };
+
+  const fetchTrashItems = async () => {
+    try {
+      setLoadingTrash(true);
+      const response = await connectionService.getTrashItems();
+      const data = response.data;
+      
+      const trashItemsWithLocalTime = data.trashItems.map((item: any) => ({
+        ...item,
+        datetime: new Date(item.datetime).toLocaleString('pl-PL', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }),
+        deleted_at: new Date(item.deleted_at).toLocaleString('pl-PL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }),
+        created_at: item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }) : ''
+      }));
+      
+      setTrashItems(trashItemsWithLocalTime || []);
+    } catch (err: any) {
+      if (err instanceof ConnectionError) {
+        console.error('Błąd połączenia:', err.message);
+      } else {
+        console.error('Błąd pobierania kosza:', err);
+      }
+    } finally {
+      setLoadingTrash(false);
     }
   };
 
@@ -177,6 +237,8 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       await connectionService.deleteReminder(id);
       // Refresh the reminders list after successful deletion
       await fetchReminders();
+      // Refresh trash items
+      await fetchTrashItems();
     } catch (err: any) {
       if (err instanceof ConnectionError) {
         setError(err.message);
@@ -251,6 +313,25 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     setDeletingCategory(null);
   };
 
+  const handleRestoreFromTrash = async (id: string) => {
+    try {
+      await connectionService.restoreFromTrash(id);
+      // Refresh both reminders and trash
+      await fetchReminders();
+      await fetchTrashItems();
+    } catch (err: any) {
+      if (err instanceof ConnectionError) {
+        setError(err.message);
+      } else {
+        setError('Błąd podczas przywracania z kosza');
+      }
+    }
+  };
+
+  const handleToggleTrash = () => {
+    setShowTrash(!showTrash);
+  };
+
   const filteredReminders = reminders;
   const filteredResult = result;
 
@@ -287,6 +368,14 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
             className="new-category-button"
           >
             {showCategoryForm ? 'Anuluj' : '+ Nowa kategoria'}
+          </button>
+          
+          <button 
+            onClick={handleToggleTrash}
+            className="trash-toggle-button"
+            title={`${showTrash ? 'Ukryj' : 'Pokaż'} kosz (${trashItems.length} elementów)`}
+          >
+            🗑️ {showTrash ? 'Ukryj kosz' : `Kosz (${trashItems.length})`}
           </button>
         </div>
         
@@ -331,6 +420,16 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         </div>
       )}
       <ReminderResult result={filteredResult} />
+      {showTrash && (
+        <div className="trash-section">
+          <TrashList 
+            trashItems={trashItems} 
+            loadingTrash={loadingTrash} 
+            onRestoreItem={handleRestoreFromTrash}
+          />
+        </div>
+      )}
+      
       <div className="reminders-section">
         <ReminderList 
           reminders={filteredReminders} 
