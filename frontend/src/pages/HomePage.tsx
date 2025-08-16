@@ -3,6 +3,7 @@ import { ConnectionService, ConnectionError, ConnectionResponse } from '../conne
 import ReminderList from '../components/ReminderList';
 import ReminderForm from '../components/ReminderForm';
 import ReminderResult from '../components/ReminderResult';
+import DeleteCategoryModal from '../components/DeleteCategoryModal';
 
 interface Reminder {
   id: string;
@@ -29,6 +30,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
   const connectionService = new ConnectionService();
 
   useEffect(() => {
@@ -206,6 +210,47 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     setLoadingReminders(true);
   };
 
+  const handleDeleteCategory = (category: string) => {
+    setDeletingCategory(category);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDeleteCategory = async () => {
+    if (!deletingCategory) return;
+    
+    setIsDeletingCategory(true);
+    try {
+      await connectionService.deleteCategory(deletingCategory);
+      
+      // Remove category from local state
+      setCategories(categories.filter(cat => cat !== deletingCategory));
+      
+      // If we're currently viewing this category, go back to main
+      if (selectedCategory === deletingCategory) {
+        setSelectedCategory(null);
+      }
+      
+      // Refresh reminders
+      await fetchReminders();
+      
+      setShowDeleteModal(false);
+      setDeletingCategory(null);
+    } catch (err: any) {
+      if (err instanceof ConnectionError) {
+        setError(err.message);
+      } else {
+        setError('Błąd podczas usuwania kategorii');
+      }
+    } finally {
+      setIsDeletingCategory(false);
+    }
+  };
+
+  const handleCancelDeleteCategory = () => {
+    setShowDeleteModal(false);
+    setDeletingCategory(null);
+  };
+
   const filteredReminders = reminders;
   const filteredResult = result;
 
@@ -265,6 +310,13 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       {selectedCategory && (
         <div className="current-category">
           <h2>Kategoria: {selectedCategory}</h2>
+          <button 
+            onClick={() => handleDeleteCategory(selectedCategory)}
+            className="delete-category-button"
+            title="Usuń kategorię i wszystkie jej przypomnienia"
+          >
+            🗑️ Usuń kategorię
+          </button>
         </div>
       )}
       
@@ -286,6 +338,15 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           onDeleteReminder={handleDeleteReminder}
         />
       </div>
+
+      <DeleteCategoryModal
+        isOpen={showDeleteModal}
+        category={deletingCategory || ''}
+        reminderCount={reminders.length}
+        onConfirm={handleConfirmDeleteCategory}
+        onCancel={handleCancelDeleteCategory}
+        isDeleting={isDeletingCategory}
+      />
     </>
   );
 };

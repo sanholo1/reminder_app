@@ -111,4 +111,20 @@ reminderRouter.get('/reminders/category/:category', async (req: Request, res: Re
   }
 });
 
+// Delete category and all its reminders
+reminderRouter.delete('/categories/:category', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { category } = req.params;
+    if (!category) throw new BadRequestError('Brak nazwy kategorii');
+    
+    const deletedCount = await reminderRepository.deleteByCategory(category);
+    res.json({ 
+      message: `Usunięto kategorię "${category}" wraz z ${deletedCount} przypomnieniami`,
+      deletedCount 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default reminderRouter; 

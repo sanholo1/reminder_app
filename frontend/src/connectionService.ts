@@ -57,4 +57,13 @@ export class ConnectionService {
       },
     });
   }
+
+  async deleteCategory(category: string): Promise<ConnectionResponse> {
+    return this.request(`/categories/${encodeURIComponent(category)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 } 

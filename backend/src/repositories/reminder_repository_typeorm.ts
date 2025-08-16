@@ -123,4 +123,21 @@ export class ReminderRepositoryTypeORM {
       throw new InternalServerError('Błąd podczas usuwania przypomnienia z bazy danych');
     }
   }
+
+  async deleteByCategory(category: string): Promise<number> {
+    try {
+      const reminders = await this.repository.find({
+        where: { category }
+      });
+      
+      if (reminders.length === 0) {
+        return 0;
+      }
+      
+      await this.repository.remove(reminders);
+      return reminders.length;
+    } catch (error) {
+      throw new InternalServerError('Błąd podczas usuwania kategorii z bazy danych');
+    }
+  }
 } 
