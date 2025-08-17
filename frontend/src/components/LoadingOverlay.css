@@ -1,0 +1,127 @@
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(26, 15, 15, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.loading-overlay.transparent {
+  background: rgba(26, 15, 15, 0.4);
+}
+
+.loading-overlay-content {
+  text-align: center;
+  color: var(--cuba-cream);
+  padding: 2rem;
+  background: rgba(26, 15, 15, 0.9);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(93, 42, 42, 0.3);
+  box-shadow: 0 4px 20px rgba(26, 15, 15, 0.4);
+  animation: scaleIn 0.3s ease-out;
+}
+
+.loading-overlay-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1rem;
+}
+
+.loading-overlay-spinner .spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid transparent;
+  border-top: 2px solid var(--cuba-lime-fresh);
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+
+.loading-overlay-spinner .spinner-ring:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-overlay-spinner .spinner-ring:nth-child(2) {
+  width: 45px;
+  height: 45px;
+  top: 7.5px;
+  left: 7.5px;
+  border-top-color: var(--cuba-lime-light);
+  animation-delay: 0.2s;
+}
+
+.loading-overlay-spinner .spinner-ring:nth-child(3) {
+  width: 30px;
+  height: 30px;
+  top: 15px;
+  left: 15px;
+  border-top-color: var(--cuba-lime);
+  animation-delay: 0.4s;
+}
+
+.loading-overlay-message {
+  font-size: 1rem;
+  margin: 0;
+  color: var(--cuba-cream);
+  opacity: 0.9;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .loading-overlay-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .loading-overlay-spinner {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .loading-overlay-spinner .spinner-ring:nth-child(2) {
+    width: 37.5px;
+    height: 37.5px;
+    top: 6.25px;
+    left: 6.25px;
+  }
+  
+  .loading-overlay-spinner .spinner-ring:nth-child(3) {
+    width: 25px;
+    height: 25px;
+    top: 12.5px;
+    left: 12.5px;
+  }
+  
+  .loading-overlay-message {
+    font-size: 0.9rem;
+  }
+}

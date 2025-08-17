@@ -5,6 +5,7 @@ import ReminderForm from '../components/ReminderForm';
 import ReminderResult from '../components/ReminderResult';
 import DeleteCategoryModal from '../components/DeleteCategoryModal';
 import TrashList from '../components/TrashList';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 interface Reminder {
   id: string;
@@ -46,6 +47,8 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
   const [showTrash, setShowTrash] = useState(false);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const [loadingOverlayMessage, setLoadingOverlayMessage] = useState('');
   const connectionService = new ConnectionService();
 
   useEffect(() => {
@@ -233,6 +236,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   };
 
   const handleDeleteReminder = async (id: string) => {
+    setShowLoadingOverlay(true);
+    setLoadingOverlayMessage('Usuwanie przypomnienia...');
+    
     try {
       await connectionService.deleteReminder(id);
       // Refresh the reminders list after successful deletion
@@ -245,6 +251,8 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       } else {
         setError('Błąd podczas usuwania przypomnienia');
       }
+    } finally {
+      setShowLoadingOverlay(false);
     }
   };
 
@@ -281,6 +289,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     if (!deletingCategory) return;
     
     setIsDeletingCategory(true);
+    setShowLoadingOverlay(true);
+    setLoadingOverlayMessage('Usuwanie kategorii...');
+    
     try {
       await connectionService.deleteCategory(deletingCategory);
       
@@ -305,6 +316,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       }
     } finally {
       setIsDeletingCategory(false);
+      setShowLoadingOverlay(false);
     }
   };
 
@@ -314,6 +326,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   };
 
   const handleRestoreFromTrash = async (id: string) => {
+    setShowLoadingOverlay(true);
+    setLoadingOverlayMessage('Przywracanie z kosza...');
+    
     try {
       await connectionService.restoreFromTrash(id);
       // Refresh both reminders and trash
@@ -325,6 +340,8 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       } else {
         setError('Błąd podczas przywracania z kosza');
       }
+    } finally {
+      setShowLoadingOverlay(false);
     }
   };
 
@@ -445,6 +462,12 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         onConfirm={handleConfirmDeleteCategory}
         onCancel={handleCancelDeleteCategory}
         isDeleting={isDeletingCategory}
+      />
+      
+      <LoadingOverlay 
+        isVisible={showLoadingOverlay} 
+        message={loadingOverlayMessage}
+        transparent={true}
       />
     </>
   );
