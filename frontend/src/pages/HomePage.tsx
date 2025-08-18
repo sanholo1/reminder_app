@@ -49,12 +49,18 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const [showTrash, setShowTrash] = useState(false);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [loadingOverlayMessage, setLoadingOverlayMessage] = useState('');
+  const [dailyUsageInfo, setDailyUsageInfo] = useState<{
+    dailyUsageCount: number;
+    maxDailyUsage: number;
+    remainingDailyUsage: number;
+  } | null>(null);
   const connectionService = new ConnectionService();
 
   useEffect(() => {
     fetchReminders();
     fetchCategories();
     fetchTrashItems();
+    fetchUsageInfo();
   }, []);
 
   useEffect(() => {
@@ -165,6 +171,35 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       }
     } finally {
       setLoadingTrash(false);
+    }
+  };
+
+  const fetchUsageInfo = async () => {
+    try {
+      const response = await connectionService.request<{
+        dailyUsageCount: number;
+        maxDailyUsage: number;
+        remainingDailyUsage: number;
+      }>('/usage');
+      setDailyUsageInfo(response.data);
+    } catch (err: any) {
+      if (err instanceof ConnectionError) {
+        console.error('Błąd połączenia podczas pobierania informacji o użyciu:', err.message);
+        // Set default values on connection error
+        setDailyUsageInfo({
+          dailyUsageCount: 0,
+          maxDailyUsage: 20,
+          remainingDailyUsage: 20
+        });
+      } else {
+        console.error('Błąd pobierania informacji o użyciu:', err);
+        // Set default values on other errors
+        setDailyUsageInfo({
+          dailyUsageCount: 0,
+          maxDailyUsage: 20,
+          remainingDailyUsage: 20
+        });
+      }
     }
   };
 
@@ -350,6 +385,19 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         };
         setResult(resultWithLocalTime);
         setInput('');
+        
+        // Update usage info immediately from headers if available
+        if (response.dailyUsageCount !== undefined && response.dailyMaxUsage !== undefined && response.dailyRemaining !== undefined) {
+          setDailyUsageInfo({
+            dailyUsageCount: response.dailyUsageCount,
+            maxDailyUsage: response.dailyMaxUsage,
+            remainingDailyUsage: response.dailyRemaining
+          });
+        } else {
+          // Fallback to fetching usage info
+          await fetchUsageInfo();
+        }
+        
         await fetchReminders();
         if (onRefreshUsage) onRefreshUsage();
       }
@@ -449,7 +497,13 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         </div>
       )}
       
-      <ReminderForm input={input} setInput={setInput} loading={loading} handleSubmit={handleSubmit} />
+      <ReminderForm 
+        input={input} 
+        setInput={setInput} 
+        loading={loading} 
+        handleSubmit={handleSubmit} 
+        dailyUsageInfo={dailyUsageInfo}
+      />
       <div style={{ height: '1.5rem' }} />
       {loading && <div className="loading">Przetwarzanie przypomnienia...</div>}
       {error && <div className="error">{error}</div>}

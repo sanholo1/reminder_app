@@ -49,6 +49,18 @@ export class LLMParserService {
         return abuseCheck;
       }
 
+      // Check daily usage limit if sessionId is provided
+      if (sessionId) {
+        const dailyUsageCheck = await this.userSessionService.checkDailyUsageLimit(sessionId);
+        if (!dailyUsageCheck.canUse) {
+          return {
+            error: `Przekroczono dzienny limit użycia (${dailyUsageCheck.maxDailyUsage} na dzień). Limit zostanie zresetowany o północy. Możesz spróbować ponownie jutro.`,
+            remainingAttempts: 0,
+            isBlocked: true
+          };
+        }
+      }
+
       const prompt = this.buildPrompt(text);
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4.1',
@@ -67,6 +79,11 @@ export class LLMParserService {
       const datetime = this.convertTimePatternToDateTime(patternResult.timePattern);
       if (!datetime) {
         return { error: 'Nie można ustawić przypomnienia w przeszłości' };
+      }
+      
+      // Record successful daily usage if sessionId is provided
+      if (sessionId) {
+        await this.userSessionService.recordDailyUsage(sessionId);
       }
       
       return { activity: patternResult.activity, datetime };

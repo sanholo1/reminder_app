@@ -4,12 +4,14 @@ import { GetRemindersHandler } from '../queries/get_query';
 import { DeleteReminderHandler } from '../commands/delete_command';
 import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
 import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
+import { UserSessionService } from '../services/user_session_service';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
 const getRemindersHandler = new GetRemindersHandler();
 const deleteReminderHandler = new DeleteReminderHandler();
 const reminderRepository = new ReminderRepositoryTypeORM();
+const userSessionService = new UserSessionService();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -42,7 +44,19 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
       }
     }
     
-    // Regular success result
+    // Regular success result - include daily usage info in headers
+    if (sessionId) {
+      try {
+        const usageInfo = await userSessionService.getUsageInfo(sessionId);
+        res.setHeader('X-Daily-Usage-Count', usageInfo.dailyUsageCount.toString());
+        res.setHeader('X-Daily-Max-Usage', usageInfo.maxDailyUsage.toString());
+        res.setHeader('X-Daily-Remaining-Usage', usageInfo.remainingDailyUsage.toString());
+      } catch (error) {
+        // If we can't get usage info, continue without headers
+        console.error('Error getting usage info for headers:', error);
+      }
+    }
+    
     res.json(result);
   } catch (error) {
     next(error);
@@ -145,6 +159,21 @@ reminderRouter.post('/trash/:id/restore', async (req: Request, res: Response, ne
     
     await reminderRepository.restoreFromTrash(id);
     res.json({ message: 'Przypomnienie zostało przywrócone' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get usage information for current session
+reminderRouter.get('/usage', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sessionId = (req as any).sessionId;
+    if (!sessionId) {
+      return res.status(401).json({ error: 'Brak identyfikatora sesji' });
+    }
+    
+    const usageInfo = await userSessionService.getUsageInfo(sessionId);
+    res.json(usageInfo);
   } catch (error) {
     next(error);
   }

@@ -23,6 +23,16 @@ export class UserSession {
   @Column({ type: 'datetime', nullable: true })
   lastAttempt!: Date | null;
 
+  // New fields for daily usage limit
+  @Column({ type: 'int', default: 0 })
+  dailyUsageCount!: number;
+
+  @Column({ type: 'date', nullable: true })
+  lastUsageDate!: Date | null;
+
+  @Column({ type: 'int', default: 20 })
+  maxDailyUsage!: number;
+
   @CreateDateColumn()
   createdAt!: Date;
 

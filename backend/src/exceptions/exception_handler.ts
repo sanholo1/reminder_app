@@ -175,4 +175,11 @@ export class AbuseError extends HttpError {
     super(message, 403);
     this.name = 'AbuseError';
   }
+}
+
+export class DailyUsageLimitExceededError extends HttpError {
+  constructor(message: string = 'Przekroczono dzienny limit użycia aplikacji') {
+    super(message, 429);
+    this.name = 'DailyUsageLimitExceededError';
+  }
 } 

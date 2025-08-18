@@ -9,6 +9,8 @@ export interface ConnectionResponse<T = any> {
   data: T;
   remainingAttempts?: number;
   dailyRemaining?: number;
+  dailyUsageCount?: number;
+  dailyMaxUsage?: number;
   dailyResetAt?: string;
   warning?: string;
 }
@@ -40,8 +42,12 @@ export class ConnectionService {
         data,
         remainingAttempts: res.headers.get('X-Remaining-Attempts') ? 
           parseInt(res.headers.get('X-Remaining-Attempts')!) : undefined,
-        dailyRemaining: res.headers.get('X-Daily-Remaining') ? 
-          parseInt(res.headers.get('X-Daily-Remaining')!) : undefined,
+        dailyRemaining: res.headers.get('X-Daily-Remaining-Usage') ? 
+          parseInt(res.headers.get('X-Daily-Remaining-Usage')!) : undefined,
+        dailyUsageCount: res.headers.get('X-Daily-Usage-Count') ? 
+          parseInt(res.headers.get('X-Daily-Usage-Count')!) : undefined,
+        dailyMaxUsage: res.headers.get('X-Daily-Max-Usage') ? 
+          parseInt(res.headers.get('X-Daily-Max-Usage')!) : undefined,
         dailyResetAt: res.headers.get('X-Daily-Reset-At') || undefined,
         warning: res.headers.get('X-Warning') || undefined
       };
