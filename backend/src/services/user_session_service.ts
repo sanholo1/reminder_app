@@ -25,8 +25,12 @@ export class UserSessionService {
 
       return session;
     } catch (error) {
-      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-        throw new DatabaseConnectionError('Błąd połączenia z bazą danych sesji użytkownika');
+      // Type guard - sprawdź czy error ma właściwość code
+      if (error && typeof error === 'object' && 'code' in error) {
+        const dbError = error as { code: string };
+        if (dbError.code === 'ECONNREFUSED' || dbError.code === 'ENOTFOUND') {
+          throw new DatabaseConnectionError('Błąd połączenia z bazą danych sesji użytkownika');
+        }
       }
       throw new DatabaseQueryError('Błąd podczas pobierania sesji użytkownika');
     }
