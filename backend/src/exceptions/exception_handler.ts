@@ -149,10 +149,24 @@ export class ServiceUnavailableError extends HttpError {
   }
 }
 
-export class ConnectionError extends HttpError {
-  constructor(message: string = 'Błąd połączenia z serwerem') {
+export class DatabaseConnectionError extends HttpError {
+  constructor(message: string = 'Błąd połączenia z bazą danych') {
     super(message, 503);
-    this.name = 'ConnectionError';
+    this.name = 'DatabaseConnectionError';
+  }
+}
+
+export class DatabaseQueryError extends HttpError {
+  constructor(message: string = 'Błąd zapytania do bazy danych') {
+    super(message, 500);
+    this.name = 'DatabaseQueryError';
+  }
+}
+
+export class DatabaseTimeoutError extends HttpError {
+  constructor(message: string = 'Przekroczono limit czasu zapytania do bazy danych') {
+    super(message, 504);
+    this.name = 'DatabaseTimeoutError';
   }
 }
 

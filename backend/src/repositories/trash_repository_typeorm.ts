@@ -1,7 +1,7 @@
 import { Repository } from "typeorm";
 import { AppDataSource } from "../config/database";
 import { TrashItem } from "../entities/TrashItem";
-import { InternalServerError, NotFoundError } from "../exceptions/exception_handler";
+import { DatabaseQueryError, NotFoundError } from "../exceptions/exception_handler";
 
 export interface TrashItemEntity {
   id: string;
@@ -24,7 +24,7 @@ export class TrashRepositoryTypeORM {
       const trashItem = new TrashItem(reminder.id, reminder.activity, reminder.datetime, reminder.category);
       await this.repository.save(trashItem);
     } catch (error) {
-      throw new InternalServerError('Błąd podczas dodawania do kosza');
+      throw new DatabaseQueryError('Błąd podczas dodawania do kosza');
     }
   }
 
@@ -46,7 +46,7 @@ export class TrashRepositoryTypeORM {
         created_at: item.created_at
       }));
     } catch (error) {
-      throw new InternalServerError('Błąd podczas pobierania elementów z kosza');
+      throw new DatabaseQueryError('Błąd podczas pobierania elementów z kosza');
     }
   }
 
@@ -77,7 +77,7 @@ export class TrashRepositoryTypeORM {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new InternalServerError('Błąd podczas przywracania z kosza');
+      throw new DatabaseQueryError('Błąd podczas przywracania z kosza');
     }
   }
 
@@ -96,7 +96,7 @@ export class TrashRepositoryTypeORM {
         await this.repository.remove(itemsToRemove);
       }
     } catch (error) {
-      throw new InternalServerError('Błąd podczas czyszczenia kosza');
+      throw new DatabaseQueryError('Błąd podczas czyszczenia kosza');
     }
   }
 }

@@ -1,7 +1,13 @@
 import { Repository } from "typeorm";
 import { AppDataSource } from "../config/database";
 import { Reminder } from "../entities/Reminder";
-import { InternalServerError, NotFoundError } from "../exceptions/exception_handler";
+import { TrashItem } from "../entities/TrashItem";
+import { 
+  NotFoundError, 
+  DatabaseConnectionError,
+  DatabaseQueryError,
+  DatabaseTimeoutError
+} from "../exceptions/exception_handler";
 import { TrashRepositoryTypeORM, TrashItemEntity } from "./trash_repository_typeorm";
 
 export interface ReminderEntity {
@@ -26,7 +32,7 @@ export class ReminderRepositoryTypeORM {
       const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime, reminder.category);
       await this.repository.save(newReminder);
     } catch (error) {
-      throw new InternalServerError('Błąd podczas tworzenia przypomnienia w bazie danych');
+      throw new DatabaseConnectionError('Błąd podczas tworzenia przypomnienia w bazie danych');
     }
   }
 
@@ -46,7 +52,7 @@ export class ReminderRepositoryTypeORM {
         created_at: reminder.created_at
       }));
     } catch (error) {
-      throw new InternalServerError('Błąd podczas pobierania przypomnień z bazy danych');
+      throw new DatabaseQueryError('Błąd podczas pobierania przypomnień z bazy danych');
     }
   }
 
@@ -66,7 +72,7 @@ export class ReminderRepositoryTypeORM {
         created_at: reminder.created_at
       };
     } catch (error) {
-      throw new InternalServerError('Błąd podczas wyszukiwania przypomnienia w bazie danych');
+      throw new DatabaseQueryError('Błąd podczas wyszukiwania przypomnienia w bazie danych');
     }
   }
 
@@ -87,7 +93,7 @@ export class ReminderRepositoryTypeORM {
         created_at: reminder.created_at
       }));
     } catch (error) {
-      throw new InternalServerError('Błąd podczas pobierania przypomnień z kategorii z bazy danych');
+      throw new DatabaseQueryError('Błąd podczas pobierania przypomnień z kategorii z bazy danych');
     }
   }
 
@@ -104,7 +110,7 @@ export class ReminderRepositoryTypeORM {
       
       return categories;
     } catch (error) {
-      throw new InternalServerError('Błąd podczas pobierania kategorii z bazy danych');
+      throw new DatabaseQueryError('Błąd podczas pobierania kategorii z bazy danych');
     }
   }
 
@@ -137,7 +143,7 @@ export class ReminderRepositoryTypeORM {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new InternalServerError('Błąd podczas usuwania przypomnienia z bazy danych');
+      throw new DatabaseQueryError('Błąd podczas usuwania przypomnienia z bazy danych');
     }
   }
 
@@ -170,7 +176,7 @@ export class ReminderRepositoryTypeORM {
       
       return reminders.length;
     } catch (error) {
-      throw new InternalServerError('Błąd podczas usuwania kategorii z bazy danych');
+      throw new DatabaseQueryError('Błąd podczas usuwania kategorii z bazy danych');
     }
   }
 
@@ -178,7 +184,7 @@ export class ReminderRepositoryTypeORM {
     try {
       return await this.trashRepository.getTrashItems();
     } catch (error) {
-      throw new InternalServerError('Błąd podczas pobierania elementów z kosza');
+      throw new DatabaseQueryError('Błąd podczas pobierania elementów z kosza');
     }
   }
 
@@ -203,7 +209,7 @@ export class ReminderRepositoryTypeORM {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new InternalServerError('Błąd podczas przywracania z kosza');
+      throw new DatabaseQueryError('Błąd podczas przywracania z kosza');
     }
   }
 } 
