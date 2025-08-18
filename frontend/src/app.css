@@ -250,6 +250,18 @@ a:hover {
   box-shadow: 0 4px 12px rgba(26, 15, 15, 0.2);
 }
 
+.result-title {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+  color: var(--cuba-lime-fresh);
+  text-shadow: 1px 1px 2px rgba(26, 15, 15, 0.5);
+  padding-bottom: 0.8rem;
+  border-bottom: 2px solid rgba(144, 238, 144, 0.3);
+  letter-spacing: 0.5px;
+}
+
 .result-item {
   display: flex;
   margin-bottom: 0.5rem;
@@ -265,6 +277,29 @@ a:hover {
 .result-value {
   flex: 1;
   color: var(--cuba-cream);
+}
+
+.notification-test {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.test-sound-button {
+  background: rgba(144, 238, 144, 0.2);
+  border: 2px solid var(--cuba-lime-fresh);
+  color: var(--cuba-lime-fresh);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.test-sound-button:hover {
+  background: rgba(144, 238, 144, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(144, 238, 144, 0.2);
 }
 
 .reminders-section {

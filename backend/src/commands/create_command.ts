@@ -51,7 +51,8 @@ export class CreateReminderHandler {
       id: this.generateId(),
       activity: llmResult.activity,
       datetime: new Date(llmResult.datetime),
-      category: command.category || null
+      category: command.category || null,
+      sessionId: command.sessionId || ''
     };
     await this.reminderRepository.create(reminder);
     return {

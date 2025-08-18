@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ConnectionService, ConnectionError, ConnectionResponse } from '../connectionService';
 import ReminderList from '../components/ReminderList';
 import ReminderForm from '../components/ReminderForm';
@@ -6,6 +6,7 @@ import ReminderResult from '../components/ReminderResult';
 import DeleteCategoryModal from '../components/DeleteCategoryModal';
 import TrashList from '../components/TrashList';
 import LoadingOverlay from '../components/LoadingOverlay';
+import { NotificationService } from '../services/NotificationService';
 
 interface Reminder {
   id: string;
@@ -54,13 +55,21 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     maxDailyUsage: number;
     remainingDailyUsage: number;
   } | null>(null);
-  const connectionService = new ConnectionService();
+  const connectionService = useMemo(() => new ConnectionService(), []);
+  const notificationService = useMemo(() => new NotificationService(connectionService), [connectionService]);
+  const notificationsStartedRef = useRef(false);
 
   useEffect(() => {
     fetchReminders();
     fetchCategories();
     fetchTrashItems();
     fetchUsageInfo();
+    
+    // Uruchom system powiadomień dźwiękowych
+    if (!notificationsStartedRef.current) {
+      notificationService.startChecking();
+      notificationsStartedRef.current = true;
+    }
   }, []);
 
   useEffect(() => {
@@ -386,6 +395,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         setResult(resultWithLocalTime);
         setInput('');
         
+        // Reset remaining attempts on successful request
+        setRemainingAttempts(null);
+        
         // Update usage info immediately from headers if available
         if (response.dailyUsageCount !== undefined && response.dailyMaxUsage !== undefined && response.dailyRemaining !== undefined) {
           setDailyUsageInfo({
@@ -504,6 +516,18 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         handleSubmit={handleSubmit} 
         dailyUsageInfo={dailyUsageInfo}
       />
+      
+      {/* Test dźwięku powiadomienia */}
+      <div className="notification-test">
+        <button 
+          onClick={() => notificationService.testSound()}
+          className="test-sound-button"
+          title="Testuj dźwięk powiadomienia"
+        >
+          🔊 Testuj dźwięk
+        </button>
+      </div>
+      
       <div style={{ height: '1.5rem' }} />
       {loading && <div className="loading">Przetwarzanie przypomnienia...</div>}
       {error && <div className="error">{error}</div>}

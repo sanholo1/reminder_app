@@ -9,12 +9,14 @@ import {
   DatabaseTimeoutError
 } from "../exceptions/exception_handler";
 import { TrashRepositoryTypeORM, TrashItemEntity } from "./trash_repository_typeorm";
+import { DateTime } from "luxon";
 
 export interface ReminderEntity {
   id: string;
   activity: string;
   datetime: Date;
   category?: string | null;
+  sessionId: string;
   created_at?: Date;
 }
 
@@ -29,7 +31,7 @@ export class ReminderRepositoryTypeORM {
 
   async create(reminder: ReminderEntity): Promise<void> {
     try {
-      const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime, reminder.category);
+      const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId);
       await this.repository.save(newReminder);
     } catch (error) {
       throw new DatabaseConnectionError('Błąd podczas tworzenia przypomnienia w bazie danych');
@@ -49,6 +51,7 @@ export class ReminderRepositoryTypeORM {
         activity: reminder.activity,
         datetime: reminder.datetime,
         category: reminder.category,
+        sessionId: reminder.sessionId,
         created_at: reminder.created_at
       }));
     } catch (error) {
@@ -69,6 +72,7 @@ export class ReminderRepositoryTypeORM {
         activity: reminder.activity,
         datetime: reminder.datetime,
         category: reminder.category,
+        sessionId: reminder.sessionId,
         created_at: reminder.created_at
       };
     } catch (error) {
@@ -90,6 +94,7 @@ export class ReminderRepositoryTypeORM {
         activity: reminder.activity,
         datetime: reminder.datetime,
         category: reminder.category,
+        sessionId: reminder.sessionId,
         created_at: reminder.created_at
       }));
     } catch (error) {
@@ -130,6 +135,7 @@ export class ReminderRepositoryTypeORM {
         activity: reminder.activity,
         datetime: reminder.datetime,
         category: reminder.category,
+        sessionId: reminder.sessionId,
         deleted_at: new Date(),
         created_at: reminder.created_at
       });
@@ -164,6 +170,7 @@ export class ReminderRepositoryTypeORM {
           activity: reminder.activity,
           datetime: reminder.datetime,
           category: reminder.category,
+          sessionId: reminder.sessionId,
           deleted_at: new Date(),
           created_at: reminder.created_at
         });
@@ -210,6 +217,37 @@ export class ReminderRepositoryTypeORM {
         throw error;
       }
       throw new DatabaseQueryError('Błąd podczas przywracania z kosza');
+    }
+  }
+
+  async getActiveReminders(sessionId: string, currentTime: Date): Promise<ReminderEntity[]> {
+    try {
+      // Używamy lokalnej strefy czasowej (tej samej, w której zapisany jest DATETIME w MySQL)
+      // oraz okna +/- 1 minuta wokół bieżącego czasu lokalnego
+      const nowLocal = DateTime.local();
+      // Nie uruchamiaj przed czasem: start = teraz, koniec = +1 min
+      const startTimeStr = nowLocal.toFormat('yyyy-LL-dd HH:mm:ss');
+      const endTimeStr = nowLocal.plus({ minutes: 1 }).toFormat('yyyy-LL-dd HH:mm:ss');
+
+      const activeReminders = await this.repository
+        .createQueryBuilder('reminder')
+        .where('reminder.datetime BETWEEN :startTime AND :endTime', {
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+        })
+        .andWhere('reminder.sessionId = :sessionId', { sessionId })
+        .getMany();
+
+      return activeReminders.map(reminder => ({
+        id: reminder.id,
+        activity: reminder.activity,
+        datetime: reminder.datetime,
+        category: reminder.category,
+        sessionId: reminder.sessionId,
+        created_at: reminder.created_at
+      }));
+    } catch (error) {
+      throw new DatabaseQueryError('Błąd podczas pobierania aktywnych przypomnień z bazy danych');
     }
   }
 } 

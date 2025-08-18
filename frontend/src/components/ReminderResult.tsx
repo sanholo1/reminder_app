@@ -8,6 +8,7 @@ const ReminderResult: React.FC<ReminderResultProps> = ({ result }) => {
   if (!result || result.error) return null;
   return (
     <div className="result">
+      <h3 className="result-title">Ostatnio dodane</h3>
       <div className="result-item">
         <div className="result-label"><strong>Aktywność:</strong></div>
         <div className="result-value">{result.activity}</div>

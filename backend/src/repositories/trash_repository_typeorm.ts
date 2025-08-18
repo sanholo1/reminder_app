@@ -8,6 +8,7 @@ export interface TrashItemEntity {
   activity: string;
   datetime: Date;
   category?: string | null;
+  sessionId: string;
   deleted_at: Date;
   created_at?: Date;
 }
@@ -21,7 +22,7 @@ export class TrashRepositoryTypeORM {
 
   async addToTrash(reminder: TrashItemEntity): Promise<void> {
     try {
-      const trashItem = new TrashItem(reminder.id, reminder.activity, reminder.datetime, reminder.category);
+      const trashItem = new TrashItem(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId);
       await this.repository.save(trashItem);
     } catch (error) {
       throw new DatabaseQueryError('Błąd podczas dodawania do kosza');
@@ -42,6 +43,7 @@ export class TrashRepositoryTypeORM {
         activity: item.activity,
         datetime: item.datetime,
         category: item.category,
+        sessionId: item.sessionId,
         deleted_at: item.deleted_at,
         created_at: item.created_at
       }));
@@ -65,6 +67,7 @@ export class TrashRepositoryTypeORM {
         activity: trashItem.activity,
         datetime: trashItem.datetime,
         category: trashItem.category,
+        sessionId: trashItem.sessionId,
         deleted_at: trashItem.deleted_at,
         created_at: trashItem.created_at
       };

@@ -72,6 +72,30 @@ reminderRouter.get('/reminders', async (req: Request, res: Response, next: NextF
   }
 });
 
+// Get active reminders (reminders that should trigger now)
+reminderRouter.get('/reminders/active', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let sessionId = (req as any).sessionId;
+    
+    // For now, allow access without session for testing
+    if (!sessionId) {
+      console.log('No session ID provided, using default');
+      sessionId = 'default-session';
+    }
+
+    const now = new Date();
+    const activeReminders = await reminderRepository.getActiveReminders(sessionId, now);
+    
+    res.json({ 
+      activeReminders,
+      currentTime: now.toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting active reminders:', error);
+    res.status(500).json({ error: 'Failed to get active reminders' });
+  }
+});
+
 reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
