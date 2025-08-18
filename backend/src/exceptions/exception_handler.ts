@@ -149,6 +149,13 @@ export class ServiceUnavailableError extends HttpError {
   }
 }
 
+export class ConnectionError extends HttpError {
+  constructor(message: string = 'Błąd połączenia z serwerem') {
+    super(message, 503);
+    this.name = 'ConnectionError';
+  }
+}
+
 export class AbuseError extends HttpError {
   constructor(message: string = 'Wykryto nieprawidłowe użycie aplikacji') {
     super(message, 403);

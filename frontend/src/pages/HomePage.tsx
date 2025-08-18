@@ -168,73 +168,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setWarning(null);
-    setResult(null);
-    setRemainingAttempts(null);
-
-    try {
-      const response = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/reminders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: input, category: selectedCategory }),
-      });
-
-      const data = response.data;
-      
-      // Handle warnings and remaining attempts
-      if (response.warning) {
-        setWarning(response.warning);
-      }
-      if (response.remainingAttempts !== undefined) {
-        setRemainingAttempts(response.remainingAttempts);
-      }
-
-      if (data.error) {
-        setError(data.error);
-        // If it's an abuse error, show remaining attempts
-        if (response.remainingAttempts !== undefined) {
-          setRemainingAttempts(response.remainingAttempts);
-        }
-      } else {
-        const resultWithLocalTime = {
-          ...data,
-          datetime: data.datetime ? new Date(data.datetime).toLocaleString('pl-PL', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }) : null
-        };
-        setResult(resultWithLocalTime);
-        setInput('');
-        await fetchReminders();
-        if (onRefreshUsage) onRefreshUsage();
-      }
-    } catch (err: any) {
-      if (err instanceof ConnectionError) {
-        setError(err.message);
-        // Try to extract remaining attempts from error message if it's an abuse error
-        if (err.message.includes('Pozostało') && err.message.includes('prób')) {
-          const match = err.message.match(/Pozostało (\d+) prób/);
-          if (match) {
-            setRemainingAttempts(parseInt(match[1]));
-          }
-        }
-      } else {
-        setError(err.message || 'Nieznany błąd...');
-      }
-    } finally {
-      if (onRefreshUsage) onRefreshUsage();
-      setLoading(false);
-    }
-  };
-
   const handleDeleteReminder = async (id: string) => {
     setShowLoadingOverlay(true);
     setLoadingOverlayMessage('Usuwanie przypomnienia...');
@@ -347,6 +280,96 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
   const handleToggleTrash = () => {
     setShowTrash(!showTrash);
+  };
+
+  // Funkcja sprawdzająca połączenie z internetem
+  const checkInternetConnection = async (): Promise<boolean> => {
+    try {
+      // Próbujemy pobrać mały plik z internetu
+      const response = await fetch('https://www.google.com/favicon.ico', { 
+        method: 'HEAD',
+        mode: 'no-cors'
+      });
+      return true;
+    } catch (error) {
+      // Gdy nie ma połączenia z internetem
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setWarning(null);
+    setResult(null);
+    setRemainingAttempts(null);
+
+    // Sprawdź połączenie z internetem przed utworzeniem przypomnienia
+    const isOnline = await checkInternetConnection();
+    if (!isOnline) {
+      setError('Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: input, category: selectedCategory }),
+      });
+
+      const data = response.data;
+      
+      // Handle warnings and remaining attempts
+      if (response.warning) {
+        setWarning(response.warning);
+      }
+      if (response.remainingAttempts !== undefined) {
+        setRemainingAttempts(response.remainingAttempts);
+      }
+
+      if (data.error) {
+        setError(data.error);
+        // If it's an abuse error, show remaining attempts
+        if (response.remainingAttempts !== undefined) {
+          setRemainingAttempts(response.remainingAttempts);
+        }
+      } else {
+        const resultWithLocalTime = {
+          ...data,
+          datetime: data.datetime ? new Date(data.datetime).toLocaleString('pl-PL', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }) : null
+        };
+        setResult(resultWithLocalTime);
+        setInput('');
+        await fetchReminders();
+        if (onRefreshUsage) onRefreshUsage();
+      }
+    } catch (err: any) {
+      if (err instanceof ConnectionError) {
+        setError(err.message);
+        // Try to extract remaining attempts from error message if it's an abuse error
+        if (err.message.includes('Pozostało') && err.message.includes('prób')) {
+          const match = err.message.match(/Pozostało (\d+) prób/);
+          if (match) {
+            setRemainingAttempts(parseInt(match[1]));
+          }
+        }
+      } else {
+        setError(err.message || 'Nieznany błąd...');
+      }
+    } finally {
+      if (onRefreshUsage) onRefreshUsage();
+      setLoading(false);
+    }
   };
 
   const filteredReminders = reminders;

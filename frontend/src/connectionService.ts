@@ -26,6 +26,10 @@ export class ConnectionService {
             errorMessage = errorData.error;
           }
         } catch (parseError) {
+          // Gdy nie można sparsować odpowiedzi błędu
+          if (res.status >= 500) {
+            errorMessage = 'Serwer nie jest dostępny';
+          }
         }
         
         throw new ConnectionError(errorMessage);
@@ -45,6 +49,7 @@ export class ConnectionService {
       if (err instanceof ConnectionError) {
         throw err;
       }
+      
       throw new ConnectionError(err.message || 'Nieznany błąd połączenia');
     }
   }
