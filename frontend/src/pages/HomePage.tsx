@@ -489,7 +489,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
             className="trash-toggle-button"
             title={`${showTrash ? t('trash.hide') : t('trash.show')} (${trashItems.length} elementów)`}
           >
-            🗑️ {showTrash ? t('trash.hide') : `${t('trash.title')} (${trashItems.length})`}
+             {showTrash ? t('trash.hide') : `${t('trash.title')} (${trashItems.length})`}
           </button>
         </div>
         
