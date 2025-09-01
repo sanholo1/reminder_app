@@ -4,7 +4,9 @@ import HomePage from './pages/HomePage';
 import AuthorPage from './pages/AuthorPage';
 import LoadingPage from './components/LoadingPage';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import ThemeSwitcher from './components/ThemeSwitcher';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import './app.css';
 import { ConnectionService } from './connectionService';
 
@@ -48,6 +50,7 @@ const AppContent: React.FC = () => {
   return (
     <Router>
       <LanguageSwitcher />
+      <ThemeSwitcher />
       <div className="container">
         <nav className="nav">
           <Link to="/">{t('navigation.home')}</Link>
@@ -78,9 +81,11 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 
