@@ -5,7 +5,8 @@
   },
   "navigation": {
     "home": "Home",
-    "author": "About Author"
+    "author": "About Author",
+    "contact": "Contact"
   },
   "author": {
     "title": "Author: sanholo1",
@@ -112,6 +113,12 @@
   "theme": {
     "light": "Light",
     "dark": "Dark"
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "Have questions or suggestions about the app? Contact us!",
+    "email": "Email",
+    "response": "We'll respond to your message within 24 hours."
   },
   "result": {
     "title": "Recently added",

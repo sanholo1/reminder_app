@@ -5,7 +5,8 @@
   },
   "navigation": {
     "home": "Strona główna",
-    "author": "O autorze"
+    "author": "O autorze",
+    "contact": "Kontakt"
   },
   "author": {
     "title": "Autor: sanholo1",
@@ -112,6 +113,12 @@
   "theme": {
     "light": "Jasny",
     "dark": "Ciemny"
+  },
+  "contact": {
+    "title": "Kontakt",
+    "description": "Masz pytania lub sugestie dotyczące aplikacji? Skontaktuj się z nami!",
+    "email": "Email",
+    "response": "Odpowiemy na Twoją wiadomość w ciągu 24 godzin."
   },
   "result": {
     "title": "Ostatnio dodane",

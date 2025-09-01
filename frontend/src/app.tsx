@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import AuthorPage from './pages/AuthorPage';
+import ContactPage from './pages/ContactPage';
 import LoadingPage from './components/LoadingPage';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -55,6 +56,7 @@ const AppContent: React.FC = () => {
         <nav className="nav">
           <Link to="/">{t('navigation.home')}</Link>
           <Link to="/author">{t('navigation.author')}</Link>
+          <Link to="/contact">{t('navigation.contact')}</Link>
         </nav>
         {dailyRemaining !== null && (
           <div className="usage-badge">
@@ -70,6 +72,7 @@ const AppContent: React.FC = () => {
             } catch {}
           }} />} />
           <Route path="/author" element={<AuthorPage />} />
+          <Route path="/contact" element={<ContactPage />} />
         </Routes>
       </div>
       <footer className="footer">
