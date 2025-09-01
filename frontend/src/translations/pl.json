@@ -1,0 +1,112 @@
+{
+  "app": {
+    "title": "Reminder App",
+    "subtitle": "Twórz inteligentne przypomnienia używając naturalnego języka"
+  },
+  "navigation": {
+    "home": "Strona główna",
+    "author": "O autorze"
+  },
+  "author": {
+    "title": "Autor: sanholo1",
+    "project": "Projekt: Reminder App",
+    "year": "2025",
+    "github": "GitHub:"
+  },
+  "reminders": {
+    "title": "Lista Przypomnień",
+    "loading": "Ładowanie przypomnień...",
+    "empty": "Brak przypomnień",
+    "delete": "Usuń przypomnienie",
+    "all": "Wszystkie przypomnienia"
+  },
+  "categories": {
+    "title": "Kategoria:",
+    "new": "+ Nowa kategoria",
+    "cancel": "Anuluj",
+    "create": "Utwórz",
+    "placeholder": "Nazwa nowej kategorii...",
+    "delete": "Usuń kategorię",
+    "back": "← Wróć do głównej"
+  },
+  "trash": {
+    "title": "🗑️ Kosz",
+    "loading": "Ładowanie kosza...",
+    "empty": "Kosz jest pusty",
+    "show": "Pokaż kosz",
+    "hide": "Ukryj kosz",
+    "restore": "Przywróć przypomnienie",
+    "deleted": "Usunięto:"
+  },
+  "form": {
+    "placeholder": "Wpisz przypomnienie lub użyj głosu...",
+    "submit": "Utwórz Przypomnienie",
+    "creating": "Tworzenie...",
+    "processing": "Przetwarzanie przypomnienia..."
+  },
+  "voice": {
+    "listening": "Słucham... Mów teraz!",
+    "recognized": "Rozpoznany tekst:",
+    "clickToStop": "Kliknij aby zatrzymać",
+    "clickToSpeak": "Kliknij aby mówić",
+    "noSpeech": "Nie wykryto mowy. Spróbuj ponownie.",
+    "audioCapture": "Błąd dostępu do mikrofonu. Sprawdź uprawnienia.",
+    "notAllowed": "Dostęp do mikrofonu został zablokowany.",
+    "network": "Błąd sieci. Sprawdź połączenie internetowe.",
+    "error": "Wystąpił błąd rozpoznawania mowy.",
+    "notSupported": "Twoja przeglądarka nie obsługuje rozpoznawania mowy.",
+    "startError": "Nie udało się uruchomić rozpoznawania mowy."
+  },
+  "usage": {
+    "title": "Dzienne użycie",
+    "remaining": "Pozostało:",
+    "resetInfo": "Limit resetuje się o północy każdego dnia",
+    "limitReached": "Dzisiejszy limit został osiągnięty. Spróbuj ponownie jutro!",
+    "approachingLimit": "⚠️ Zostało tylko {count} użyć do końca dnia!",
+    "remainingAttempts": "Pozostałe użycia:"
+  },
+  "notifications": {
+    "testSound": "🔊 Testuj dźwięk",
+    "testTitle": "Testuj dźwięk powiadomienia"
+  },
+  "modals": {
+    "deleteCategory": {
+      "title": "Usuń kategorię",
+      "confirm": "Czy na pewno chcesz usunąć kategorię \"{category}\"?",
+      "warning": "Ta operacja usunie wszystkie przypomnienia należące do tej kategorii ({count} {word}).",
+      "irreversible": "⚠️ Tej operacji nie można cofnąć!",
+      "cancel": "Anuluj",
+      "delete": "Usuń kategorię",
+      "deleting": "Usuwanie..."
+    }
+  },
+  "loading": {
+    "app": "Ładowanie aplikacji...",
+    "server": "Sprawdzanie połączenia z serwerem...",
+    "data": "Pobieranie danych aplikacji...",
+    "finalizing": "Finalizowanie ładowania...",
+    "deletingReminder": "Usuwanie przypomnienia...",
+    "deletingCategory": "Usuwanie kategorii...",
+    "restoring": "Przywracanie z kosza..."
+  },
+  "errors": {
+    "connection": "Błąd połączenia:",
+    "unknown": "Nieznany błąd...",
+    "noInternet": "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+    "deleteReminder": "Błąd podczas usuwania przypomnienia",
+    "deleteCategory": "Błąd podczas usuwania kategorii",
+    "restoreFromTrash": "Błąd podczas przywracania z kosza",
+    "fetchReminders": "Błąd pobierania przypomnień:",
+    "fetchCategories": "Błąd pobierania kategorii:",
+    "fetchTrash": "Błąd pobierania kosza:",
+    "fetchUsage": "Błąd pobierania informacji o użyciu:",
+    "initApp": "Błąd podczas inicjalizacji aplikacji:"
+  },
+  "footer": {
+    "copyright": "© {year} sanholo1"
+  },
+  "language": {
+    "polish": "Polski",
+    "english": "English"
+  }
+}

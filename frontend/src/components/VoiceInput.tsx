@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './VoiceInput.css';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -21,6 +22,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const currentTranscriptRef = useRef<string>('');
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     // Sprawdź czy przeglądarka obsługuje Web Speech API
@@ -32,7 +34,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       const recognition = recognitionRef.current;
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = 'pl-PL'; // Polski język
+      recognition.lang = language === 'pl' ? 'pl-PL' : 'en-US'; // Dynamiczny język
       
       recognition.onstart = () => {
         onListeningChange(true);
@@ -74,19 +76,19 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         
         switch (event.error) {
           case 'no-speech':
-            setError('Nie wykryto mowy. Spróbuj ponownie.');
+            setError(t('voice.noSpeech'));
             break;
           case 'audio-capture':
-            setError('Błąd dostępu do mikrofonu. Sprawdź uprawnienia.');
+            setError(t('voice.audioCapture'));
             break;
           case 'not-allowed':
-            setError('Dostęp do mikrofonu został zablokowany.');
+            setError(t('voice.notAllowed'));
             break;
           case 'network':
-            setError('Błąd sieci. Sprawdź połączenie internetowe.');
+            setError(t('voice.network'));
             break;
           default:
-            setError('Wystąpił błąd rozpoznawania mowy.');
+            setError(t('voice.error'));
         }
       };
       
@@ -108,7 +110,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       };
     } else {
       setIsSupported(false);
-      setError('Twoja przeglądarka nie obsługuje rozpoznawania mowy.');
+      setError(t('voice.notSupported'));
     }
     
     return () => {
@@ -116,7 +118,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         recognitionRef.current.stop();
       }
     };
-  }, [onTranscript, onListeningChange]);
+  }, [onTranscript, onListeningChange, language, t]);
 
   // Resetuj stan gdy komponent się odmontowuje
   useEffect(() => {
@@ -148,7 +150,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
           recognitionRef.current.start();
         } catch (error) {
           console.error('Error starting speech recognition:', error);
-          setError('Nie udało się uruchomić rozpoznawania mowy.');
+          setError(t('voice.startError'));
         }
       }
     }
@@ -164,7 +166,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       onClick={toggleListening}
       disabled={disabled}
       className={`voice-button ${isListening ? 'listening' : ''} ${disabled ? 'disabled' : ''}`}
-      title={isListening ? 'Kliknij aby zatrzymać' : 'Kliknij aby mówić'}
+      title={isListening ? t('voice.clickToStop') : t('voice.clickToSpeak')}
     >
       {isListening ? '🔴' : '🎤'}
     </button>

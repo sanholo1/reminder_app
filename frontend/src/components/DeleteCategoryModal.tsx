@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface DeleteCategoryModalProps {
   isOpen: boolean;
@@ -17,24 +18,35 @@ const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
   onCancel,
   isDeleting
 }) => {
+  const { t } = useLanguage();
+  
   if (!isOpen) return null;
+
+  // Helper function to get the correct word form for reminders count
+  const getReminderWord = (count: number) => {
+    if (count === 1) return 'przypomnienie';
+    if (count < 5) return 'przypomnienia';
+    return 'przypomnień';
+  };
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3>Usuń kategorię</h3>
+          <h3>{t('modals.deleteCategory.title')}</h3>
         </div>
         <div className="modal-body">
           <p>
-            Czy na pewno chcesz usunąć kategorię <strong>"{category}"</strong>?
+            {t('modals.deleteCategory.confirm', { category })}
           </p>
           <p>
-            Ta operacja usunie wszystkie przypomnienia należące do tej kategorii 
-            ({reminderCount} {reminderCount === 1 ? 'przypomnienie' : reminderCount < 5 ? 'przypomnienia' : 'przypomnień'}).
+            {t('modals.deleteCategory.warning', { 
+              count: reminderCount, 
+              word: getReminderWord(reminderCount) 
+            })}
           </p>
           <p className="warning-text">
-            ⚠️ Tej operacji nie można cofnąć!
+            {t('modals.deleteCategory.irreversible')}
           </p>
         </div>
         <div className="modal-footer">
@@ -43,14 +55,14 @@ const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
             onClick={onCancel}
             disabled={isDeleting}
           >
-            Anuluj
+            {t('modals.deleteCategory.cancel')}
           </button>
           <button 
             className="delete-button" 
             onClick={onConfirm}
             disabled={isDeleting}
           >
-            {isDeleting ? 'Usuwanie...' : 'Usuń kategorię'}
+            {isDeleting ? t('modals.deleteCategory.deleting') : t('modals.deleteCategory.delete')}
           </button>
         </div>
       </div>

@@ -16,6 +16,56 @@
   --cuba-transparent: rgba(26, 15, 15, 0.8); /* Transparent Coca-Cola brown */
 }
 
+/* Language Switcher Styles */
+.language-switcher {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 5px;
+  z-index: 1000;
+  background: var(--cuba-transparent);
+  padding: 8px;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--cuba-lime);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.language-button {
+  background: transparent;
+  border: 2px solid var(--cuba-lime);
+  color: var(--cuba-cream);
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.language-button:hover {
+  background: var(--cuba-lime);
+  color: var(--cuba-cola-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(50, 205, 50, 0.4);
+}
+
+.language-button.active {
+  background: var(--cuba-lime);
+  color: var(--cuba-cola-dark);
+  box-shadow: 0 0 15px rgba(50, 205, 50, 0.6);
+}
+
+.language-button:active {
+  transform: translateY(0);
+}
+
 * {
   margin: 0;
   padding: 0;

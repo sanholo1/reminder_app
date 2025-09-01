@@ -7,6 +7,7 @@ import DeleteCategoryModal from '../components/DeleteCategoryModal';
 import TrashList from '../components/TrashList';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { NotificationService } from '../services/NotificationService';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Reminder {
   id: string;
@@ -58,6 +59,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const connectionService = useMemo(() => new ConnectionService(), []);
   const notificationService = useMemo(() => new NotificationService(connectionService), [connectionService]);
   const notificationsStartedRef = useRef(false);
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     fetchReminders();
@@ -214,7 +216,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
   const handleDeleteReminder = async (id: string) => {
     setShowLoadingOverlay(true);
-    setLoadingOverlayMessage('Usuwanie przypomnienia...');
+    setLoadingOverlayMessage(t('loading.deletingReminder'));
     
     try {
       await connectionService.deleteReminder(id);
@@ -226,7 +228,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       if (err instanceof ConnectionError) {
         setError(err.message);
       } else {
-        setError('Błąd podczas usuwania przypomnienia');
+        setError(t('errors.deleteReminder'));
       }
     } finally {
       setShowLoadingOverlay(false);
@@ -267,7 +269,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     
     setIsDeletingCategory(true);
     setShowLoadingOverlay(true);
-    setLoadingOverlayMessage('Usuwanie kategorii...');
+    setLoadingOverlayMessage(t('loading.deletingCategory'));
     
     try {
       await connectionService.deleteCategory(deletingCategory);
@@ -289,7 +291,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       if (err instanceof ConnectionError) {
         setError(err.message);
       } else {
-        setError('Błąd podczas usuwania kategorii');
+        setError(t('errors.deleteCategory'));
       }
     } finally {
       setIsDeletingCategory(false);
@@ -304,7 +306,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
   const handleRestoreFromTrash = async (id: string) => {
     setShowLoadingOverlay(true);
-    setLoadingOverlayMessage('Przywracanie z kosza...');
+    setLoadingOverlayMessage(t('loading.restoring'));
     
     try {
       await connectionService.restoreFromTrash(id);
@@ -315,7 +317,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       if (err instanceof ConnectionError) {
         setError(err.message);
       } else {
-        setError('Błąd podczas przywracania z kosza');
+        setError(t('errors.restoreFromTrash'));
       }
     } finally {
       setShowLoadingOverlay(false);
@@ -352,7 +354,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     // Sprawdź połączenie z internetem przed utworzeniem przypomnienia
     const isOnline = await checkInternetConnection();
     if (!isOnline) {
-      setError('Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.');
+      setError(t('errors.noInternet'));
       setLoading(false);
       return;
     }
@@ -424,7 +426,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           }
         }
       } else {
-        setError(err.message || 'Nieznany błąd...');
+        setError(err.message || t('errors.unknown'));
       }
     } finally {
       if (onRefreshUsage) onRefreshUsage();
@@ -437,8 +439,8 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
   return (
     <>
-      <h1 className="title">Reminder App</h1>
-      <p className="subtitle">Twórz inteligentne przypomnienia używając naturalnego języka</p>
+      <h1 className="title">{t('app.title')}</h1>
+      <p className="subtitle">{t('app.subtitle')}</p>
       
       {/* Category Navigation */}
       <div className="category-navigation">
@@ -447,7 +449,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
             onClick={handleBackToMain}
             className="back-button"
           >
-            ← Wróć do głównej
+            {t('categories.back')}
           </button>
         )}
         
@@ -457,7 +459,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
             onChange={(e) => handleCategorySelect(e.target.value || null)}
             className="category-select"
           >
-            <option value="">Wszystkie przypomnienia</option>
+            <option value="">{t('reminders.all')}</option>
             {categories.map(category => (
               <option key={category} value={category}>{category}</option>
             ))}
@@ -467,15 +469,15 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
             onClick={() => setShowCategoryForm(!showCategoryForm)}
             className="new-category-button"
           >
-            {showCategoryForm ? 'Anuluj' : '+ Nowa kategoria'}
+            {showCategoryForm ? t('categories.cancel') : t('categories.new')}
           </button>
           
           <button 
             onClick={handleToggleTrash}
             className="trash-toggle-button"
-            title={`${showTrash ? 'Ukryj' : 'Pokaż'} kosz (${trashItems.length} elementów)`}
+            title={`${showTrash ? t('trash.hide') : t('trash.show')} (${trashItems.length} elementów)`}
           >
-            🗑️ {showTrash ? 'Ukryj kosz' : `Kosz (${trashItems.length})`}
+            🗑️ {showTrash ? t('trash.hide') : `${t('trash.title')} (${trashItems.length})`}
           </button>
         </div>
         
@@ -485,11 +487,11 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
               type="text"
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="Nazwa nowej kategorii..."
+              placeholder={t('categories.placeholder')}
               className="category-input"
             />
             <button type="submit" disabled={!newCategory.trim()} className="category-submit">
-              Utwórz
+              {t('categories.create')}
             </button>
           </form>
         )}
@@ -498,13 +500,13 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       {/* Current Category Display */}
       {selectedCategory && (
         <div className="current-category">
-          <h2>Kategoria: {selectedCategory}</h2>
+          <h2>{t('categories.title')} {selectedCategory}</h2>
           <button 
             onClick={() => handleDeleteCategory(selectedCategory)}
             className="delete-category-button"
-            title="Usuń kategorię i wszystkie jej przypomnienia"
+            title={t('categories.delete')}
           >
-            🗑️ Usuń kategorię
+            🗑️ {t('categories.delete')}
           </button>
         </div>
       )}
@@ -522,19 +524,19 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         <button 
           onClick={() => notificationService.testSound()}
           className="test-sound-button"
-          title="Testuj dźwięk powiadomienia"
+          title={t('notifications.testTitle')}
         >
-          🔊 Testuj dźwięk
+          {t('notifications.testSound')}
         </button>
       </div>
       
       <div style={{ height: '1.5rem' }} />
-      {loading && <div className="loading">Przetwarzanie przypomnienia...</div>}
+      {loading && <div className="loading">{t('form.processing')}</div>}
       {error && <div className="error">{error}</div>}
       {warning && <div className="warning">{warning}</div>}
       {remainingAttempts !== null && remainingAttempts < 3 && (
         <div className="attempts-info">
-          ⚠️ Pozostało prób: {remainingAttempts}
+          ⚠️ {t('usage.remainingAttempts')} {remainingAttempts}
         </div>
       )}
       <ReminderResult result={filteredResult} />

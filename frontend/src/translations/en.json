@@ -1,0 +1,112 @@
+{
+  "app": {
+    "title": "Reminder App",
+    "subtitle": "Create intelligent reminders using natural language"
+  },
+  "navigation": {
+    "home": "Home",
+    "author": "About Author"
+  },
+  "author": {
+    "title": "Author: sanholo1",
+    "project": "Project: Reminder App",
+    "year": "2025",
+    "github": "GitHub:"
+  },
+  "reminders": {
+    "title": "Reminders List",
+    "loading": "Loading reminders...",
+    "empty": "No reminders",
+    "delete": "Delete reminder",
+    "all": "All reminders"
+  },
+  "categories": {
+    "title": "Category:",
+    "new": "+ New category",
+    "cancel": "Cancel",
+    "create": "Create",
+    "placeholder": "New category name...",
+    "delete": "Delete category",
+    "back": "← Back to main"
+  },
+  "trash": {
+    "title": "🗑️ Trash",
+    "loading": "Loading trash...",
+    "empty": "Trash is empty",
+    "show": "Show trash",
+    "hide": "Hide trash",
+    "restore": "Restore reminder",
+    "deleted": "Deleted:"
+  },
+  "form": {
+    "placeholder": "Enter reminder or use voice...",
+    "submit": "Create Reminder",
+    "creating": "Creating...",
+    "processing": "Processing reminder..."
+  },
+  "voice": {
+    "listening": "Listening... Speak now!",
+    "recognized": "Recognized text:",
+    "clickToStop": "Click to stop",
+    "clickToSpeak": "Click to speak",
+    "noSpeech": "No speech detected. Try again.",
+    "audioCapture": "Microphone access error. Check permissions.",
+    "notAllowed": "Microphone access has been blocked.",
+    "network": "Network error. Check your internet connection.",
+    "error": "Speech recognition error occurred.",
+    "notSupported": "Your browser does not support speech recognition.",
+    "startError": "Failed to start speech recognition."
+  },
+  "usage": {
+    "title": "Daily usage",
+    "remaining": "Remaining:",
+    "resetInfo": "Limit resets at midnight each day",
+    "limitReached": "Today's limit has been reached. Try again tomorrow!",
+    "approachingLimit": "⚠️ Only {count} uses left until end of day!",
+    "remainingAttempts": "Remaining uses:"
+  },
+  "notifications": {
+    "testSound": "🔊 Test sound",
+    "testTitle": "Test notification sound"
+  },
+  "modals": {
+    "deleteCategory": {
+      "title": "Delete category",
+      "confirm": "Are you sure you want to delete category \"{category}\"?",
+      "warning": "This operation will delete all reminders belonging to this category ({count} {word}).",
+      "irreversible": "⚠️ This operation cannot be undone!",
+      "cancel": "Cancel",
+      "delete": "Delete category",
+      "deleting": "Deleting..."
+    }
+  },
+  "loading": {
+    "app": "Loading application...",
+    "server": "Checking server connection...",
+    "data": "Fetching application data...",
+    "finalizing": "Finalizing loading...",
+    "deletingReminder": "Deleting reminder...",
+    "deletingCategory": "Deleting category...",
+    "restoring": "Restoring from trash..."
+  },
+  "errors": {
+    "connection": "Connection error:",
+    "unknown": "Unknown error...",
+    "noInternet": "No internet connection. Check your connection and try again.",
+    "deleteReminder": "Error while deleting reminder",
+    "deleteCategory": "Error while deleting category",
+    "restoreFromTrash": "Error while restoring from trash",
+    "fetchReminders": "Error fetching reminders:",
+    "fetchCategories": "Error fetching categories:",
+    "fetchTrash": "Error fetching trash:",
+    "fetchUsage": "Error fetching usage information:",
+    "initApp": "Error during application initialization:"
+  },
+  "footer": {
+    "copyright": "© {year} sanholo1"
+  },
+  "language": {
+    "polish": "Polski",
+    "english": "English"
+  }
+}

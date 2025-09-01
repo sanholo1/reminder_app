@@ -3,32 +3,35 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import AuthorPage from './pages/AuthorPage';
 import LoadingPage from './components/LoadingPage';
+import LanguageSwitcher from './components/LanguageSwitcher';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import './app.css';
 import { ConnectionService } from './connectionService';
 
-function App() {
+const AppContent: React.FC = () => {
   const [dailyRemaining, setDailyRemaining] = useState<number | null>(null);
   const [dailyResetAt, setDailyResetAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Ładowanie aplikacji...");
   const connectionService = new ConnectionService();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        setLoadingMessage("Sprawdzanie połączenia z serwerem...");
+        setLoadingMessage(t('loading.server'));
         await new Promise(resolve => setTimeout(resolve, 500)); // Minimal loading time
         
-        setLoadingMessage("Pobieranie danych aplikacji...");
+        setLoadingMessage(t('loading.data'));
         const res = await connectionService.request<any>('/reminders');
         if (res.dailyRemaining !== undefined) setDailyRemaining(res.dailyRemaining);
         if (res.dailyResetAt) setDailyResetAt(res.dailyResetAt);
         
-        setLoadingMessage("Finalizowanie ładowania...");
+        setLoadingMessage(t('loading.finalizing'));
         await new Promise(resolve => setTimeout(resolve, 300)); // Smooth transition
         
       } catch (error) {
-        console.error('Błąd podczas inicjalizacji aplikacji:', error);
+        console.error(t('errors.initApp'), error);
         // Continue loading even if there's an error
       } finally {
         setIsLoading(false);
@@ -36,7 +39,7 @@ function App() {
     };
     
     initializeApp();
-  }, []);
+  }, [t]);
 
   if (isLoading) {
     return <LoadingPage message={loadingMessage} />;
@@ -44,14 +47,15 @@ function App() {
 
   return (
     <Router>
+      <LanguageSwitcher />
       <div className="container">
         <nav className="nav">
-          <Link to="/">Strona główna</Link>
-          <Link to="/author">O autorze</Link>
+          <Link to="/">{t('navigation.home')}</Link>
+          <Link to="/author">{t('navigation.author')}</Link>
         </nav>
         {dailyRemaining !== null && (
           <div className="usage-badge">
-            Pozostałe użycia: {dailyRemaining}
+            {t('usage.remainingAttempts')} {dailyRemaining}
           </div>
         )}
         <Routes>
@@ -66,9 +70,17 @@ function App() {
         </Routes>
       </div>
       <footer className="footer">
-        © {new Date().getFullYear()} sanholo1
+        {t('footer.copyright', { year: new Date().getFullYear() })}
       </footer>
     </Router>
+  );
+};
+
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 

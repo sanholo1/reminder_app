@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import VoiceInput from './VoiceInput';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ReminderFormProps {
   input: string;
@@ -16,6 +17,7 @@ interface ReminderFormProps {
 const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, handleSubmit, dailyUsageInfo }) => {
   const [isListening, setIsListening] = useState(false);
   const [voicePreview, setVoicePreview] = useState('');
+  const { t } = useLanguage();
 
   const handleVoiceTranscript = (transcript: string) => {
     setInput(transcript);
@@ -35,14 +37,14 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
         }`}>
           <div className="usage-header">
             <span className="usage-icon">📊</span>
-            <span className="usage-title">Dzienne użycie</span>
+            <span className="usage-title">{t('usage.title')}</span>
           </div>
           <div className="usage-details">
             <span className="usage-count">
               {dailyUsageInfo ? `${dailyUsageInfo.dailyUsageCount} / ${dailyUsageInfo.maxDailyUsage}` : '0 / 20'}
             </span>
             <span className="usage-remaining">
-              Pozostało: {dailyUsageInfo?.remainingDailyUsage ?? 20}
+              {t('usage.remaining')} {dailyUsageInfo?.remainingDailyUsage ?? 20}
             </span>
           </div>
           <div className="usage-progress">
@@ -54,15 +56,15 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
             ></div>
           </div>
           <div className="usage-reset-info">
-            <small>Limit resetuje się o północy każdego dnia</small>
+            <small>{t('usage.resetInfo')}</small>
             {dailyUsageInfo.remainingDailyUsage <= 0 && (
               <div className="limit-reached-message">
-                <strong>Dzisiejszy limit został osiągnięty. Spróbuj ponownie jutro!</strong>
+                <strong>{t('usage.limitReached')}</strong>
               </div>
             )}
             {dailyUsageInfo.remainingDailyUsage > 0 && dailyUsageInfo.remainingDailyUsage <= 5 && (
               <div className="approaching-limit-message">
-                <strong>⚠️ Zostało tylko {dailyUsageInfo.remainingDailyUsage} użyć do końca dnia!</strong>
+                <strong>{t('usage.approachingLimit', { count: dailyUsageInfo.remainingDailyUsage })}</strong>
               </div>
             )}
           </div>
@@ -75,7 +77,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Wpisz przypomnienie lub użyj głosu..."
+            placeholder={t('form.placeholder')}
             className="input"
           />
           <VoiceInput 
@@ -88,10 +90,10 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
         </div>
         {isListening && (
           <div className="voice-status-indicator">
-            <span>🎤 Słucham... Mów teraz!</span>
+            <span>🎤 {t('voice.listening')}</span>
             {voicePreview && (
               <div className="voice-preview">
-                <span>Rozpoznany tekst: "{voicePreview}"</span>
+                <span>{t('voice.recognized')} "{voicePreview}"</span>
               </div>
             )}
           </div>
@@ -101,7 +103,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
           disabled={loading || !input.trim() || (dailyUsageInfo?.remainingDailyUsage ?? 0) <= 0}
           className="button"
         >
-          {loading ? 'Tworzenie...' : 'Utwórz Przypomnienie'}
+          {loading ? t('form.creating') : t('form.submit')}
         </button>
       </form>
     </div>
