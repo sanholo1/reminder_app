@@ -80,6 +80,15 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     }
   }, [selectedCategory]);
 
+  // Odśwież dane gdy zmieni się język, aby przeformatować daty
+  useEffect(() => {
+    // Tylko odśwież jeśli dane już istnieją (żeby uniknąć niepotrzebnych zapytań)
+    if (reminders.length > 0 || trashItems.length > 0) {
+      fetchReminders();
+      fetchTrashItems();
+    }
+  }, [language]);
+
   const fetchReminders = async () => {
     try {
       let response;
@@ -90,8 +99,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       }
       const data = response.data;
       console.log('Daty z backendu:', data.reminders.map(r => ({ id: r.id, datetime: r.datetime })));
+      const locale = language === 'pl' ? 'pl-PL' : 'en-US';
       const remindersWithLocalTime = data.reminders.map(reminder => {
-        const localDateTime = new Date(reminder.datetime).toLocaleString('pl-PL', {
+        const localDateTime = new Date(reminder.datetime).toLocaleString(locale, {
           weekday: 'long',
           month: 'long',
           day: 'numeric',
@@ -103,7 +113,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         return {
           ...reminder,
           datetime: localDateTime,
-          created_at: reminder.created_at ? new Date(reminder.created_at).toLocaleString('pl-PL', {
+          created_at: reminder.created_at ? new Date(reminder.created_at).toLocaleString(locale, {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
@@ -145,9 +155,10 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       const response = await connectionService.getTrashItems();
       const data = response.data;
       
+      const locale = language === 'pl' ? 'pl-PL' : 'en-US';
       const trashItemsWithLocalTime = data.trashItems.map((item: any) => ({
         ...item,
-        datetime: new Date(item.datetime).toLocaleString('pl-PL', {
+        datetime: new Date(item.datetime).toLocaleString(locale, {
           weekday: 'long',
           month: 'long',
           day: 'numeric',
@@ -155,7 +166,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           minute: '2-digit',
           hour12: false
         }),
-        deleted_at: new Date(item.deleted_at).toLocaleString('pl-PL', {
+        deleted_at: new Date(item.deleted_at).toLocaleString(locale, {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -163,7 +174,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           minute: '2-digit',
           hour12: false
         }),
-        created_at: item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', {
+        created_at: item.created_at ? new Date(item.created_at).toLocaleString(locale, {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -383,9 +394,10 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           setRemainingAttempts(response.remainingAttempts);
         }
       } else {
+        const locale = language === 'pl' ? 'pl-PL' : 'en-US';
         const resultWithLocalTime = {
           ...data,
-          datetime: data.datetime ? new Date(data.datetime).toLocaleString('pl-PL', {
+          datetime: data.datetime ? new Date(data.datetime).toLocaleString(locale, {
             weekday: 'long',
             month: 'long',
             day: 'numeric',

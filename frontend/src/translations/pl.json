@@ -108,5 +108,11 @@
   "language": {
     "polish": "Polski",
     "english": "English"
+  },
+  "result": {
+    "title": "Ostatnio dodane",
+    "activity": "Aktywność",
+    "datetime": "Data i Czas",
+    "timeNotRecognized": "Czas nie został rozpoznany"
   }
 }
