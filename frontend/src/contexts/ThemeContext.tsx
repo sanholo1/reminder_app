@@ -43,32 +43,32 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     
     if (currentTheme === 'light') {
       // Light theme colors - Softer, more subtle contrasts
-      root.style.setProperty('--cuba-cola-dark', '#fefefe');      // Almost white base
-      root.style.setProperty('--cuba-cola-medium', '#f5f5f5');    // Very light gray
-      root.style.setProperty('--cuba-cola-light', '#e8e8e8');     // Light gray
-      root.style.setProperty('--cuba-cola-golden', '#6b7280');    // Muted gray accent
-      root.style.setProperty('--cuba-lime', '#4b5563');           // Muted dark gray
-      root.style.setProperty('--cuba-lime-light', '#6b7280');     // Medium gray
-      root.style.setProperty('--cuba-lime-dark', '#374151');      // Darker gray
-      root.style.setProperty('--cuba-lime-fresh', '#6366f1');     // Subtle blue accent
-      root.style.setProperty('--cuba-cream', '#374151');          // Soft dark text
-      root.style.setProperty('--cuba-white', '#ffffff');          // Pure white
-      root.style.setProperty('--cuba-black', '#fefefe');          // Almost white background
-      root.style.setProperty('--cuba-transparent', 'rgba(254, 254, 254, 0.95)'); // Almost white transparent
+      root.style.setProperty('--dark-base', '#fefefe');      // Almost white base
+      root.style.setProperty('--dark-medium', '#f5f5f5');    // Very light gray
+      root.style.setProperty('--dark-light', '#e8e8e8');     // Light gray
+      root.style.setProperty('--dark-accent', '#6b7280');    // Muted gray accent
+      root.style.setProperty('--light-accent', '#4b5563');   // Muted dark gray
+      root.style.setProperty('--light-accent-hover', '#6b7280');     // Medium gray
+      root.style.setProperty('--light-accent-dark', '#374151');      // Darker gray
+      root.style.setProperty('--light-accent-fresh', '#6366f1');     // Subtle blue accent
+      root.style.setProperty('--text-primary', '#374151');          // Soft dark text
+      root.style.setProperty('--text-secondary', '#ffffff');          // Pure white
+      root.style.setProperty('--background', '#fefefe');          // Almost white background
+      root.style.setProperty('--overlay', 'rgba(254, 254, 254, 0.95)'); // Almost white transparent
     } else {
       // Dark theme colors - Dark Navy palette
-      root.style.setProperty('--cuba-cola-dark', '#0f1419');      // Dark navy base
-      root.style.setProperty('--cuba-cola-medium', '#1a2332');    // Medium navy
-      root.style.setProperty('--cuba-cola-light', '#2a3441');     // Light navy
-      root.style.setProperty('--cuba-cola-golden', '#4a90e2');    // Blue accent
-      root.style.setProperty('--cuba-lime', '#00d4aa');           // Teal accent
-      root.style.setProperty('--cuba-lime-light', '#26e6c7');     // Light teal
-      root.style.setProperty('--cuba-lime-dark', '#00a085');      // Dark teal
-      root.style.setProperty('--cuba-lime-fresh', '#00ffcc');     // Bright teal
-      root.style.setProperty('--cuba-cream', '#e8f4f8');          // Light text
-      root.style.setProperty('--cuba-white', '#ffffff');          // Pure white
-      root.style.setProperty('--cuba-black', '#0f1419');          // Dark navy background
-      root.style.setProperty('--cuba-transparent', 'rgba(15, 20, 25, 0.8)'); // Navy transparent
+      root.style.setProperty('--dark-base', '#0f1419');      // Dark navy base
+      root.style.setProperty('--dark-medium', '#1a2332');    // Medium navy
+      root.style.setProperty('--dark-light', '#2a3441');     // Light navy
+      root.style.setProperty('--dark-accent', '#4a90e2');    // Blue accent
+      root.style.setProperty('--light-accent', '#00d4aa');   // Teal accent
+      root.style.setProperty('--light-accent-hover', '#26e6c7');     // Light teal
+      root.style.setProperty('--light-accent-dark', '#00a085');      // Dark teal
+      root.style.setProperty('--light-accent-fresh', '#00ffcc');     // Bright teal
+      root.style.setProperty('--text-primary', '#e8f4f8');          // Light text
+      root.style.setProperty('--text-secondary', '#ffffff');          // Pure white
+      root.style.setProperty('--background', '#0f1419');          // Dark navy background
+      root.style.setProperty('--overlay', 'rgba(15, 20, 25, 0.8)'); // Navy transparent
     }
   };
 

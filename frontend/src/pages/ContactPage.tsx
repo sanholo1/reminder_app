@@ -15,7 +15,7 @@ const ContactPage: React.FC = () => {
         <a 
           href="mailto:reminderappcontact@gmail.com"
           style={{
-            color: 'var(--cuba-lime)',
+            color: 'var(--light-accent)',
             textDecoration: 'none',
             fontSize: '1.2rem',
             fontWeight: 'bold'
@@ -30,7 +30,7 @@ const ContactPage: React.FC = () => {
           reminderappcontact@gmail.com
         </a>
       </div>
-      <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: 'var(--cuba-cream)' }}>
+      <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
         <p>{t('contact.response')}</p>
       </div>
     </div>

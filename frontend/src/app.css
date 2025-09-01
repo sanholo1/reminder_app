@@ -1,19 +1,19 @@
-/* Dark Navy & Cream Theme - Modern Color Palette */
+/* Light & Dark Theme - Modern Color Palette */
 
 :root {
-  /* Dark Navy & Cream Color Palette - Default Dark Theme */
-  --cuba-cola-dark: #0f1419;      /* Dark navy base */
-  --cuba-cola-medium: #1a2332;    /* Medium navy */
-  --cuba-cola-light: #2a3441;     /* Light navy */
-  --cuba-cola-golden: #4a90e2;    /* Blue accent */
-  --cuba-lime: #00d4aa;           /* Teal accent */
-  --cuba-lime-light: #26e6c7;     /* Light teal */
-  --cuba-lime-dark: #00a085;      /* Dark teal */
-  --cuba-lime-fresh: #00ffcc;     /* Bright teal */
-  --cuba-cream: #e8f4f8;          /* Light text */
-  --cuba-white: #ffffff;          /* Pure white */
-  --cuba-black: #0f1419;          /* Dark navy background */
-  --cuba-transparent: rgba(15, 20, 25, 0.8); /* Navy transparent */
+  /* Dark Theme Color Palette - Default */
+  --dark-base: #0f1419;      /* Dark navy base */
+  --dark-medium: #1a2332;    /* Medium navy */
+  --dark-light: #2a3441;     /* Light navy */
+  --dark-accent: #4a90e2;    /* Blue accent */
+  --light-accent: #00d4aa;   /* Teal accent */
+  --light-accent-hover: #26e6c7;     /* Light teal */
+  --light-accent-dark: #00a085;      /* Dark teal */
+  --light-accent-fresh: #00ffcc;     /* Bright teal */
+  --text-primary: #e8f4f8;          /* Light text */
+  --text-secondary: #ffffff;          /* Pure white */
+  --background: #0f1419;          /* Dark navy background */
+  --overlay: rgba(15, 20, 25, 0.8); /* Navy transparent */
 }
 
 /* Language and Theme Switchers Styles */
@@ -24,11 +24,11 @@
   display: flex;
   gap: 5px;
   z-index: 1000;
-  background: var(--cuba-transparent);
+  background: var(--overlay);
   padding: 8px;
   border-radius: 25px;
   backdrop-filter: blur(10px);
-  border: 1px solid var(--cuba-lime);
+  border: 1px solid var(--light-accent);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   width: 170px;
 }
@@ -40,19 +40,19 @@
   display: flex;
   gap: 5px;
   z-index: 1000;
-  background: var(--cuba-transparent);
+  background: var(--overlay);
   padding: 8px;
   border-radius: 25px;
   backdrop-filter: blur(10px);
-  border: 1px solid var(--cuba-lime);
+  border: 1px solid var(--light-accent);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   width: 170px;
 }
 
 .language-button {
   background: transparent;
-  border: 2px solid var(--cuba-lime);
-  color: var(--cuba-cream);
+  border: 2px solid var(--light-accent);
+  color: var(--text-primary);
   padding: 8px 12px;
   border-radius: 20px;
   cursor: pointer;
@@ -67,16 +67,16 @@
 }
 
 .language-button:hover {
-  background: var(--cuba-lime);
-  color: var(--cuba-cola-dark);
+  background: var(--light-accent);
+  color: var(--background);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(50, 205, 50, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
 }
 
 .language-button.active {
-  background: var(--cuba-lime);
-  color: var(--cuba-cola-dark);
-  box-shadow: 0 0 15px rgba(50, 205, 50, 0.6);
+  background: var(--light-accent);
+  color: var(--background);
+  box-shadow: 0 0 15px rgba(0, 212, 170, 0.6);
 }
 
 .language-button:active {
@@ -85,8 +85,8 @@
 
 .theme-button {
   background: transparent;
-  border: 2px solid var(--cuba-lime);
-  color: var(--cuba-cream);
+  border: 2px solid var(--light-accent);
+  color: var(--text-primary);
   padding: 8px 12px;
   border-radius: 20px;
   cursor: pointer;
@@ -101,16 +101,16 @@
 }
 
 .theme-button:hover {
-  background: var(--cuba-lime);
-  color: var(--cuba-cola-dark);
+  background: var(--light-accent);
+  color: var(--background);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(50, 205, 50, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
 }
 
 .theme-button.active {
-  background: var(--cuba-lime);
-  color: var(--cuba-cola-dark);
-  box-shadow: 0 0 15px rgba(50, 205, 50, 0.6);
+  background: var(--light-accent);
+  color: var(--background);
+  box-shadow: 0 0 15px rgba(0, 212, 170, 0.6);
 }
 
 .theme-button:active {
@@ -125,19 +125,19 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, var(--cuba-cola-dark) 0%, var(--cuba-cola-medium) 50%, var(--cuba-cola-light) 100%);
+  background: linear-gradient(135deg, var(--dark-base) 0%, var(--dark-medium) 50%, var(--dark-light) 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  color: var(--cuba-cream);
+  color: var(--text-primary);
   transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Light theme specific improvements - Softer contrasts */
 body.light-theme {
-  background: linear-gradient(135deg, #fefefe 0%, #f5f5f5 50%, #e8e8e8 100%);
+  background: linear-gradient(135deg, var(--dark-base) 0%, var(--dark-medium) 50%, var(--dark-light) 100%);
 }
 
 body.light-theme .container {
@@ -147,34 +147,39 @@ body.light-theme .container {
 }
 
 body.light-theme .nav a {
-  color: #4b5563;
+  color: #6366f1;
   border-bottom: 2px solid transparent;
 }
 
 body.light-theme .nav a:hover {
-  color: #6366f1;
-  border-bottom-color: #6366f1;
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
 }
 
 body.light-theme .form .input {
   background: rgba(255, 255, 255, 0.95);
   border: 2px solid #e8e8e8;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 body.light-theme .form .input:focus {
-  border-color: #6366f1;
+  border-color: var(--light-accent-fresh);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+body.light-theme .form .input::placeholder {
+  color: var(--text-primary);
+  opacity: 0.7;
+}
+
 body.light-theme .button {
-  background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--light-accent) 0%, var(--light-accent-hover) 100%);
+  color: var(--text-secondary);
   border: none;
 }
 
 body.light-theme .button:hover {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  background: linear-gradient(135deg, var(--light-accent-dark) 0%, var(--light-accent) 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(75, 85, 99, 0.2);
 }
@@ -182,12 +187,67 @@ body.light-theme .button:hover {
 body.light-theme .reminder-item {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #e8e8e8;
-  color: #374151;
+  color: var(--text-primary);
+}
+
+body.light-theme .trash-section {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(232, 232, 232, 0.8);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .trash-item {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e8e8e8;
+  color: var(--text-primary);
+}
+
+body.light-theme .trash-item:hover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: var(--light-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .new-category-button {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: var(--text-secondary);
+}
+
+body.light-theme .new-category-button:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+}
+
+body.light-theme .test-sound-button {
+  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  border: 2px solid #4f46e5;
+  color: var(--text-secondary);
+}
+
+body.light-theme .test-sound-button:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  border-color: #3730a3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+body.light-theme .current-category {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .reminder-item {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e8e8e8;
+  color: var(--text-primary);
 }
 
 body.light-theme .reminder-item:hover {
   background: rgba(255, 255, 255, 0.98);
-  border-color: #6b7280;
+  border-color: var(--light-accent-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
@@ -204,9 +264,9 @@ body.light-theme .reminder-item:hover {
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: var(--cuba-cream);
+  color: var(--text-primary);
   min-height: 100vh;
-  background: var(--cuba-transparent);
+  background: var(--overlay);
   transition: background 0.3s ease, color 0.3s ease;
   border-radius: 15px;
   backdrop-filter: blur(10px);
@@ -214,7 +274,7 @@ body.light-theme .reminder-item:hover {
 }
 
 a {
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
   text-decoration: none;
   font-size: 1.2rem;
   font-weight: bold;
@@ -228,7 +288,7 @@ a {
 
 a:hover {
   background: rgba(93, 42, 42, 0.4);
-  color: var(--cuba-lime-light);
+  color: var(--light-accent-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(26, 15, 15, 0.3);
 }
@@ -246,7 +306,7 @@ a:hover {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
   font-weight: 300;
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
   text-shadow: 2px 2px 4px rgba(26, 15, 15, 0.5);
 }
 
@@ -256,7 +316,7 @@ a:hover {
   margin-bottom: 3rem;
   opacity: 0.9;
   font-weight: 300;
-  color: var(--cuba-cream);
+  color: var(--text-primary);
 }
 
 .form {
@@ -283,7 +343,7 @@ a:hover {
   border-radius: 10px;
   font-size: 1rem;
   background: rgba(93, 42, 42, 0.2);
-  color: var(--cuba-cream);
+  color: var(--text-primary);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(93, 42, 42, 0.4);
   transition: all 0.3s ease;
@@ -291,21 +351,22 @@ a:hover {
 
 .input:focus {
   outline: none;
-  border-color: var(--cuba-lime-fresh);
+  border-color: var(--light-accent-fresh);
   box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3);
   background: rgba(93, 42, 42, 0.3);
 }
 
 .input::placeholder {
-  color: rgba(245, 245, 220, 0.6);
+  color: var(--text-primary);
+  opacity: 0.8;
 }
 
 .button {
   padding: 1rem 2rem;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-dark) 100%);
-  color: var(--cuba-white);
+  background: linear-gradient(135deg, var(--light-accent-fresh) 0%, var(--light-accent-dark) 100%);
+  color: var(--text-secondary);
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -317,7 +378,7 @@ a:hover {
 }
 
 .button:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--cuba-lime-light) 0%, var(--cuba-lime-fresh) 100%);
+  background: linear-gradient(135deg, var(--light-accent-hover) 0%, var(--light-accent-fresh) 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 255, 0, 0.4);
 }
@@ -336,7 +397,7 @@ a:hover {
   margin: 1rem 0;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(93, 42, 42, 0.3);
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
 }
 
 .error {
@@ -368,7 +429,7 @@ a:hover {
   border-radius: 8px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(50, 205, 50, 0.3);
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
   font-size: 0.9rem;
   font-weight: bold;
   animation: pulse 2s infinite;
@@ -381,7 +442,7 @@ a:hover {
   border-radius: 6px;
   border: 1px solid rgba(93, 42, 42, 0.2);
   font-size: 0.85rem;
-  color: var(--cuba-cream);
+  color: var(--text-primary);
   font-style: italic;
 }
 
@@ -415,7 +476,7 @@ a:hover {
   font-size: 1.4rem;
   margin-bottom: 1.5rem;
   font-weight: 400;
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
   text-shadow: 1px 1px 2px rgba(26, 15, 15, 0.5);
   padding-bottom: 0.8rem;
   border-bottom: 2px solid rgba(144, 238, 144, 0.3);
@@ -431,12 +492,12 @@ a:hover {
 .result-label {
   font-weight: 600;
   min-width: 120px;
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
 }
 
 .result-value {
   flex: 1;
-  color: var(--cuba-cream);
+  color: var(--text-primary);
 }
 
 .notification-test {
@@ -446,8 +507,8 @@ a:hover {
 
 .test-sound-button {
   background: rgba(144, 238, 144, 0.2);
-  border: 2px solid var(--cuba-lime-fresh);
-  color: var(--cuba-lime-fresh);
+  border: 2px solid var(--light-accent-fresh);
+  color: var(--light-accent-fresh);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
@@ -471,7 +532,7 @@ a:hover {
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
   font-weight: 300;
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
   text-shadow: 1px 1px 2px rgba(26, 15, 15, 0.5);
 }
 
@@ -484,7 +545,7 @@ a:hover {
   border: 1px solid rgba(93, 42, 42, 0.3);
   font-style: italic;
   opacity: 0.8;
-  color: var(--cuba-cream);
+  color: var(--text-primary);
 }
 
 .reminders-list {
@@ -694,8 +755,8 @@ a:hover {
 }
 
 .new-category-button {
-  background: linear-gradient(135deg, var(--cuba-lime-dark) 0%, var(--cuba-lime-fresh) 100%);
-  color: var(--cuba-white);
+  background: linear-gradient(135deg, var(--light-accent-dark) 0%, var(--light-accent-fresh) 100%);
+  color: var(--text-secondary);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -706,7 +767,7 @@ a:hover {
 }
 
 .new-category-button:hover {
-  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-light) 100%);
+  background: linear-gradient(135deg, var(--light-accent-fresh) 0%, var(--light-accent-hover) 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
 }
@@ -726,7 +787,7 @@ a:hover {
   border: 1px solid rgba(93, 42, 42, 0.4);
   border-radius: 8px;
   background: rgba(93, 42, 42, 0.2);
-  color: var(--cuba-cream);
+  color: var(--text-primary);
   font-size: 1rem;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
@@ -734,17 +795,18 @@ a:hover {
 
 .category-input:focus {
   outline: none;
-  border-color: var(--cuba-lime-fresh);
+  border-color: var(--light-accent-fresh);
   box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3);
 }
 
 .category-input::placeholder {
-  color: rgba(245, 245, 220, 0.6);
+  color: var(--text-primary);
+  opacity: 0.6;
 }
 
 .category-submit {
-  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-dark) 100%);
-  color: var(--cuba-white);
+  background: linear-gradient(135deg, var(--light-accent-fresh) 0%, var(--light-accent-dark) 100%);
+  color: var(--text-secondary);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -755,7 +817,7 @@ a:hover {
 }
 
 .category-submit:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--cuba-lime-light) 0%, var(--cuba-lime-fresh) 100%);
+  background: linear-gradient(135deg, var(--light-accent-hover) 0%, var(--light-accent-fresh) 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
 }
@@ -777,7 +839,7 @@ a:hover {
 }
 
 .current-category h2 {
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
   font-size: 1.5rem;
   font-weight: 300;
   margin: 0;
@@ -913,7 +975,7 @@ a:hover {
 /* Trash Styles */
 .trash-toggle-button {
   background: linear-gradient(135deg, #666666 0%, #444444 100%);
-  color: var(--cuba-white);
+  color: var(--text-secondary);
   border: none;
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -939,7 +1001,7 @@ a:hover {
 }
 
 .trash-title {
-  color: #cccccc;
+  color: var(--text-primary);
   font-size: 1.3rem;
   font-weight: 300;
   margin-bottom: 1rem;
@@ -948,7 +1010,7 @@ a:hover {
 
 .no-trash {
   text-align: center;
-  color: #cccccc;
+  color: var(--text-primary);
   font-style: italic;
   padding: 2rem;
 }
@@ -981,13 +1043,14 @@ a:hover {
 }
 
 .trash-activity {
-  color: #cccccc;
+  color: var(--text-primary);
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
 }
 
 .trash-datetime {
-  color: #aaaaaa;
+  color: var(--text-primary);
+  opacity: 0.8;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
@@ -998,7 +1061,7 @@ a:hover {
 
 .trash-category .category-badge {
   background: rgba(0, 255, 0, 0.2);
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
