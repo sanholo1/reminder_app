@@ -109,6 +109,10 @@
     "polish": "Polski",
     "english": "English"
   },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  },
   "result": {
     "title": "Recently added",
     "activity": "Activity",

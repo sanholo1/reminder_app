@@ -30,6 +30,7 @@
   backdrop-filter: blur(10px);
   border: 1px solid var(--cuba-lime);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  width: 170px;
 }
 
 .theme-switcher {
@@ -45,6 +46,7 @@
   backdrop-filter: blur(10px);
   border: 1px solid var(--cuba-lime);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  width: 170px;
 }
 
 .language-button {
@@ -57,7 +59,7 @@
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
-  min-width: 50px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,7 +93,7 @@
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
-  min-width: 70px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
