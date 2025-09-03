@@ -210,6 +210,13 @@ body.light-theme .trash-item:hover {
 }
 
 body.light-theme .new-category-button {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: var(--light-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .new-category-button {
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: var(--text-secondary);
 }
@@ -648,7 +655,7 @@ a:hover {
 .footer {
   width: 100%;
   text-align: center;
-  color: var(--cuba-lime-fresh);
+  color: lightgray;
   font-size: 1rem;
   position: fixed;
   left: 0;
