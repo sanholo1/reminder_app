@@ -1062,7 +1062,7 @@ a:hover {
 
 /* Trash Styles */
 .trash-toggle-button {
-  background: linear-gradient(135deg, #666666 0%, #444444 100%);
+  background: linear-gradient(135deg, #6b6b6b 0%, #949494 100%);
   color: var(--text-secondary);
   border: none;
   padding: 0.75rem 1rem;
