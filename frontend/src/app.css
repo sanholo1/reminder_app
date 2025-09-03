@@ -14,6 +14,60 @@
   --text-secondary: #ffffff;          /* Pure white */
   --background: #0f1419;          /* Dark navy background */
   --overlay: rgba(15, 20, 25, 0.8); /* Navy transparent */
+  
+  /* Dark Theme Specific Colors */
+  --dark-accent-primary: #00ffcc;    /* Bright teal for dark theme */
+  --dark-accent-light: #26e6c7;      /* Light teal for dark theme */
+  --dark-accent-dark: #00a085;       /* Dark teal for dark theme */
+  --dark-accent-base: #00d4aa;       /* Base teal for dark theme */
+  --dark-accent-golden: #ffd700;     /* Golden accent for dark theme */
+  --dark-text-primary: #e8f4f8;      /* Primary text for dark theme */
+  --dark-text-secondary: #ffffff;    /* Secondary text for dark theme */
+  --dark-text-white: #ffffff;        /* Pure white text for dark theme */
+  --dark-background-primary: #0f1419; /* Primary background for dark theme */
+  --dark-background-secondary: #1a2332; /* Secondary background for dark theme */
+  --dark-background-overlay: rgba(15, 20, 25, 0.8); /* Overlay for dark theme */
+  
+  /* Dark Theme Cola Colors */
+  --dark-cola-light: #8b5a2b;    /* Light cola for dark theme */
+  --dark-cola-medium: #654321;   /* Medium cola for dark theme */
+  --dark-cola-dark: #3d2b1f;     /* Dark cola for dark theme */
+  
+  /* Light Theme Specific Colors */
+  --light-accent-primary: #00d4aa;   /* Primary accent for light theme */
+  --light-accent-light: #26e6c7;     /* Light accent for light theme */
+  --light-accent-dark: #00a085;      /* Dark accent for light theme */
+  --light-accent-base: #00ffcc;      /* Base accent for light theme */
+  --light-accent-golden: #ffa500;    /* Golden accent for light theme */
+  --light-text-primary: #1a2332;     /* Primary text for light theme */
+  --light-text-secondary: #2a3441;   /* Secondary text for light theme */
+  --light-text-white: #ffffff;       /* White text for light theme */
+  --light-background-primary: #ffffff; /* Primary background for light theme */
+  --light-background-secondary: #f8f9fa; /* Secondary background for light theme */
+  --light-background-overlay: rgba(255, 255, 255, 0.95); /* Overlay for light theme */
+  
+  /* Light Theme Cola Colors */
+  --light-cola-light: #d2691e;    /* Light cola for light theme */
+  --light-cola-medium: #cd853f;   /* Medium cola for light theme */
+  --light-cola-dark: #b8860b;     /* Dark cola for light theme */
+  
+  /* Universal Theme Variables - These will be overridden by theme-specific styles */
+  --accent-primary: var(--dark-accent-primary);
+  --accent-light: var(--dark-accent-light);
+  --accent-dark: var(--dark-accent-dark);
+  --accent-base: var(--dark-accent-base);
+  --accent-golden: var(--dark-accent-golden);
+  --text-primary: var(--dark-text-primary);
+  --text-secondary: var(--dark-text-secondary);
+  --text-white: var(--dark-text-white);
+  --background-primary: var(--dark-background-primary);
+  --background-secondary: var(--dark-background-secondary);
+  --background-overlay: var(--dark-background-overlay);
+  
+  /* Universal Cola Colors */
+  --cola-light: var(--dark-cola-light);
+  --cola-medium: var(--dark-cola-medium);
+  --cola-dark: var(--dark-cola-dark);
 }
 
 /* Language and Theme Switchers Styles */
@@ -138,6 +192,24 @@ body {
 /* Light theme specific improvements - Softer contrasts */
 body.light-theme {
   background: linear-gradient(135deg, var(--dark-base) 0%, var(--dark-medium) 50%, var(--dark-light) 100%);
+  
+  /* Override universal variables for light theme */
+  --accent-primary: var(--light-accent-primary);
+  --accent-light: var(--light-accent-light);
+  --accent-dark: var(--light-accent-dark);
+  --accent-base: var(--light-accent-base);
+  --accent-golden: var(--light-accent-golden);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --text-white: var(--light-text-white);
+  --background-primary: var(--light-background-primary);
+  --background-secondary: var(--light-background-secondary);
+  --background-overlay: var(--light-background-overlay);
+  
+  /* Override cola colors for light theme */
+  --cola-light: var(--light-cola-light);
+  --cola-medium: var(--light-cola-medium);
+  --cola-dark: var(--light-cola-dark);
 }
 
 body.light-theme .container {
@@ -259,6 +331,15 @@ body.light-theme .reminder-item:hover {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
+/* Light theme specific styles for new variables */
+body.light-theme .footer {
+  color: var(--light-accent-fresh);
+  background: var(--light-background-overlay);
+  border-top: var(--light-accent-fresh);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+}
+
 #root {
   width: 100%;
   display: flex;
@@ -314,7 +395,6 @@ a:hover {
   margin-bottom: 0.5rem;
   font-weight: 300;
   color: var(--light-accent-fresh);
-  text-shadow: 2px 2px 4px rgba(26, 15, 15, 0.5);
 }
 
 .subtitle {
@@ -579,7 +659,7 @@ a:hover {
   background: rgba(93, 42, 42, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(26, 15, 15, 0.3);
-  border-color: var(--cuba-lime-fresh);
+  border-color: var(--accent-primary);
 }
 
 .reminder-content {
@@ -590,21 +670,21 @@ a:hover {
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
-  color: var(--cuba-lime-fresh);
+  color: var(--accent-primary);
 }
 
 .reminder-datetime {
   font-size: 1rem;
   margin-bottom: 0.5rem;
   opacity: 0.9;
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
 }
 
 .reminder-created {
   font-size: 0.9rem;
   opacity: 0.7;
   font-style: italic;
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
 }
 
 .reminder-category {
@@ -613,8 +693,8 @@ a:hover {
 
 .category-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-dark) 100%);
-  color: var(--cuba-white);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-dark) 100%);
+  color: var(--text-white);
   padding: 0.25rem 0.75rem;
   border-radius: 15px;
   font-size: 0.8rem;
@@ -632,7 +712,7 @@ a:hover {
   padding: 0.5rem;
   border-radius: 8px;
   transition: all 0.3s ease;
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
   opacity: 0.7;
   min-width: 40px;
   height: 40px;
@@ -655,7 +735,7 @@ a:hover {
 .footer {
   width: 100%;
   text-align: center;
-  color: lightgray;
+  color: var(--accent-primary);
   font-size: 1rem;
   position: fixed;
   left: 0;
@@ -665,14 +745,16 @@ a:hover {
   z-index: 100;
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(93, 42, 42, 0.3);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .usage-badge {
   position: fixed;
   top: 8px;
   right: 8px;
-  background: var(--cuba-transparent);
-  color: var(--cuba-lime-fresh);
+  background: var(--background-overlay);
+  color: var(--accent-primary);
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -695,12 +777,12 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--cuba-lime-fresh);
+  background: var(--accent-primary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cuba-lime-light);
+  background: var(--accent-light);
 }
 
 /* Category Navigation Styles */
@@ -714,8 +796,8 @@ a:hover {
 }
 
 .back-button {
-  background: linear-gradient(135deg, var(--cuba-cola-medium) 0%, var(--cuba-cola-light) 100%);
-  color: var(--cuba-cream);
+  background: linear-gradient(135deg, var(--cola-medium) 0%, var(--cola-light) 100%);
+  color: var(--text-secondary);
   border: 1px solid rgba(93, 42, 42, 0.4);
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -726,7 +808,7 @@ a:hover {
 }
 
 .back-button:hover {
-  background: linear-gradient(135deg, var(--cuba-cola-light) 0%, var(--cuba-cola-medium) 100%);
+  background: linear-gradient(135deg, var(--cola-light) 0%, var(--cola-medium) 100%);
   transform: translateY(-1px);
 }
 
@@ -744,7 +826,7 @@ a:hover {
   border: 1px solid rgba(93, 42, 42, 0.4);
   border-radius: 8px;
   background: rgba(93, 42, 42, 0.2);
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
   font-size: 1rem;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
@@ -752,13 +834,13 @@ a:hover {
 
 .category-select:focus {
   outline: none;
-  border-color: var(--cuba-lime-fresh);
+  border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3);
 }
 
 .category-select option {
-  background: var(--cuba-cola-dark);
-  color: var(--cuba-cream);
+  background: var(--cola-dark);
+  color: var(--text-secondary);
 }
 
 .new-category-button {
@@ -854,7 +936,7 @@ a:hover {
 
 .delete-category-button {
   background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-  color: var(--cuba-white);
+  color: var(--text-white);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -887,7 +969,7 @@ a:hover {
 }
 
 .modal-content {
-  background: linear-gradient(135deg, var(--cuba-cola-medium) 0%, var(--cuba-cola-light) 100%);
+  background: linear-gradient(135deg, var(--cola-medium) 0%, var(--cola-light) 100%);
   border-radius: 15px;
   padding: 2rem;
   max-width: 500px;
@@ -904,7 +986,7 @@ a:hover {
 }
 
 .modal-header h3 {
-  color: var(--cuba-lime-fresh);
+  color: var(--accent-primary);
   font-size: 1.5rem;
   font-weight: 300;
   margin: 0;
@@ -917,7 +999,7 @@ a:hover {
 .modal-body p {
   margin-bottom: 1rem;
   line-height: 1.6;
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
 }
 
 .warning-text {
@@ -935,7 +1017,7 @@ a:hover {
 
 .cancel-button {
   background: rgba(93, 42, 42, 0.3);
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
   border: 1px solid rgba(93, 42, 42, 0.5);
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -957,7 +1039,7 @@ a:hover {
 
 .modal-footer .delete-button {
   background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-  color: var(--cuba-white);
+  color: var(--text-white);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -1082,8 +1164,8 @@ a:hover {
 }
 
 .restore-button {
-  background: linear-gradient(135deg, var(--cuba-lime-fresh) 0%, var(--cuba-lime-dark) 100%);
-  color: var(--cuba-white);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-dark) 100%);
+  color: var(--text-white);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -1095,7 +1177,7 @@ a:hover {
 }
 
 .restore-button:hover {
-  background: linear-gradient(135deg, var(--cuba-lime-light) 0%, var(--cuba-lime-fresh) 100%);
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
 }
@@ -1157,7 +1239,7 @@ a:hover {
 .usage-title {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--cuba-lime-fresh);
+  color: var(--light-accent-fresh);
 }
 
 .usage-details {
@@ -1170,12 +1252,12 @@ a:hover {
 .usage-count {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
 }
 
 .usage-remaining {
   font-size: 1rem;
-  color: var(--cuba-lime-light);
+  color: var(--light-accent-fresh);
   font-weight: 500;
 }
 
@@ -1190,38 +1272,38 @@ a:hover {
 
 .usage-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--cuba-lime) 0%, var(--cuba-lime-light) 100%);
+  background: linear-gradient(90deg, var(--accent-base) 0%, var(--accent-light) 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
 /* Style for when limit is reached */
 .daily-usage-info.limit-reached {
-  border-color: var(--cuba-lime);
+  border-color: var(--accent-base);
   background: rgba(93, 42, 42, 0.3);
 }
 
 .daily-usage-info.limit-reached .usage-title {
-  color: var(--cuba-lime);
+  color: var(--accent-base);
 }
 
 .daily-usage-info.limit-reached .usage-remaining {
-  color: var(--cuba-lime);
+  color: var(--accent-base);
   font-weight: 600;
 }
 
 /* Style for when approaching limit (less than 5 remaining) */
 .daily-usage-info.approaching-limit {
-  border-color: var(--cuba-lime-golden);
+  border-color: var(--accent-golden);
   background: rgba(139, 69, 19, 0.2);
 }
 
 .daily-usage-info.approaching-limit .usage-title {
-  color: var(--cuba-lime-golden);
+  color: var(--accent-golden);
 }
 
 .daily-usage-info.approaching-limit .usage-remaining {
-  color: var(--cuba-lime-golden);
+  color: var(--accent-golden);
   font-weight: 600;
 }
 
@@ -1229,25 +1311,25 @@ a:hover {
   margin-top: 0.75rem;
   padding: 0.75rem;
   background: rgba(50, 205, 50, 0.1);
-  border: 1px solid var(--cuba-lime);
+  border: 1px solid var(--accent-base);
   border-radius: 8px;
   text-align: center;
-  color: var(--cuba-lime);
+  color: var(--accent-base);
 }
 
 .approaching-limit-message {
   margin-top: 0.75rem;
   padding: 0.75rem;
   background: rgba(139, 69, 19, 0.1);
-  border: 1px solid var(--cuba-lime-golden);
+  border: 1px solid var(--accent-golden);
   border-radius: 8px;
   text-align: center;
-  color: var(--cuba-lime-golden);
+  color: var(--accent-golden);
 }
 
 .usage-reset-info {
   text-align: center;
-  color: var(--cuba-cream);
+  color: var(--text-secondary);
   opacity: 0.8;
   font-size: 0.9rem;
 }
