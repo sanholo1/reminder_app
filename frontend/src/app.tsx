@@ -6,18 +6,70 @@ import ContactPage from './pages/ContactPage';
 import LoadingPage from './components/LoadingPage';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import ThemeSwitcher from './components/ThemeSwitcher';
+import NotificationToast from './components/NotificationToast';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './app.css';
 import { ConnectionService } from './connectionService';
+
+interface ToastMessage {
+  id: string;
+  message: string;
+  type: 'success' | 'info' | 'warning' | 'error';
+}
+
+// Funkcja do żądania uprawnień do powiadomień
+const requestNotificationPermission = async (t: (key: string) => string, showToast: (message: string, type: 'success' | 'info' | 'warning' | 'error') => void) => {
+  // Sprawdź czy przeglądarka wspiera powiadomienia
+  if (!('Notification' in window)) {
+    console.log(t('notifications.browserNotSupported'));
+    showToast(t('notifications.browserNotSupported'), 'warning');
+    return;
+  }
+
+  // Sprawdź aktualne uprawnienia
+  if (Notification.permission === 'default') {
+    console.log(t('notifications.permissionRequest'));
+    showToast(t('notifications.permissionRequest'), 'info');
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        console.log(t('notifications.permissionGranted'));
+        showToast(t('notifications.permissionGranted'), 'success');
+      } else if (permission === 'denied') {
+        console.log(t('notifications.permissionDenied'));
+        showToast(t('notifications.permissionDenied'), 'warning');
+      }
+    } catch (error) {
+      console.warn('Błąd podczas żądania uprawnień do powiadomień:', error);
+      showToast(t('notifications.permissionError'), 'error');
+    }
+  } else if (Notification.permission === 'granted') {
+    console.log(t('notifications.permissionAlreadyGranted'));
+    showToast(t('notifications.permissionAlreadyGranted'), 'success');
+  } else {
+    console.log(t('notifications.permissionAlreadyDenied'));
+    showToast(t('notifications.permissionAlreadyDenied'), 'warning');
+  }
+};
 
 const AppContent: React.FC = () => {
   const [dailyRemaining, setDailyRemaining] = useState<number | null>(null);
   const [dailyResetAt, setDailyResetAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Ładowanie aplikacji...");
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const connectionService = new ConnectionService();
   const { t } = useLanguage();
+
+  const showToast = (message: string, type: 'success' | 'info' | 'warning' | 'error') => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -32,6 +84,9 @@ const AppContent: React.FC = () => {
         
         setLoadingMessage(t('loading.finalizing'));
         await new Promise(resolve => setTimeout(resolve, 300)); // Smooth transition
+        
+        // Żądaj uprawnień do powiadomień po załadowaniu aplikacji
+        await requestNotificationPermission(t, showToast);
         
       } catch (error) {
         console.error(t('errors.initApp'), error);
@@ -78,6 +133,16 @@ const AppContent: React.FC = () => {
       <footer className="footer">
         {t('footer.copyright', { year: new Date().getFullYear() })}
       </footer>
+      
+      {/* Toast Notifications */}
+      {toasts.map(toast => (
+        <NotificationToast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </Router>
   );
 };

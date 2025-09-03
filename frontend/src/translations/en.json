@@ -68,7 +68,15 @@
   },
   "notifications": {
     "testSound": "🔊 Test sound",
-    "testTitle": "Test notification sound"
+    "testTitle": "Test notification sound",
+    "permissionRequest": "Please allow notifications",
+    "permissionGranted": "Notification permissions granted!",
+    "permissionDenied": "Notification permissions denied.",
+    "permissionAlreadyGranted": "Notification permissions already granted.",
+    "permissionAlreadyDenied": "Notification permissions already denied.",
+    "browserNotSupported": "This browser does not support notifications",
+    "close": "Close",
+    "permissionError": "Error requesting notification permissions"
   },
   "modals": {
     "deleteCategory": {

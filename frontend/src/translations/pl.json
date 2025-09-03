@@ -68,7 +68,15 @@
   },
   "notifications": {
     "testSound": "🔊 Testuj dźwięk",
-    "testTitle": "Testuj dźwięk powiadomienia"
+    "testTitle": "Testuj dźwięk powiadomienia",
+    "permissionRequest": "Proszę o uprawnienia do powiadomień",
+    "permissionGranted": "Uprawnienia do powiadomień zostały przyznane!",
+    "permissionDenied": "Uprawnienia do powiadomień zostały odrzucone.",
+    "permissionAlreadyGranted": "Uprawnienia do powiadomień już przyznane.",
+    "permissionAlreadyDenied": "Uprawnienia do powiadomień zostały odrzucone wcześniej.",
+    "browserNotSupported": "Ta przeglądarka nie wspiera powiadomień",
+    "close": "Zamknij",
+    "permissionError": "Błąd podczas żądania uprawnień do powiadomień"
   },
   "modals": {
     "deleteCategory": {
