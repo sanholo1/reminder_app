@@ -28,10 +28,6 @@
   --dark-background-secondary: #1a2332; /* Secondary background for dark theme */
   --dark-background-overlay: rgba(15, 20, 25, 0.8); /* Overlay for dark theme */
   
-  /* Dark Theme Cola Colors */
-  --dark-cola-light: #8b5a2b;    /* Light cola for dark theme */
-  --dark-cola-medium: #654321;   /* Medium cola for dark theme */
-  --dark-cola-dark: #3d2b1f;     /* Dark cola for dark theme */
   
   /* Light Theme Specific Colors */
   --light-accent-primary: #00d4aa;   /* Primary accent for light theme */
@@ -46,10 +42,7 @@
   --light-background-secondary: #f8f9fa; /* Secondary background for light theme */
   --light-background-overlay: rgba(255, 255, 255, 0.95); /* Overlay for light theme */
   
-  /* Light Theme Cola Colors */
-  --light-cola-light: #d2691e;    /* Light cola for light theme */
-  --light-cola-medium: #cd853f;   /* Medium cola for light theme */
-  --light-cola-dark: #b8860b;     /* Dark cola for light theme */
+
   
   /* Universal Theme Variables - These will be overridden by theme-specific styles */
   --accent-primary: var(--dark-accent-primary);
@@ -64,10 +57,7 @@
   --background-secondary: var(--dark-background-secondary);
   --background-overlay: var(--dark-background-overlay);
   
-  /* Universal Cola Colors */
-  --cola-light: var(--dark-cola-light);
-  --cola-medium: var(--dark-cola-medium);
-  --cola-dark: var(--dark-cola-dark);
+
 }
 
 /* Language and Theme Switchers Styles */
