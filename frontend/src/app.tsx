@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import AuthorPage from './pages/AuthorPage';
@@ -12,6 +12,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import './app.css';
 import { ConnectionService } from './connectionService';
 
+let appInitializationDone = false;
+
 interface ToastMessage {
   id: string;
   message: string;
@@ -19,7 +21,11 @@ interface ToastMessage {
 }
 
 // Funkcja do żądania uprawnień do powiadomień
-const requestNotificationPermission = async (t: (key: string) => string, showToast: (message: string, type: 'success' | 'info' | 'warning' | 'error') => void) => {
+const requestNotificationPermission = async (
+  t: (key: string) => string,
+  showToast: (message: string, type: 'success' | 'info' | 'warning' | 'error') => string,
+  removeToast: (id: string) => void
+) => {
   // Sprawdź czy przeglądarka wspiera powiadomienia
   if (!('Notification' in window)) {
     console.log(t('notifications.browserNotSupported'));
@@ -30,9 +36,10 @@ const requestNotificationPermission = async (t: (key: string) => string, showToa
   // Sprawdź aktualne uprawnienia
   if (Notification.permission === 'default') {
     console.log(t('notifications.permissionRequest'));
-    showToast(t('notifications.permissionRequest'), 'info');
+    const infoToastId = showToast(t('notifications.permissionRequest'), 'info');
     try {
       const permission = await Notification.requestPermission();
+      removeToast(infoToastId);
       if (permission === 'granted') {
         console.log(t('notifications.permissionGranted'));
         showToast(t('notifications.permissionGranted'), 'success');
@@ -42,11 +49,12 @@ const requestNotificationPermission = async (t: (key: string) => string, showToa
       }
     } catch (error) {
       console.warn('Błąd podczas żądania uprawnień do powiadomień:', error);
+      removeToast(infoToastId);
       showToast(t('notifications.permissionError'), 'error');
     }
   } else if (Notification.permission === 'granted') {
-    console.log(t('notifications.permissionAlreadyGranted'));
-    showToast(t('notifications.permissionAlreadyGranted'), 'success');
+    console.log('✅ Uprawnienia już przyznane - pomijam toast');
+    // Nie pokazuj toastu jeśli uprawnienia już są przyznane
   } else {
     console.log(t('notifications.permissionAlreadyDenied'));
     showToast(t('notifications.permissionAlreadyDenied'), 'warning');
@@ -59,19 +67,27 @@ const AppContent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Ładowanie aplikacji...");
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const notificationPermissionChecked = useRef(false);
   const connectionService = new ConnectionService();
   const { t } = useLanguage();
 
   const showToast = (message: string, type: 'success' | 'info' | 'warning' | 'error') => {
-    const id = Date.now().toString();
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setToasts(prev => [...prev, { id, message, type }]);
+    return id;
   };
 
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
+  // Inicjalizacja aplikacji - tylko raz
   useEffect(() => {
+    if (appInitializationDone) {
+      return;
+    }
+    appInitializationDone = true;
+
     const initializeApp = async () => {
       try {
         setLoadingMessage(t('loading.server'));
@@ -85,8 +101,11 @@ const AppContent: React.FC = () => {
         setLoadingMessage(t('loading.finalizing'));
         await new Promise(resolve => setTimeout(resolve, 300)); // Smooth transition
         
-        // Żądaj uprawnień do powiadomień po załadowaniu aplikacji
-        await requestNotificationPermission(t, showToast);
+        // Żądaj uprawnień do powiadomień tylko raz po załadowaniu aplikacji
+        if (!notificationPermissionChecked.current) {
+          await requestNotificationPermission(t, showToast, removeToast);
+          notificationPermissionChecked.current = true;
+        }
         
       } catch (error) {
         console.error(t('errors.initApp'), error);
@@ -97,7 +116,7 @@ const AppContent: React.FC = () => {
     };
     
     initializeApp();
-  }, [t]);
+  }, []); // Pusta tablica zależności - tylko raz
 
   if (isLoading) {
     return <LoadingPage message={loadingMessage} />;

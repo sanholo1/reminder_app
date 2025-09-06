@@ -16,27 +16,28 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   onClose 
 }) => {
   const [isVisible, setIsVisible] = useState(true);
+  const [isClosing, setIsClosing] = useState(false);
   const { t } = useLanguage();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        onClose?.();
-      }, 300); // Czas na animację wyjścia
+      handleClose();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [duration]);
 
   const handleClose = () => {
+    if (isClosing) return; // Zapobiegaj wielokrotnemu wywołaniu
+    
+    setIsClosing(true);
     setIsVisible(false);
+    
+    // Poczekaj na zakończenie animacji przed usunięciem z DOM
     setTimeout(() => {
       onClose?.();
-    }, 300);
+    }, 300); // Czas na animację wyjścia
   };
-
-  if (!isVisible) return null;
 
   return (
     <div className={`notification-toast notification-toast-${type} ${isVisible ? 'show' : 'hide'}`}>
