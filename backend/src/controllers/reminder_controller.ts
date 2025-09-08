@@ -5,6 +5,12 @@ import { DeleteReminderHandler } from '../commands/delete_command';
 import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
 import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
 import { UserSessionService } from '../services/user_session_service';
+import { GetActiveRemindersHandler } from '../queries/get_active_reminders_query';
+import { GetCategoriesHandler } from '../queries/get_categories_query';
+import { GetRemindersByCategoryHandler } from '../queries/get_reminders_by_category_query';
+import { GetTrashItemsHandler } from '../queries/get_trash_items_query';
+import { RestoreFromTrashHandler } from '../commands/restore_from_trash_command';
+import { DeleteCategoryHandler } from '../commands/delete_category_command';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
@@ -12,6 +18,12 @@ const getRemindersHandler = new GetRemindersHandler();
 const deleteReminderHandler = new DeleteReminderHandler();
 const reminderRepository = new ReminderRepositoryTypeORM();
 const userSessionService = new UserSessionService();
+const getActiveRemindersHandler = new GetActiveRemindersHandler();
+const getCategoriesHandler = new GetCategoriesHandler();
+const getRemindersByCategoryHandler = new GetRemindersByCategoryHandler();
+const getTrashItemsHandler = new GetTrashItemsHandler();
+const restoreFromTrashHandler = new RestoreFromTrashHandler();
+const deleteCategoryHandler = new DeleteCategoryHandler();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -76,23 +88,14 @@ reminderRouter.get('/reminders', async (req: Request, res: Response, next: NextF
 reminderRouter.get('/reminders/active', async (req: Request, res: Response, next: NextFunction) => {
   try {
     let sessionId = (req as any).sessionId;
-    
-    // For now, allow access without session for testing
     if (!sessionId) {
       console.log('No session ID provided, using default');
       sessionId = 'default-session';
     }
-
-    const now = new Date();
-    const activeReminders = await reminderRepository.getActiveReminders(sessionId, now);
-    
-    res.json({ 
-      activeReminders,
-      currentTime: now.toISOString()
-    });
+    const result = await getActiveRemindersHandler.execute({ sessionId });
+    res.json(result);
   } catch (error) {
-    console.error('Error getting active reminders:', error);
-    res.status(500).json({ error: 'Failed to get active reminders' });
+    next(error);
   }
 });
 
@@ -129,8 +132,8 @@ reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next
 // Get all categories
 reminderRouter.get('/categories', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const categories = await reminderRepository.getCategories();
-    res.json({ categories });
+    const result = await getCategoriesHandler.execute({});
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -141,9 +144,8 @@ reminderRouter.get('/reminders/category/:category', async (req: Request, res: Re
   try {
     const { category } = req.params;
     if (!category) throw new BadRequestError('Brak nazwy kategorii');
-    
-    const reminders = await reminderRepository.findByCategory(category);
-    res.json({ reminders });
+    const result = await getRemindersByCategoryHandler.execute({ category });
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -154,12 +156,8 @@ reminderRouter.delete('/categories/:category', async (req: Request, res: Respons
   try {
     const { category } = req.params;
     if (!category) throw new BadRequestError('Brak nazwy kategorii');
-    
-    const deletedCount = await reminderRepository.deleteByCategory(category);
-    res.json({ 
-      message: `Usunięto kategorię "${category}" wraz z ${deletedCount} przypomnieniami`,
-      deletedCount 
-    });
+    const result = await deleteCategoryHandler.execute({ category });
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -168,8 +166,8 @@ reminderRouter.delete('/categories/:category', async (req: Request, res: Respons
 // Get trash items
 reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const trashItems = await reminderRepository.getTrashItems();
-    res.json({ trashItems });
+    const result = await getTrashItemsHandler.execute({});
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -180,9 +178,8 @@ reminderRouter.post('/trash/:id/restore', async (req: Request, res: Response, ne
   try {
     const { id } = req.params;
     if (!id) throw new BadRequestError('Brak identyfikatora elementu');
-    
-    await reminderRepository.restoreFromTrash(id);
-    res.json({ message: 'Przypomnienie zostało przywrócone' });
+    const result = await restoreFromTrashHandler.execute({ id });
+    res.json(result);
   } catch (error) {
     next(error);
   }
