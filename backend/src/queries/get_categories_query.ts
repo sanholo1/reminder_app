@@ -1,4 +1,4 @@
-import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
+import { ReminderReadRepositoryTypeORM } from '../repositories/reminder_read_repository_typeorm';
 import { InternalServerError } from '../exceptions/exception_handler';
 
 export interface GetCategoriesQuery {}
@@ -8,10 +8,10 @@ export interface GetCategoriesResult {
 }
 
 export class GetCategoriesHandler {
-  private reminderRepository: ReminderRepositoryTypeORM;
+  private reminderRepository: ReminderReadRepositoryTypeORM;
 
   constructor() {
-    this.reminderRepository = new ReminderRepositoryTypeORM();
+    this.reminderRepository = new ReminderReadRepositoryTypeORM();
   }
 
   async execute(_query: GetCategoriesQuery): Promise<GetCategoriesResult> {

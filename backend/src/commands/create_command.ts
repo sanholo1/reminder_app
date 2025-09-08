@@ -1,4 +1,5 @@
-import { ReminderRepositoryTypeORM, ReminderEntity } from '../repositories/reminder_repository_typeorm';
+import { ReminderWriteRepositoryTypeORM } from '../repositories/reminder_write_repository_typeorm';
+import { ReminderEntity } from '../repositories/reminder_types';
 import { EmptyInputError, LLMParsingError, AbuseError } from '../exceptions/exception_handler';
 import { LLMParserService, LLMErrorResult, LLMAbuseResult } from '../services/llm_parser_service';
 
@@ -20,11 +21,11 @@ export interface CreateReminderAbuseResult {
 }
 
 export class CreateReminderHandler {
-  private reminderRepository: ReminderRepositoryTypeORM;
+  private reminderRepository: ReminderWriteRepositoryTypeORM;
   private llmParser: LLMParserService;
 
   constructor() {
-    this.reminderRepository = new ReminderRepositoryTypeORM();
+    this.reminderRepository = new ReminderWriteRepositoryTypeORM();
     this.llmParser = new LLMParserService();
   }
 

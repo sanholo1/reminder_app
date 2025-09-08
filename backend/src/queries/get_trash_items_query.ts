@@ -1,4 +1,4 @@
-import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
+import { ReminderReadRepositoryTypeORM } from '../repositories/reminder_read_repository_typeorm';
 import { InternalServerError } from '../exceptions/exception_handler';
 import { TrashItemEntity } from '../repositories/trash_repository_typeorm';
 
@@ -19,10 +19,10 @@ export interface GetTrashItemsResult {
 }
 
 export class GetTrashItemsHandler {
-  private reminderRepository: ReminderRepositoryTypeORM;
+  private reminderRepository: ReminderReadRepositoryTypeORM;
 
   constructor() {
-    this.reminderRepository = new ReminderRepositoryTypeORM();
+    this.reminderRepository = new ReminderReadRepositoryTypeORM();
   }
 
   async execute(_query: GetTrashItemsQuery): Promise<GetTrashItemsResult> {

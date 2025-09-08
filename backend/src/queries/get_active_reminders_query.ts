@@ -1,4 +1,4 @@
-import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
+import { ReminderReadRepositoryTypeORM } from '../repositories/reminder_read_repository_typeorm';
 import { InternalServerError } from '../exceptions/exception_handler';
 
 export interface GetActiveRemindersQuery {
@@ -19,16 +19,16 @@ export interface GetActiveRemindersResult {
 }
 
 export class GetActiveRemindersHandler {
-  private reminderRepository: ReminderRepositoryTypeORM;
+  private reminderRepository: ReminderReadRepositoryTypeORM;
 
   constructor() {
-    this.reminderRepository = new ReminderRepositoryTypeORM();
+    this.reminderRepository = new ReminderReadRepositoryTypeORM();
   }
 
   async execute(query: GetActiveRemindersQuery): Promise<GetActiveRemindersResult> {
     try {
       const now = new Date();
-      const reminders = await this.reminderRepository.getActiveReminders(query.sessionId, now);
+      const reminders = await this.reminderRepository.getActiveReminders(query.sessionId);
 
       return {
         activeReminders: reminders.map(reminder => ({

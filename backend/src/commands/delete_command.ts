@@ -1,4 +1,4 @@
-import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
+import { ReminderWriteRepositoryTypeORM } from '../repositories/reminder_write_repository_typeorm';
 import { NotFoundError } from '../exceptions/exception_handler';
 
 export interface DeleteReminderCommand {
@@ -11,10 +11,10 @@ export interface DeleteReminderResult {
 }
 
 export class DeleteReminderHandler {
-  private reminderRepository: ReminderRepositoryTypeORM;
+  private reminderRepository: ReminderWriteRepositoryTypeORM;
 
   constructor() {
-    this.reminderRepository = new ReminderRepositoryTypeORM();
+    this.reminderRepository = new ReminderWriteRepositoryTypeORM();
   }
 
   async execute(command: DeleteReminderCommand): Promise<DeleteReminderResult> {

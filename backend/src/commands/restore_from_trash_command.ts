@@ -1,4 +1,4 @@
-import { ReminderRepositoryTypeORM } from '../repositories/reminder_repository_typeorm';
+import { ReminderWriteRepositoryTypeORM } from '../repositories/reminder_write_repository_typeorm';
 import { InternalServerError, NotFoundError } from '../exceptions/exception_handler';
 
 export interface RestoreFromTrashCommand {
@@ -10,10 +10,10 @@ export interface RestoreFromTrashResult {
 }
 
 export class RestoreFromTrashHandler {
-  private reminderRepository: ReminderRepositoryTypeORM;
+  private reminderRepository: ReminderWriteRepositoryTypeORM;
 
   constructor() {
-    this.reminderRepository = new ReminderRepositoryTypeORM();
+    this.reminderRepository = new ReminderWriteRepositoryTypeORM();
   }
 
   async execute(command: RestoreFromTrashCommand): Promise<RestoreFromTrashResult> {
