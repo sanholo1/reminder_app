@@ -30,7 +30,7 @@ function ensureLogDirExists(dir: string) {
 function getLogFilePath(): string {
   const baseDir = process.env.LOG_DIR || path.join(process.cwd(), 'logs');
   ensureLogDirExists(baseDir);
-  const datePart = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const datePart = new Date().toISOString().slice(0, 10); 
   const fileName = process.env.LOG_FILE || `app-${datePart}.log`;
   return path.join(baseDir, fileName);
 }
@@ -40,7 +40,7 @@ function writeToFile(line: string) {
     const filePath = getLogFilePath();
     fs.appendFile(filePath, line + '\n', (err) => {
       if (err) {
-        // Fallback to console error if file write fails
+        
         console.error('[LOGGER] Failed to write log file', err);
       }
     });
