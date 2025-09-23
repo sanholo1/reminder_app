@@ -6,21 +6,17 @@ export class SessionMiddleware {
   private userSessionService = new UserSessionService();
 
   extractSessionId = (req: Request, res: Response, next: NextFunction) => {
-    // Try to get session ID from various sources
     let sessionId = req.headers['x-session-id'] as string;
     
     if (!sessionId) {
-      // Try to get from cookies
       sessionId = req.cookies?.sessionId;
     }
     
     if (!sessionId) {
-      // Try to get from query parameters
       sessionId = req.query.sessionId as string;
     }
     
     if (!sessionId) {
-      // Generate a new session ID based on IP and user agent
       const ip = req.ip || req.connection.remoteAddress || 'unknown';
       const userAgent = req.headers['user-agent'] || 'unknown';
       sessionId = Buffer.from(`${ip}-${userAgent}`).toString('base64').substring(0, 32);
@@ -49,7 +45,6 @@ export class SessionMiddleware {
         );
       }
       
-      // Add remaining attempts to response headers
       res.setHeader('X-Remaining-Attempts', blockStatus.remainingAttempts.toString());
       
       next();

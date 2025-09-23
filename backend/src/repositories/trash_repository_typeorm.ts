@@ -35,7 +35,7 @@ export class TrashRepositoryTypeORM {
         order: {
           deleted_at: "DESC"
         },
-        take: 10 // Maksymalnie 10 ostatnich elementów
+        take: 10
       });
       
       return trashItems.map(item => ({
@@ -72,7 +72,6 @@ export class TrashRepositoryTypeORM {
         created_at: trashItem.created_at
       };
       
-      // Usuń z kosza
       await this.repository.remove(trashItem);
       
       return itemToRestore;
@@ -86,14 +85,12 @@ export class TrashRepositoryTypeORM {
 
   async clearOldItems(): Promise<void> {
     try {
-      // Pobierz wszystkie elementy z kosza
       const allItems = await this.repository.find({
         order: {
           deleted_at: "DESC"
         }
       });
       
-      // Jeśli jest więcej niż 10 elementów, usuń najstarsze
       if (allItems.length > 10) {
         const itemsToRemove = allItems.slice(10);
         await this.repository.remove(itemsToRemove);

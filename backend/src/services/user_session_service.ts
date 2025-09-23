@@ -25,7 +25,6 @@ export class UserSessionService {
         });
         await this.userSessionRepository.save(session);
       } else {
-        // Ensure existing sessions have the new fields with default values
         let needsUpdate = false;
         
         if (session.dailyUsageCount === undefined || session.dailyUsageCount === null) {
@@ -41,7 +40,6 @@ export class UserSessionService {
           needsUpdate = true;
         }
         
-        // Save the session if we updated any fields
         if (needsUpdate) {
           await this.userSessionRepository.save(session);
         }
@@ -49,7 +47,6 @@ export class UserSessionService {
 
       return session;
     } catch (error) {
-      // Type guard - sprawdź czy error ma właściwość code
       if (error && typeof error === 'object' && 'code' in error) {
         const dbError = error as { code: string };
         if (dbError.code === 'ECONNREFUSED' || dbError.code === 'ENOTFOUND') {
@@ -64,7 +61,6 @@ export class UserSessionService {
     try {
       const session = await this.getOrCreateSession(sessionId);
       
-      // Check if user is currently blocked
       if (session.isBlocked && session.blockedUntil) {
         const now = new Date();
         if (now < session.blockedUntil) {
@@ -74,7 +70,6 @@ export class UserSessionService {
             blockedUntil: session.blockedUntil
           };
         } else {
-          // Block has expired, reset
           session.isBlocked = false;
           session.blockedUntil = null;
           session.attempts = 0;
@@ -107,20 +102,19 @@ export class UserSessionService {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
-      // Check if we need to reset daily usage (new day)
       if (session.lastUsageDate) {
-        // Ensure lastUsageDate is a Date object
+        
         const lastUsageDate = session.lastUsageDate instanceof Date ? session.lastUsageDate : new Date(session.lastUsageDate);
         const lastUsageDay = new Date(lastUsageDate.getFullYear(), lastUsageDate.getMonth(), lastUsageDate.getDate());
         
         if (lastUsageDay < today) {
-          // New day, reset daily usage count
+         
           session.dailyUsageCount = 0;
           session.lastUsageDate = today;
           await this.userSessionRepository.save(session);
         }
       } else {
-        // First time usage, set today's date
+       
         session.lastUsageDate = today;
         await this.userSessionRepository.save(session);
       }
@@ -153,23 +147,22 @@ export class UserSessionService {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
-      // Check if we need to reset daily usage (new day)
       if (session.lastUsageDate) {
-        // Ensure lastUsageDate is a Date object
+        
         const lastUsageDate = session.lastUsageDate instanceof Date ? session.lastUsageDate : new Date(session.lastUsageDate);
         const lastUsageDay = new Date(lastUsageDate.getFullYear(), lastUsageDate.getMonth(), lastUsageDate.getDate());
         
         if (lastUsageDay < today) {
-          // New day, reset daily usage count
+         
           session.dailyUsageCount = 0;
           session.lastUsageDate = today;
         }
       } else {
-        // First time usage, set today's date
+       
         session.lastUsageDate = today;
       }
       
-      // Increment daily usage count
+      
       session.dailyUsageCount += 1;
       await this.userSessionRepository.save(session);
       
@@ -195,7 +188,7 @@ export class UserSessionService {
         session.lastAttempt = new Date();
         
         if (session.attempts >= session.maxAttempts) {
-          // Block user for 24 hours
+          
           session.isBlocked = true;
           session.blockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
         }
@@ -246,14 +239,14 @@ export class UserSessionService {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
-      // Check if we need to reset daily usage (new day)
+      
       if (session.lastUsageDate) {
-        // Ensure lastUsageDate is a Date object
+        
         const lastUsageDate = session.lastUsageDate instanceof Date ? session.lastUsageDate : new Date(session.lastUsageDate);
         const lastUsageDay = new Date(lastUsageDate.getFullYear(), lastUsageDate.getMonth(), lastUsageDate.getDate());
         
         if (lastUsageDay < today) {
-          // New day, reset daily usage count
+            
           session.dailyUsageCount = 0;
           session.lastUsageDate = today;
           await this.userSessionRepository.save(session);

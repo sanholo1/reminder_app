@@ -21,7 +21,6 @@ const sessionMiddleware = new SessionMiddleware();
 application.use(cors());
 application.use(express.json());
 
-// Session middleware
 application.use(sessionMiddleware.extractSessionId);
 application.use(sessionMiddleware.checkBlocked);
 
@@ -63,7 +62,6 @@ AppDataSource.initialize()
   .catch((error) => {
     console.error("Error during database initialization:", error);
     
-    // Sprawdź typ błędu bazy danych
     if (error.code === 'ECONNREFUSED') {
       console.error("Database connection refused. Make sure database is running.");
     } else if (error.code === 'ENOTFOUND') {
@@ -76,7 +74,7 @@ AppDataSource.initialize()
       console.error("Database does not exist. Create the database first.");
     }
     
-    // Próba ponownego połączenia po 5 sekundach
+    
     console.log("Retrying database connection in 5 seconds...");
     setTimeout(() => {
       console.log("Retrying database connection...");

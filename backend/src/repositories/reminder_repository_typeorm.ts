@@ -111,7 +111,7 @@ export class ReminderRepositoryTypeORM {
       const categories = reminders
         .map(reminder => reminder.category)
         .filter((category): category is string => category !== null && category !== undefined)
-        .filter((category, index, self) => self.indexOf(category) === index); // Remove duplicates
+        .filter((category, index, self) => self.indexOf(category) === index);
       
       return categories;
     } catch (error) {
@@ -129,7 +129,6 @@ export class ReminderRepositoryTypeORM {
         throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
       }
       
-      // Dodaj do kosza przed usunięciem
       await this.trashRepository.addToTrash({
         id: reminder.id,
         activity: reminder.activity,
@@ -140,10 +139,8 @@ export class ReminderRepositoryTypeORM {
         created_at: reminder.created_at
       });
       
-      // Usuń z głównej tabeli
       await this.repository.remove(reminder);
       
-      // Wyczyść stare elementy z kosza (zachowaj tylko 10 najnowszych)
       await this.trashRepository.clearOldItems();
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -163,7 +160,6 @@ export class ReminderRepositoryTypeORM {
         return 0;
       }
       
-      // Dodaj wszystkie przypomnienia z kategorii do kosza
       for (const reminder of reminders) {
         await this.trashRepository.addToTrash({
           id: reminder.id,
@@ -178,7 +174,6 @@ export class ReminderRepositoryTypeORM {
       
       await this.repository.remove(reminders);
       
-      // Wyczyść stare elementy z kosza
       await this.trashRepository.clearOldItems();
       
       return reminders.length;
@@ -203,7 +198,6 @@ export class ReminderRepositoryTypeORM {
         throw new NotFoundError('Element nie został znaleziony w koszu');
       }
       
-      // Przywróć przypomnienie do głównej tabeli
       const restoredReminder = new Reminder(
         itemToRestore.id,
         itemToRestore.activity,
@@ -222,10 +216,8 @@ export class ReminderRepositoryTypeORM {
 
   async getActiveReminders(sessionId: string, currentTime: Date): Promise<ReminderEntity[]> {
     try {
-      // Używamy lokalnej strefy czasowej (tej samej, w której zapisany jest DATETIME w MySQL)
-      // oraz okna +/- 1 minuta wokół bieżącego czasu lokalnego
+      
       const nowLocal = DateTime.local();
-      // Nie uruchamiaj przed czasem: start = teraz, koniec = +1 min
       const startTimeStr = nowLocal.toFormat('yyyy-LL-dd HH:mm:ss');
       const endTimeStr = nowLocal.plus({ minutes: 1 }).toFormat('yyyy-LL-dd HH:mm:ss');
 
