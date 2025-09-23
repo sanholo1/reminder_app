@@ -27,19 +27,18 @@ export class NotificationService {
 
   public async initializeAudio() {
     try {
-      // Jeśli AudioContext już istnieje, nie twórz nowego
       if (!this.audioContext) {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       
-      // Upewnij się, że AudioContext jest w stanie running
+      
       if (this.audioContext.state === 'suspended') {
         console.log('AudioContext jest zawieszony podczas inicjalizacji, wznawiam...');
         await this.audioContext.resume();
         console.log('AudioContext state po wznowieniu:', this.audioContext.state);
       }
       
-      // Pobierz dźwięk powiadomienia (możesz zastąpić URL swoim dźwiękiem)
+      
       const response = await fetch('/notification-sound.mp3');
       if (response.ok) {
         const arrayBuffer = await response.arrayBuffer();
@@ -57,12 +56,12 @@ export class NotificationService {
   startChecking() {
     if (this.checkInterval) {
       console.log('System powiadomień już działa');
-      return; // Już sprawdzamy
+      return; 
     }
 
     console.log('Uruchamiam system powiadomień dźwiękowych...');
     
-    // Upewnij się, że AudioContext jest gotowy
+    
     if (this.audioContext && this.audioContext.state === 'suspended') {
       console.log('AudioContext jest zawieszony przy starcie, wznawiam...');
       this.audioContext.resume().then(() => {
@@ -70,12 +69,12 @@ export class NotificationService {
       });
     }
     
-    // Sprawdzaj co 30 sekund
+    
     this.checkInterval = setInterval(() => {
       this.checkActiveReminders();
     }, 30000);
 
-    // Sprawdź od razu przy starcie
+    
     this.checkActiveReminders();
   }
 
@@ -91,7 +90,7 @@ export class NotificationService {
     try {
       console.log('Sprawdzam aktywne przypomnienia...');
       
-      // Użyj względnego URL - backend działa na tym samym porcie co frontend
+      
       const response = await this.connectionService.request<ActiveRemindersResponse>('/reminders/active', {
         method: 'GET'
       });
@@ -115,12 +114,12 @@ export class NotificationService {
     reminders.forEach(reminder => {
       console.log(`Sprawdzam przypomnienie: ${reminder.id} - ${reminder.activity}`);
       
-      // Sprawdź czy to nowe przypomnienie (nie było wcześniej sprawdzane)
+      
       if (!this.lastCheckedReminders.has(reminder.id)) {
         console.log(`Nowe przypomnienie! Dodaję do pamięci i pokazuję powiadomienie`);
         this.lastCheckedReminders.add(reminder.id);
         this.showNotification(reminder);
-        // Czekaj na zakończenie odtwarzania dźwięku
+        
         this.playNotificationSound().catch(error => {
           console.warn('Błąd podczas odtwarzania dźwięku powiadomienia:', error);
         });
@@ -129,7 +128,7 @@ export class NotificationService {
       }
     });
 
-    // Wyczyść stare ID z pamięci (zachowaj tylko ostatnie 100)
+    
     if (this.lastCheckedReminders.size > 100) {
       const reminderIds = Array.from(this.lastCheckedReminders);
       this.lastCheckedReminders = new Set(reminderIds.slice(-50));
@@ -138,13 +137,13 @@ export class NotificationService {
   }
 
   private showNotification(reminder: ActiveReminder) {
-    // Sprawdź czy przeglądarka wspiera powiadomienia
+    
     if (!('Notification' in window)) {
       console.log('Ta przeglądarka nie wspiera powiadomień');
       return;
     }
 
-    // Sprawdź uprawnienia
+
     if (Notification.permission === 'granted') {
       this.createNotification(reminder);
     } else if (Notification.permission !== 'denied') {
@@ -165,12 +164,12 @@ export class NotificationService {
       silent: false
     });
 
-    // Automatycznie zamknij po 10 sekundach
+    
     setTimeout(() => {
       notification.close();
     }, 10000);
 
-    // Obsługa kliknięcia w powiadomienie
+    
     notification.onclick = () => {
       window.focus();
       notification.close();
@@ -184,14 +183,14 @@ export class NotificationService {
     
     if (this.audioContext && this.notificationSound) {
       try {
-        // Sprawdź czy AudioContext jest zawieszony i wznów go
+        
         if (this.audioContext.state === 'suspended') {
           console.log('AudioContext jest zawieszony, wznawiam...');
           await this.audioContext.resume();
           console.log('AudioContext state po wznowieniu:', this.audioContext.state);
         }
         
-        // Poczekaj chwilę po wznowieniu AudioContext
+        
         if (this.audioContext.state === 'running') {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -209,13 +208,13 @@ export class NotificationService {
     }
   }
 
-  // Metoda do testowania dźwięku
+  
   testSound() {
     console.log('=== TEST DŹWIĘKU ===');
     console.log('AudioContext state:', this.audioContext?.state);
     console.log('NotificationSound loaded:', !!this.notificationSound);
     
-    // Sprawdź czy dźwięk jest załadowany
+    
     if (!this.notificationSound) {
       console.warn('Dźwięk powiadomienia nie został załadowany. Próbuję ponownie...');
       this.initializeAudio().then(() => {
@@ -225,21 +224,17 @@ export class NotificationService {
       return;
     }
     
-    // Odtwórz dźwięk i obsłuż błędy
+    
     this.playNotificationSound().catch(error => {
       console.warn('Błąd podczas testowania dźwięku:', error);
     });
   }
 
-  // Metoda do czyszczenia pamięci
+  
   cleanup() {
     console.log('Czyszczenie NotificationService...');
     this.stopChecking();
     this.lastCheckedReminders.clear();
     console.log('NotificationService wyczyszczony');
-    // NIE zamykaj AudioContext - może być potrzebny do testowania dźwięku
-    // if (this.audioContext) {
-    //   this.audioContext.close();
-    // }
   }
 }

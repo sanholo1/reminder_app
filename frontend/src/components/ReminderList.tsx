@@ -6,7 +6,7 @@ interface Reminder {
   id: string;
   activity: string;
   datetime: string;
-  // Original ISO string for reliable date math/grouping
+  
   datetimeISO?: string;
   category?: string | null;
   created_at: string;
@@ -21,11 +21,11 @@ interface ReminderListProps {
 const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders, onDeleteReminder }) => {
   const { t } = useLanguage();
 
-  // Group reminders by local date (YYYY-MM-DD) based on their datetime
+  
   const groups = React.useMemo(() => {
     const map = new Map<string, Reminder[]>();
     for (const r of reminders) {
-      // Use local date for grouping
+      
       const d = new Date(r.datetimeISO || r.datetime);
       const year = d.getFullYear();
       const month = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -35,9 +35,8 @@ const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders
       arr.push(r);
       map.set(key, arr);
     }
-    // Sort groups by date descending (newest first)
+    
     const sorted = Array.from(map.entries()).sort((a, b) => (a[0] > b[0] ? -1 : a[0] < b[0] ? 1 : 0));
-    // Within each group, sort by time ascending
     for (const [, arr] of sorted) {
       arr.sort((a, b) => new Date(a.datetimeISO || a.datetime).getTime() - new Date(b.datetimeISO || b.datetime).getTime());
     }
@@ -45,10 +44,10 @@ const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders
   }, [reminders]);
 
   const formatDateHeader = (key: string) => {
-    // key is YYYY-MM-DD
+    
     const [y, m, d] = key.split('-').map(Number);
     const date = new Date(y, (m || 1) - 1, d || 1);
-    // Use browser locale; could be enhanced to use current language
+      
     return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 

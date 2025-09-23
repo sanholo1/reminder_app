@@ -28,15 +28,14 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   }, [duration]);
 
   const handleClose = () => {
-    if (isClosing) return; // Zapobiegaj wielokrotnemu wywołaniu
+    if (isClosing) return; 
     
     setIsClosing(true);
     setIsVisible(false);
     
-    // Poczekaj na zakończenie animacji przed usunięciem z DOM
     setTimeout(() => {
       onClose?.();
-    }, 300); // Czas na animację wyjścia
+    }, 300); 
   };
 
   return (

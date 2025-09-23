@@ -67,7 +67,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     fetchTrashItems();
     fetchUsageInfo();
     
-    // Uruchom system powiadomień dźwiękowych
     if (!notificationsStartedRef.current) {
       notificationService.startChecking();
       notificationsStartedRef.current = true;
@@ -80,9 +79,8 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     }
   }, [selectedCategory]);
 
-  // Odśwież dane gdy zmieni się język, aby przeformatować daty
+
   useEffect(() => {
-    // Tylko odśwież jeśli dane już istnieją (żeby uniknąć niepotrzebnych zapytań)
     if (reminders.length > 0 || trashItems.length > 0) {
       fetchReminders();
       fetchTrashItems();
@@ -208,7 +206,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     } catch (err: any) {
       if (err instanceof ConnectionError) {
         console.error('Błąd połączenia podczas pobierania informacji o użyciu:', err.message);
-        // Set default values on connection error
         setDailyUsageInfo({
           dailyUsageCount: 0,
           maxDailyUsage: 20,
@@ -216,7 +213,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         });
       } else {
         console.error('Błąd pobierania informacji o użyciu:', err);
-        // Set default values on other errors
+        
         setDailyUsageInfo({
           dailyUsageCount: 0,
           maxDailyUsage: 20,
@@ -232,9 +229,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     
     try {
       await connectionService.deleteReminder(id);
-      // Refresh the reminders list after successful deletion
+
       await fetchReminders();
-      // Refresh trash items
+
       await fetchTrashItems();
     } catch (err: any) {
       if (err instanceof ConnectionError) {
@@ -256,7 +253,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
     
-    // Add category to local state (it will be created when first reminder is added)
+
     if (!categories.includes(newCategory.trim())) {
       setCategories([...categories, newCategory.trim()]);
     }
@@ -286,15 +283,15 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     try {
       await connectionService.deleteCategory(deletingCategory);
       
-      // Remove category from local state
+
       setCategories(categories.filter(cat => cat !== deletingCategory));
       
-      // If we're currently viewing this category, go back to main
+
       if (selectedCategory === deletingCategory) {
         setSelectedCategory(null);
       }
       
-      // Refresh reminders
+
       await fetchReminders();
       
       setShowDeleteModal(false);
@@ -322,7 +319,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     
     try {
       await connectionService.restoreFromTrash(id);
-      // Refresh both reminders and trash
+
       await fetchReminders();
       await fetchTrashItems();
     } catch (err: any) {
@@ -340,17 +337,17 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     setShowTrash(!showTrash);
   };
 
-  // Funkcja sprawdzająca połączenie z internetem
+
   const checkInternetConnection = async (): Promise<boolean> => {
     try {
-      // Próbujemy pobrać mały plik z internetu
+
       const response = await fetch('https://www.google.com/favicon.ico', { 
         method: 'HEAD',
         mode: 'no-cors'
       });
       return true;
     } catch (error) {
-      // Gdy nie ma połączenia z internetem
+
       return false;
     }
   };
@@ -363,7 +360,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     setResult(null);
     setRemainingAttempts(null);
 
-    // Sprawdź połączenie z internetem przed utworzeniem przypomnienia
+
     const isOnline = await checkInternetConnection();
     if (!isOnline) {
       setError(t('errors.noInternet'));
@@ -380,7 +377,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
       const data = response.data;
       
-      // Handle warnings and remaining attempts
+
       if (response.warning) {
         setWarning(response.warning);
       }
@@ -390,7 +387,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
       if (data.error) {
         setError(data.error);
-        // If it's an abuse error, show remaining attempts
+
         if (response.remainingAttempts !== undefined) {
           setRemainingAttempts(response.remainingAttempts);
         }
@@ -410,10 +407,8 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         setResult(resultWithLocalTime);
         setInput('');
         
-        // Reset remaining attempts on successful request
         setRemainingAttempts(null);
         
-        // Update usage info immediately from headers if available
         if (response.dailyUsageCount !== undefined && response.dailyMaxUsage !== undefined && response.dailyRemaining !== undefined) {
           setDailyUsageInfo({
             dailyUsageCount: response.dailyUsageCount,
@@ -421,7 +416,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
             remainingDailyUsage: response.dailyRemaining
           });
         } else {
-          // Fallback to fetching usage info
           await fetchUsageInfo();
         }
         
@@ -431,7 +425,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     } catch (err: any) {
       if (err instanceof ConnectionError) {
         setError(err.message);
-        // Try to extract remaining attempts from error message if it's an abuse error
         if (err.message.includes('Pozostało') && err.message.includes('prób')) {
           const match = err.message.match(/Pozostało (\d+) prób/);
           if (match) {
@@ -455,7 +448,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       <h1 className="title">{t('app.title')}</h1>
       <p className="subtitle">{t('app.subtitle')}</p>
       
-      {/* Category Navigation */}
       <div className="category-navigation">
         {selectedCategory && (
           <button 
@@ -510,7 +502,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         )}
       </div>
 
-      {/* Current Category Display */}
       {selectedCategory && (
         <div className="current-category">
           <h2>{t('categories.title')} {selectedCategory}</h2>
@@ -532,7 +523,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         dailyUsageInfo={dailyUsageInfo}
       />
       
-      {/* Test dźwięku powiadomienia */}
       <div className="notification-test">
         <button 
           onClick={() => notificationService.testSound()}

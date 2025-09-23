@@ -22,7 +22,6 @@ const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
   
   if (!isOpen) return null;
 
-  // Helper function to get the correct word form for reminders count
   const getReminderWord = (count: number) => {
     if (count === 1) return 'przypomnienie';
     if (count < 5) return 'przypomnienia';

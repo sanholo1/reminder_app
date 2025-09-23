@@ -25,7 +25,6 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
   const { t, language } = useLanguage();
 
   useEffect(() => {
-    // Sprawdź czy przeglądarka obsługuje Web Speech API
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       setIsSupported(true);
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -34,14 +33,13 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       const recognition = recognitionRef.current;
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = language === 'pl' ? 'pl-PL' : 'en-US'; // Dynamiczny język
+      recognition.lang = language === 'pl' ? 'pl-PL' : 'en-US'; 
       
       recognition.onstart = () => {
         onListeningChange(true);
         setError(null);
         setTranscript('');
         currentTranscriptRef.current = '';
-        // Resetuj preview
         if (onPreview) {
           onPreview('');
         }
@@ -64,7 +62,6 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         setTranscript(newTranscript);
         currentTranscriptRef.current = newTranscript;
         
-        // Wyślij preview jeśli funkcja jest dostępna
         if (onPreview) {
           onPreview(newTranscript);
         }
@@ -94,15 +91,12 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
       
       recognition.onend = () => {
         onListeningChange(false);
-        // Użyj referencji do aktualnego transcript
         if (currentTranscriptRef.current.trim()) {
           onTranscript(currentTranscriptRef.current.trim());
         }
-        // Resetuj preview
         if (onPreview) {
           onPreview('');
         }
-        // Resetuj stan po krótkim opóźnieniu, aby użytkownik widział wynik
         setTimeout(() => {
           setTranscript('');
           currentTranscriptRef.current = '';
@@ -120,7 +114,6 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     };
   }, [onTranscript, onListeningChange, language, t]);
 
-  // Resetuj stan gdy komponent się odmontowuje
   useEffect(() => {
     return () => {
       setTranscript('');
@@ -137,7 +130,6 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         recognitionRef.current.stop();
       }
     } else {
-      // Resetuj poprzedni stan przed rozpoczęciem nowej sesji
       setTranscript('');
       currentTranscriptRef.current = '';
       setError(null);
@@ -157,7 +149,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
   };
 
   if (!isSupported) {
-    return null; // Nie pokazuj ikony jeśli nie jest obsługiwane
+    return null; 
   }
 
   return (
