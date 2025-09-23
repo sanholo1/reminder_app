@@ -701,6 +701,11 @@ body.light-theme .button:disabled {
   color: var(--accent-primary);
 }
 
+/* Light theme: use the characteristic purple for reminder titles */
+body.light-theme .reminder-activity {
+  color: #6366f1; /* primary purple */
+}
+
 .reminder-datetime {
   font-size: 1rem;
   margin-bottom: 0.5rem;
