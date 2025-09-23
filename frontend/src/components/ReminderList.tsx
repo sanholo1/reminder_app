@@ -36,7 +36,7 @@ const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders
       map.set(key, arr);
     }
     
-    const sorted = Array.from(map.entries()).sort((a, b) => (a[0] > b[0] ? -1 : a[0] < b[0] ? 1 : 0));
+    const sorted = Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
     for (const [, arr] of sorted) {
       arr.sort((a, b) => new Date(a.datetimeISO || a.datetime).getTime() - new Date(b.datetimeISO || b.datetime).getTime());
     }
