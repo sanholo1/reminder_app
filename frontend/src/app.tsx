@@ -20,20 +20,19 @@ interface ToastMessage {
   type: 'success' | 'info' | 'warning' | 'error';
 }
 
-// Funkcja do żądania uprawnień do powiadomień
 const requestNotificationPermission = async (
   t: (key: string) => string,
   showToast: (message: string, type: 'success' | 'info' | 'warning' | 'error') => string,
   removeToast: (id: string) => void
 ) => {
-  // Sprawdź czy przeglądarka wspiera powiadomienia
+  
   if (!('Notification' in window)) {
     console.log(t('notifications.browserNotSupported'));
     showToast(t('notifications.browserNotSupported'), 'warning');
     return;
   }
 
-  // Sprawdź aktualne uprawnienia
+  
   if (Notification.permission === 'default') {
     console.log(t('notifications.permissionRequest'));
     const infoToastId = showToast(t('notifications.permissionRequest'), 'info');
@@ -54,7 +53,7 @@ const requestNotificationPermission = async (
     }
   } else if (Notification.permission === 'granted') {
     console.log('✅ Uprawnienia już przyznane - pomijam toast');
-    // Nie pokazuj toastu jeśli uprawnienia już są przyznane
+    
   } else {
     console.log(t('notifications.permissionAlreadyDenied'));
     showToast(t('notifications.permissionAlreadyDenied'), 'warning');
@@ -81,7 +80,7 @@ const AppContent: React.FC = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
-  // Inicjalizacja aplikacji - tylko raz
+  
   useEffect(() => {
     if (appInitializationDone) {
       return;
@@ -91,7 +90,7 @@ const AppContent: React.FC = () => {
     const initializeApp = async () => {
       try {
         setLoadingMessage(t('loading.server'));
-        await new Promise(resolve => setTimeout(resolve, 500)); // Minimal loading time
+        await new Promise(resolve => setTimeout(resolve, 500)); 
         
         setLoadingMessage(t('loading.data'));
         const res = await connectionService.request<any>('/reminders');
@@ -99,9 +98,9 @@ const AppContent: React.FC = () => {
         if (res.dailyResetAt) setDailyResetAt(res.dailyResetAt);
         
         setLoadingMessage(t('loading.finalizing'));
-        await new Promise(resolve => setTimeout(resolve, 300)); // Smooth transition
+        await new Promise(resolve => setTimeout(resolve, 300)); 
         
-        // Żądaj uprawnień do powiadomień tylko raz po załadowaniu aplikacji
+        
         if (!notificationPermissionChecked.current) {
           await requestNotificationPermission(t, showToast, removeToast);
           notificationPermissionChecked.current = true;
@@ -109,14 +108,14 @@ const AppContent: React.FC = () => {
         
       } catch (error) {
         console.error(t('errors.initApp'), error);
-        // Continue loading even if there's an error
+        
       } finally {
         setIsLoading(false);
       }
     };
     
     initializeApp();
-  }, []); // Pusta tablica zależności - tylko raz
+  }, []); 
 
   if (isLoading) {
     return <LoadingPage message={loadingMessage} />;
@@ -153,7 +152,7 @@ const AppContent: React.FC = () => {
         {t('footer.copyright', { year: new Date().getFullYear() })}
       </footer>
       
-      {/* Toast Notifications */}
+          
       {toasts.map(toast => (
         <NotificationToast
           key={toast.id}

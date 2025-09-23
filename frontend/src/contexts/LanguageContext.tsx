@@ -23,7 +23,6 @@ interface LanguageProviderProps {
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    // Sprawdź zapisany język w localStorage lub domyślnie polski
     const savedLanguage = localStorage.getItem('app-language') as Language;
     return savedLanguage && ['pl', 'en'].includes(savedLanguage) ? savedLanguage : 'pl';
   });
@@ -41,13 +40,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        // Fallback do polskiego jeśli klucz nie istnieje
+        
         value = translations.pl;
         for (const fallbackKey of keys) {
           if (value && typeof value === 'object' && fallbackKey in value) {
             value = value[fallbackKey];
           } else {
-            return key; // Zwróć klucz jeśli nie znaleziono tłumaczenia
+            return key; 
           }
         }
         break;
@@ -58,7 +57,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       return key;
     }
     
-    // Zastąp parametry w tekście
+    
     if (params) {
       return value.replace(/\{(\w+)\}/g, (match, paramKey) => {
         return params[paramKey]?.toString() || match;

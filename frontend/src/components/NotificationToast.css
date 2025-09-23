@@ -1,4 +1,3 @@
-/* Notification Toast Styles */
 .notification-toast {
   position: fixed;
   top: 20px;
@@ -64,7 +63,6 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Toast Types */
 .notification-toast-success {
   background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
   color: white;
@@ -89,7 +87,6 @@
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-/* Light theme adjustments */
 body.light-theme .notification-toast {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-color: rgba(0, 0, 0, 0.1);
