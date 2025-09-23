@@ -1346,6 +1346,11 @@ body.light-theme .category-input:hover {
   transition: width 0.3s ease;
 }
 
+/* Light theme: purple loading bar */
+body.light-theme .usage-progress-bar {
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+}
+
 /* Style for when limit is reached */
 .daily-usage-info.limit-reached {
   border-color: var(--accent-base);

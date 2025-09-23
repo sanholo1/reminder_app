@@ -1,3 +1,4 @@
+import { logger } from './utils/logger';
 export class ConnectionError extends Error {
   constructor(message: string) {
     super(message);
@@ -18,6 +19,7 @@ export interface ConnectionResponse<T = any> {
 export class ConnectionService {
   async request<T = any>(url: string, options?: RequestInit): Promise<ConnectionResponse<T>> {
     try {
+      const startedAt = performance.now();
       const res = await fetch(url, options);
       if (!res.ok) {
         let errorMessage = `Błąd połączenia: ${res.status} ${res.statusText}`;
@@ -31,9 +33,12 @@ export class ConnectionService {
             errorMessage = 'Serwer nie jest dostępny';
           }
         }
+        logger.warn('HTTP error', { url, status: res.status, statusText: res.statusText });
         throw new ConnectionError(errorMessage);
       }
       const data = await res.json();
+      const durationMs = Math.round(performance.now() - startedAt);
+      logger.info('HTTP', { url, method: (options && options.method) || 'GET', durationMs });
       return {
         data,
         remainingAttempts: res.headers.get('X-Remaining-Attempts') ? parseInt(res.headers.get('X-Remaining-Attempts')!) : undefined,
@@ -47,6 +52,7 @@ export class ConnectionService {
       if (err instanceof ConnectionError) {
         throw err;
       }
+      logger.error('HTTP exception', { url, error: err?.message || String(err) });
       throw new ConnectionError(err.message || 'Nieznany błąd połączenia');
     }
   }

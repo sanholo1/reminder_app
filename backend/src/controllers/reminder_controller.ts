@@ -11,6 +11,7 @@ import { GetTrashItemsHandler } from '../queries/get_trash_items_query';
 import { RestoreFromTrashHandler } from '../commands/restore_from_trash_command';
 import { DeleteCategoryHandler } from '../commands/delete_category_command';
 import { UpdateReminderHandler } from '../commands/update_command';
+import { logger } from '../utils/logger';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
@@ -61,7 +62,7 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
         res.setHeader('X-Daily-Max-Usage', usageInfo.maxDailyUsage.toString());
         res.setHeader('X-Daily-Remaining-Usage', usageInfo.remainingDailyUsage.toString());
       } catch (error) {
-        console.error('Error getting usage info for headers:', error);
+        logger.warn('Error getting usage info for headers', { error: (error as any)?.message || String(error), sessionId });
       }
     }
     
@@ -84,7 +85,7 @@ reminderRouter.get('/reminders/active', async (req: Request, res: Response, next
   try {
     let sessionId = (req as any).sessionId;
     if (!sessionId) {
-      console.log('No session ID provided, using default');
+      logger.warn('No session ID provided, using default');
       sessionId = 'default-session';
     }
     const result = await getActiveRemindersHandler.execute({ sessionId });

@@ -3,6 +3,8 @@ import cors from 'cors';
 import reminderRouter from './controllers/reminder_controller';
 import { AppDataSource } from './config/database';
 import { SessionMiddleware } from './middleware/session_middleware';
+import { requestLogger } from './middleware/request_logger';
+import { logger } from './utils/logger';
 import {
   ValidationError,
   HttpError,
@@ -20,13 +22,14 @@ const sessionMiddleware = new SessionMiddleware();
 
 application.use(cors());
 application.use(express.json());
+application.use(requestLogger);
 
 application.use(sessionMiddleware.extractSessionId);
 application.use(sessionMiddleware.checkBlocked);
 
 application.use('/', reminderRouter);
 application.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.log('Error handler called with:', err);
+  logger.error('Error handler called', { error: (err && err.message) || String(err) });
   if (err instanceof AbuseError) {
     return res.status(err.status).json({ error: err.message, status: err.status, name: err.name });
   }
@@ -48,46 +51,46 @@ application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof DatabaseTimeoutError) {
     return res.status(504).json({ error: err.message, status: 504, name: err.name });
   }
-  console.log('Unhandled error:', err);
+  logger.error('Unhandled error', { error: (err && err.message) || String(err) });
   res.status(500).json({ error: 'Internal Server Error', status: 500 });
 });
 
 AppDataSource.initialize()
   .then(() => {
-    console.log("Database connection established successfully");
+    logger.info('Database connection established successfully');
     application.listen(applicationPort, () => {
-      console.log(`Server is running on port ${applicationPort}`);
+      logger.info('Server is running', { port: applicationPort });
     });
   })
   .catch((error) => {
-    console.error("Error during database initialization:", error);
+    logger.error('Error during database initialization', { error: (error && error.message) || String(error) });
     
     if (error.code === 'ECONNREFUSED') {
-      console.error("Database connection refused. Make sure database is running.");
+      logger.error('Database connection refused. Make sure database is running.');
     } else if (error.code === 'ENOTFOUND') {
-      console.error("Database host not found. Check database configuration.");
+      logger.error('Database host not found. Check database configuration.');
     } else if (error.code === 'ETIMEDOUT') {
-      console.error("Database connection timeout. Check network connection.");
+      logger.error('Database connection timeout. Check network connection.');
     } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-      console.error("Database access denied. Check username and password.");
+      logger.error('Database access denied. Check username and password.');
     } else if (error.code === 'ER_BAD_DB_ERROR') {
-      console.error("Database does not exist. Create the database first.");
+      logger.error('Database does not exist. Create the database first.');
     }
     
     
-    console.log("Retrying database connection in 5 seconds...");
+    logger.warn('Retrying database connection in 5 seconds...');
     setTimeout(() => {
-      console.log("Retrying database connection...");
+      logger.info('Retrying database connection...');
       AppDataSource.initialize()
         .then(() => {
-          console.log("Database connection established successfully on retry");
+          logger.info('Database connection established successfully on retry');
           application.listen(applicationPort, () => {
-            console.log(`Server is running on port ${applicationPort}`);
+            logger.info('Server is running', { port: applicationPort });
           });
         })
         .catch((retryError) => {
-          console.error("Database connection failed on retry:", retryError);
-          console.error("Server will exit. Please check database configuration.");
+          logger.error('Database connection failed on retry', { error: (retryError && retryError.message) || String(retryError) });
+          logger.error('Server will exit. Please check database configuration.');
           process.exit(1);
         });
     }, 5000);

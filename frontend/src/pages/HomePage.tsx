@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ConnectionService, ConnectionError, ConnectionResponse } from '../connectionService';
 import ReminderList from '../components/ReminderList';
-import EditReminderModal from '../components/EditReminderModal';
 import ReminderForm from '../components/ReminderForm';
 import ReminderResult from '../components/ReminderResult';
 import DeleteCategoryModal from '../components/DeleteCategoryModal';
@@ -49,9 +48,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  
   const [loadingTrash, setLoadingTrash] = useState(false);
   const [showTrash, setShowTrash] = useState(false);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -86,9 +83,33 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
 
   useEffect(() => {
-    if (reminders.length > 0 || trashItems.length > 0) {
-      fetchReminders();
-      fetchTrashItems();
+    // Reformat locally on language change without refetching
+    if (reminders.length > 0) {
+      const locale = language === 'pl' ? 'pl-PL' : 'en-US';
+      setReminders(reminders.map(r => ({
+        ...r,
+        datetime: r.datetimeISO ? new Date(r.datetimeISO).toLocaleString(locale, {
+          weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
+        }) : r.datetime,
+        created_at: r.created_at ? new Date(r.datetimeISO || r.created_at).toLocaleString(locale, {
+          year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+        }) : ''
+      })));
+    }
+    if (trashItems.length > 0) {
+      const locale = language === 'pl' ? 'pl-PL' : 'en-US';
+      setTrashItems(trashItems.map(item => ({
+        ...item,
+        datetime: new Date(item.datetime).toLocaleString(locale, {
+          weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
+        }),
+        deleted_at: new Date(item.deleted_at).toLocaleString(locale, {
+          year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+        }),
+        created_at: item.created_at ? new Date(item.created_at).toLocaleString(locale, {
+          year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+        }) : ''
+      })));
     }
   }, [language]);
 
@@ -101,7 +122,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         response = await connectionService.request<{ reminders: Reminder[] }>('/reminders');
       }
       const data = response.data;
-      console.log('Daty z backendu:', data.reminders.map(r => ({ id: r.id, datetime: r.datetime })));
+      
       const locale = language === 'pl' ? 'pl-PL' : 'en-US';
       const remindersWithLocalTime = data.reminders.map(reminder => {
         const localDateTime = new Date(reminder.datetime).toLocaleString(locale, {
@@ -112,7 +133,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           minute: '2-digit',
           hour12: false
         });
-        console.log(`Konwersja: ${reminder.datetime} -> ${localDateTime}`);
+        
         return {
           ...reminder,
           datetimeISO: reminder.datetime,
@@ -343,19 +364,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   };
 
 
-  const checkInternetConnection = async (): Promise<boolean> => {
-    try {
-
-      const response = await fetch('https://www.google.com/favicon.ico', { 
-        method: 'HEAD',
-        mode: 'no-cors'
-      });
-      return true;
-    } catch (error) {
-
-      return false;
-    }
-  };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -366,12 +375,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
     setRemainingAttempts(null);
 
 
-    const isOnline = await checkInternetConnection();
-    if (!isOnline) {
-      setError(t('errors.noInternet'));
-      setLoading(false);
-      return;
-    }
+    
 
     try {
       const response = await connectionService.request<{ activity: string; datetime: string | null; error?: string | null }>('/reminders', {

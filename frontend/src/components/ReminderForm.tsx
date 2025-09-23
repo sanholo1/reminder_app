@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import VoiceInput from './VoiceInput';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ReminderFormProps {
@@ -15,17 +14,9 @@ interface ReminderFormProps {
 }
 
 const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, handleSubmit, dailyUsageInfo }) => {
-  const [isListening, setIsListening] = useState(false);
-  const [voicePreview, setVoicePreview] = useState('');
+  
   const { t } = useLanguage();
-
-  const handleVoiceTranscript = (transcript: string) => {
-    setInput(transcript);
-  };
-
-  const handleVoicePreview = (preview: string) => {
-    setVoicePreview(preview);
-  };
+  
 
   return (
     <div>
@@ -81,24 +72,9 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
             maxLength={200}
             className="input"
           />
-          <VoiceInput 
-            onTranscript={handleVoiceTranscript}
-            onPreview={handleVoicePreview}
-            disabled={loading}
-            isListening={isListening}
-            onListeningChange={setIsListening}
-          />
+          
         </div>
-        {isListening && (
-          <div className="voice-status-indicator">
-            <span>🎤 {t('voice.listening')}</span>
-            {voicePreview && (
-              <div className="voice-preview">
-                <span>{t('voice.recognized')} "{voicePreview}"</span>
-              </div>
-            )}
-          </div>
-        )}
+        
         <button
           type="submit"
           disabled={loading || !input.trim() || (dailyUsageInfo?.remainingDailyUsage ?? 0) <= 0}

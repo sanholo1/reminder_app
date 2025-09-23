@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import AuthorPage from './pages/AuthorPage';
-import ContactPage from './pages/ContactPage';
 import LoadingPage from './components/LoadingPage';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -11,6 +9,9 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './app.css';
 import { ConnectionService } from './connectionService';
+
+const AuthorPage = React.lazy(() => import('./pages/AuthorPage'));
+const ContactPage = React.lazy(() => import('./pages/ContactPage'));
 
 let appInitializationDone = false;
 
@@ -62,7 +63,6 @@ const requestNotificationPermission = async (
 
 const AppContent: React.FC = () => {
   const [dailyRemaining, setDailyRemaining] = useState<number | null>(null);
-  const [dailyResetAt, setDailyResetAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Ładowanie aplikacji...");
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -95,7 +95,6 @@ const AppContent: React.FC = () => {
         setLoadingMessage(t('loading.data'));
         const res = await connectionService.request<any>('/reminders');
         if (res.dailyRemaining !== undefined) setDailyRemaining(res.dailyRemaining);
-        if (res.dailyResetAt) setDailyResetAt(res.dailyResetAt);
         
         setLoadingMessage(t('loading.finalizing'));
         await new Promise(resolve => setTimeout(resolve, 300)); 
@@ -115,6 +114,7 @@ const AppContent: React.FC = () => {
     };
     
     initializeApp();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
   if (isLoading) {
@@ -141,11 +141,18 @@ const AppContent: React.FC = () => {
             try {
               const res = await connectionService.request<any>('/reminders');
               if (res.dailyRemaining !== undefined) setDailyRemaining(res.dailyRemaining);
-              if (res.dailyResetAt) setDailyResetAt(res.dailyResetAt);
             } catch {}
           }} />} />
-          <Route path="/author" element={<AuthorPage />} />
-          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/author" element={
+            <React.Suspense fallback={<LoadingPage message="Ładowanie..." />}> 
+              <AuthorPage />
+            </React.Suspense>
+          } />
+          <Route path="/contact" element={
+            <React.Suspense fallback={<LoadingPage message="Ładowanie..." />}> 
+              <ContactPage />
+            </React.Suspense>
+          } />
         </Routes>
       </div>
       <footer className="footer">
