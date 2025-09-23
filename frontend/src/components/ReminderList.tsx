@@ -16,10 +16,11 @@ interface ReminderListProps {
   reminders: Reminder[];
   loadingReminders: boolean;
   onDeleteReminder: (id: string) => void;
+  onUpdateReminder?: (id: string, payload: { activity?: string; datetime?: string }) => void | Promise<void>;
 }
 
-const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders, onDeleteReminder }) => {
-  const { t } = useLanguage();
+const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders, onDeleteReminder, onUpdateReminder }) => {
+  const { t, language } = useLanguage();
 
   
   const groups = React.useMemo(() => {
@@ -47,8 +48,8 @@ const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders
     
     const [y, m, d] = key.split('-').map(Number);
     const date = new Date(y, (m || 1) - 1, d || 1);
-      
-    return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const locale = language === 'pl' ? 'pl-PL' : 'en-US';
+    return date.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   return (
@@ -70,8 +71,10 @@ const ReminderList: React.FC<ReminderListProps> = ({ reminders, loadingReminders
                     id={reminder.id}
                     activity={reminder.activity}
                     datetime={reminder.datetime}
+                    datetimeISO={reminder.datetimeISO}
                     category={reminder.category}
                     onDelete={onDeleteReminder}
+                    onUpdate={onUpdateReminder}
                   />
                 ))}
               </div>

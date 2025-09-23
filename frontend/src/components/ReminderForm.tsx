@@ -78,6 +78,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder={t('form.placeholder')}
+            maxLength={200}
             className="input"
           />
           <VoiceInput 

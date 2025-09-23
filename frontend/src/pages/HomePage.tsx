@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ConnectionService, ConnectionError, ConnectionResponse } from '../connectionService';
 import ReminderList from '../components/ReminderList';
+import EditReminderModal from '../components/EditReminderModal';
 import ReminderForm from '../components/ReminderForm';
 import ReminderResult from '../components/ReminderResult';
 import DeleteCategoryModal from '../components/DeleteCategoryModal';
@@ -13,6 +14,7 @@ interface Reminder {
   id: string;
   activity: string;
   datetime: string;
+  datetimeISO?: string;
   category?: string | null;
   created_at: string;
 }
@@ -47,6 +49,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [loadingTrash, setLoadingTrash] = useState(false);
   const [showTrash, setShowTrash] = useState(false);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -558,8 +563,18 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           reminders={filteredReminders} 
           loadingReminders={loadingReminders} 
           onDeleteReminder={handleDeleteReminder}
+          onUpdateReminder={async (id, payload) => {
+            try {
+              await connectionService.updateReminder(id, payload);
+              await fetchReminders();
+            } catch (e: any) {
+              setError(e?.message || 'Błąd podczas aktualizacji przypomnienia');
+            }
+          }}
         />
       </div>
+
+      {/* inline edit replaces modal */}
 
       <DeleteCategoryModal
         isOpen={showDeleteModal}

@@ -15,7 +15,7 @@ const ContactPage: React.FC = () => {
         <a 
           href="mailto:reminderappcontact@gmail.com"
           style={{
-            color: 'var(--light-accent)',
+            color: 'var(--light-accent-fresh)',
             textDecoration: 'none',
             fontSize: '1.2rem',
             fontWeight: 'bold'

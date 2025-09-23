@@ -1,6 +1,6 @@
 import { ReminderWriteRepositoryTypeORM } from '../repositories/reminder_write_repository_typeorm';
 import { ReminderEntity } from '../repositories/reminder_types';
-import { EmptyInputError, LLMParsingError, AbuseError } from '../exceptions/exception_handler';
+import { EmptyInputError, LLMParsingError, AbuseError, ValidationError } from '../exceptions/exception_handler';
 import { LLMParserService, LLMErrorResult, LLMAbuseResult } from '../services/llm_parser_service';
 
 export interface CreateReminderCommand {
@@ -31,6 +31,7 @@ export class CreateReminderHandler {
 
   async execute(command: CreateReminderCommand): Promise<CreateReminderResult | CreateReminderAbuseResult> {
     if (!command.text || !command.text.trim()) throw new EmptyInputError();
+    const MAX_ACTIVITY_LENGTH = 200;
     
     const llmResult = await this.llmParser.parseReminderText(command.text, command.sessionId);
     
@@ -48,6 +49,10 @@ export class CreateReminderHandler {
       throw new LLMParsingError(llmResult.error);
     }
     
+    if (llmResult.activity && llmResult.activity.length > MAX_ACTIVITY_LENGTH) {
+      throw new ValidationError(`Aktywność przekracza maksymalną długość ${MAX_ACTIVITY_LENGTH} znaków`);
+    }
+
     const reminder: ReminderEntity = {
       id: this.generateId(),
       activity: llmResult.activity,

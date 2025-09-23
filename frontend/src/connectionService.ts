@@ -21,33 +21,25 @@ export class ConnectionService {
       const res = await fetch(url, options);
       if (!res.ok) {
         let errorMessage = `Błąd połączenia: ${res.status} ${res.statusText}`;
-        
         try {
           const errorData = await res.json();
           if (errorData && errorData.error) {
             errorMessage = errorData.error;
           }
         } catch (parseError) {
-          // Gdy nie można sparsować odpowiedzi błędu
           if (res.status >= 500) {
             errorMessage = 'Serwer nie jest dostępny';
           }
         }
-        
         throw new ConnectionError(errorMessage);
       }
       const data = await res.json();
-      
       return {
         data,
-        remainingAttempts: res.headers.get('X-Remaining-Attempts') ? 
-          parseInt(res.headers.get('X-Remaining-Attempts')!) : undefined,
-        dailyRemaining: res.headers.get('X-Daily-Remaining-Usage') ? 
-          parseInt(res.headers.get('X-Daily-Remaining-Usage')!) : undefined,
-        dailyUsageCount: res.headers.get('X-Daily-Usage-Count') ? 
-          parseInt(res.headers.get('X-Daily-Usage-Count')!) : undefined,
-        dailyMaxUsage: res.headers.get('X-Daily-Max-Usage') ? 
-          parseInt(res.headers.get('X-Daily-Max-Usage')!) : undefined,
+        remainingAttempts: res.headers.get('X-Remaining-Attempts') ? parseInt(res.headers.get('X-Remaining-Attempts')!) : undefined,
+        dailyRemaining: res.headers.get('X-Daily-Remaining-Usage') ? parseInt(res.headers.get('X-Daily-Remaining-Usage')!) : undefined,
+        dailyUsageCount: res.headers.get('X-Daily-Usage-Count') ? parseInt(res.headers.get('X-Daily-Usage-Count')!) : undefined,
+        dailyMaxUsage: res.headers.get('X-Daily-Max-Usage') ? parseInt(res.headers.get('X-Daily-Max-Usage')!) : undefined,
         dailyResetAt: res.headers.get('X-Daily-Reset-At') || undefined,
         warning: res.headers.get('X-Warning') || undefined
       };
@@ -55,7 +47,6 @@ export class ConnectionService {
       if (err instanceof ConnectionError) {
         throw err;
       }
-      
       throw new ConnectionError(err.message || 'Nieznany błąd połączenia');
     }
   }
@@ -93,6 +84,16 @@ export class ConnectionService {
       headers: {
         'Content-Type': 'application/json',
       },
+    });
+  }
+
+  async updateReminder(id: string, body: { activity?: string; datetime?: string }): Promise<ConnectionResponse> {
+    return this.request(`/reminders/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     });
   }
 } 

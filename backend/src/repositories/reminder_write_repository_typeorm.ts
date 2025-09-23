@@ -93,6 +93,24 @@ export class ReminderWriteRepositoryTypeORM {
       throw new DatabaseQueryError('Błąd podczas przywracania z kosza');
     }
   }
+
+  async update(id: string, data: { activity?: string; datetime?: Date; category?: string | null }): Promise<void> {
+    try {
+      const reminder = await this.repository.findOne({ where: { id } });
+      if (!reminder) {
+        throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
+      }
+      if (typeof data.activity !== 'undefined') reminder.activity = data.activity;
+      if (typeof data.datetime !== 'undefined') reminder.datetime = data.datetime;
+      if (typeof data.category !== 'undefined') reminder.category = data.category ?? null;
+      await this.repository.save(reminder);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new DatabaseQueryError('Błąd podczas aktualizacji przypomnienia');
+    }
+  }
 }
 
 

@@ -10,6 +10,7 @@ import { GetRemindersByCategoryHandler } from '../queries/get_reminders_by_categ
 import { GetTrashItemsHandler } from '../queries/get_trash_items_query';
 import { RestoreFromTrashHandler } from '../commands/restore_from_trash_command';
 import { DeleteCategoryHandler } from '../commands/delete_category_command';
+import { UpdateReminderHandler } from '../commands/update_command';
 
 const reminderRouter = Router();
 const createReminderHandler = new CreateReminderHandler();
@@ -22,6 +23,7 @@ const getRemindersByCategoryHandler = new GetRemindersByCategoryHandler();
 const getTrashItemsHandler = new GetTrashItemsHandler();
 const restoreFromTrashHandler = new RestoreFromTrashHandler();
 const deleteCategoryHandler = new DeleteCategoryHandler();
+const updateReminderHandler = new UpdateReminderHandler();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -104,7 +106,11 @@ reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: N
 
 reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    throw new MethodNotAllowedError('Aktualizacja przypomnień nie jest jeszcze zaimplementowana');
+    const { id } = req.params;
+    if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
+    const { activity, datetime, category } = req.body || {};
+    const result = await updateReminderHandler.execute({ id, activity, datetime, category });
+    res.json(result);
   } catch (error) {
     next(error);
   }
