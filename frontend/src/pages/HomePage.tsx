@@ -112,6 +112,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         console.log(`Konwersja: ${reminder.datetime} -> ${localDateTime}`);
         return {
           ...reminder,
+          datetimeISO: reminder.datetime,
           datetime: localDateTime,
           created_at: reminder.created_at ? new Date(reminder.created_at).toLocaleString(locale, {
             year: 'numeric',
