@@ -35,7 +35,7 @@ export class CreateReminderHandler {
     const llmResult = await this.llmParser.parseReminderText(command.text, command.sessionId);
     
     if ('error' in llmResult) {
-      // Check if it's an abuse result
+      
       if ('remainingAttempts' in llmResult && 'isBlocked' in llmResult) {
         const abuseResult = llmResult as LLMAbuseResult;
         return {
@@ -44,7 +44,7 @@ export class CreateReminderHandler {
           isBlocked: abuseResult.isBlocked
         };
       }
-      // Regular error
+    
       throw new LLMParsingError(llmResult.error);
     }
     

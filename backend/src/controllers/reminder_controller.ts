@@ -32,11 +32,9 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
       category: req.body.category || null
     });
     
-    // Check if it's an abuse result
     if ('isBlocked' in result && 'remainingAttempts' in result) {
       const abuseResult = result as any;
       
-      // Set headers
       res.setHeader('X-Remaining-Attempts', abuseResult.remainingAttempts.toString());
       
       if (abuseResult.isBlocked) {
@@ -54,7 +52,6 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
       }
     }
     
-    // Regular success result - include daily usage info in headers
     if (sessionId) {
       try {
         const usageInfo = await userSessionService.getUsageInfo(sessionId);
@@ -62,7 +59,6 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
         res.setHeader('X-Daily-Max-Usage', usageInfo.maxDailyUsage.toString());
         res.setHeader('X-Daily-Remaining-Usage', usageInfo.remainingDailyUsage.toString());
       } catch (error) {
-        // If we can't get usage info, continue without headers
         console.error('Error getting usage info for headers:', error);
       }
     }
@@ -82,7 +78,6 @@ reminderRouter.get('/reminders', async (req: Request, res: Response, next: NextF
   }
 });
 
-// Get active reminders (reminders that should trigger now)
 reminderRouter.get('/reminders/active', async (req: Request, res: Response, next: NextFunction) => {
   try {
     let sessionId = (req as any).sessionId;
@@ -127,7 +122,6 @@ reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next
   }
 });
 
-// Get all categories
 reminderRouter.get('/categories', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await getCategoriesHandler.execute({});
@@ -137,7 +131,6 @@ reminderRouter.get('/categories', async (req: Request, res: Response, next: Next
   }
 });
 
-// Get reminders by category
 reminderRouter.get('/reminders/category/:category', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { category } = req.params;
@@ -149,7 +142,6 @@ reminderRouter.get('/reminders/category/:category', async (req: Request, res: Re
   }
 });
 
-// Delete category and all its reminders
 reminderRouter.delete('/categories/:category', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { category } = req.params;
@@ -161,7 +153,6 @@ reminderRouter.delete('/categories/:category', async (req: Request, res: Respons
   }
 });
 
-// Get trash items
 reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await getTrashItemsHandler.execute({});
@@ -171,7 +162,6 @@ reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunct
   }
 });
 
-// Restore item from trash
 reminderRouter.post('/trash/:id/restore', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
@@ -183,7 +173,6 @@ reminderRouter.post('/trash/:id/restore', async (req: Request, res: Response, ne
   }
 });
 
-// Get usage information for current session
 reminderRouter.get('/usage', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sessionId = (req as any).sessionId;
