@@ -2,12 +2,14 @@ import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const ThemeSwitcher: React.FC = () => {
+type Props = { inline?: boolean };
+
+const ThemeSwitcher: React.FC<Props> = ({ inline }) => {
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
-    <div className="theme-switcher">
+    <div className={`theme-switcher${inline ? ' inline' : ''}`}>
       <button
         className={`theme-button ${theme === 'light' ? 'active' : ''}`}
         onClick={() => setTheme('light')}

@@ -1,7 +1,9 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const LanguageSwitcher: React.FC = () => {
+type Props = { inline?: boolean };
+
+const LanguageSwitcher: React.FC<Props> = ({ inline }) => {
   const { language, setLanguage, t } = useLanguage();
 
   const handleLanguageChange = (newLanguage: 'pl' | 'en') => {
@@ -9,7 +11,7 @@ const LanguageSwitcher: React.FC = () => {
   };
 
   return (
-    <div className="language-switcher">
+    <div className={`language-switcher${inline ? ' inline' : ''}`}>
       <button
         className={`language-button ${language === 'pl' ? 'active' : ''}`}
         onClick={() => handleLanguageChange('pl')}

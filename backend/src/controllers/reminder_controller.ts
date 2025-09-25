@@ -1,4 +1,5 @@
 import { Request, Response, Router, NextFunction } from 'express';
+import { requireAuth } from '../middleware/auth_middleware';
 import { CreateReminderHandler } from '../commands/create_command';
 import { GetRemindersHandler } from '../queries/get_query';
 import { DeleteReminderHandler } from '../commands/delete_command';
@@ -14,6 +15,7 @@ import { UpdateReminderHandler } from '../commands/update_command';
 import { logger } from '../utils/logger';
 
 const reminderRouter = Router();
+reminderRouter.use(requireAuth);
 const createReminderHandler = new CreateReminderHandler();
 const getRemindersHandler = new GetRemindersHandler();
 const deleteReminderHandler = new DeleteReminderHandler();

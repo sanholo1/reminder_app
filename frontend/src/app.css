@@ -77,6 +77,20 @@
   width: 170px;
 }
 
+/* Inline mode: used inside hamburger menu - no fixed positioning, compact buttons */
+.language-switcher.inline {
+  position: static;
+  top: auto;
+  right: auto;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  width: auto;
+  backdrop-filter: none;
+  gap: 8px;
+}
+
 .theme-switcher {
   position: fixed;
   top: 80px;
@@ -91,6 +105,27 @@
   border: 1px solid var(--light-accent);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   width: 170px;
+}
+
+.theme-switcher.inline {
+  position: static;
+  top: auto;
+  right: auto;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  width: auto;
+  backdrop-filter: none;
+  gap: 8px;
+}
+
+/* Compact buttons inside inline switchers to avoid overlap */
+.language-switcher.inline .language-button,
+.theme-switcher.inline .theme-button {
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 12px;
 }
 
 .language-button {

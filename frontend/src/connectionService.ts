@@ -20,7 +20,10 @@ export class ConnectionService {
   async request<T = any>(url: string, options?: RequestInit): Promise<ConnectionResponse<T>> {
     try {
       const startedAt = performance.now();
-      const res = await fetch(url, options);
+      const headers: Record<string, string> = { ...(options && (options.headers as any)) };
+      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(url, { ...(options || {}), headers });
       if (!res.ok) {
         let errorMessage = `Błąd połączenia: ${res.status} ${res.statusText}`;
         try {
@@ -60,9 +63,9 @@ export class ConnectionService {
   async deleteReminder(id: string): Promise<ConnectionResponse> {
     return this.request(`/reminders/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+        headers: {
+          'Content-Type': 'application/json',
+        },
     });
   }
 

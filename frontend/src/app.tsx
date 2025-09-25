@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import LoadingPage from './components/LoadingPage';
-import LanguageSwitcher from './components/LanguageSwitcher';
-import ThemeSwitcher from './components/ThemeSwitcher';
+import HamburgerMenu from './components/HamburgerMenu';
 import NotificationToast from './components/NotificationToast';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -69,6 +70,8 @@ const AppContent: React.FC = () => {
   const notificationPermissionChecked = useRef(false);
   const connectionService = new ConnectionService();
   const { t } = useLanguage();
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('authToken'));
+  const [username, setUsername] = useState<string | null>(null);
 
   const showToast = (message: string, type: 'success' | 'info' | 'warning' | 'error') => {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -92,9 +95,11 @@ const AppContent: React.FC = () => {
         setLoadingMessage(t('loading.server'));
         await new Promise(resolve => setTimeout(resolve, 500)); 
         
-        setLoadingMessage(t('loading.data'));
-        const res = await connectionService.request<any>('/reminders');
-        if (res.dailyRemaining !== undefined) setDailyRemaining(res.dailyRemaining);
+        if (token) {
+          setLoadingMessage(t('loading.data'));
+          const res = await connectionService.request<any>('/reminders');
+          if (res.dailyRemaining !== undefined) setDailyRemaining(res.dailyRemaining);
+        }
         
         setLoadingMessage(t('loading.finalizing'));
         await new Promise(resolve => setTimeout(resolve, 300)); 
@@ -117,22 +122,45 @@ const AppContent: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
+  // Decode username whenever token changes
+  React.useEffect(() => {
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUsername(payload?.username || null);
+      } catch {
+        setUsername(null);
+      }
+    } else {
+      setUsername(null);
+    }
+  }, [token]);
+
   if (isLoading) {
     return <LoadingPage message={loadingMessage} />;
   }
 
+  if (!token) {
+    return <LoginPage onLogin={(tok) => { localStorage.setItem('authToken', tok); setToken(tok); try { const payload = JSON.parse(atob(tok.split('.')[1])); setUsername(payload?.username || null); } catch { setUsername(null); } }} />;
+  }
+
   return (
     <Router>
-      <LanguageSwitcher />
-      <ThemeSwitcher />
+      {/* Fixed top-right position to mimic previous language/theme controls */}
+      <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 1000 }}>
+        <HamburgerMenu username={username} onLogout={() => { localStorage.removeItem('authToken'); setToken(null); }} />
+      </div>
+
       <div className="container">
-        <nav className="nav">
-          <Link to="/">{t('navigation.home')}</Link>
-          <Link to="/author">{t('navigation.author')}</Link>
-          <Link to="/contact">{t('navigation.contact')}</Link>
+        <nav className="nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Link to="/">{t('navigation.home')}</Link>
+            <Link to="/author">{t('navigation.author')}</Link>
+            <Link to="/contact">{t('navigation.contact')}</Link>
+          </div>
         </nav>
         {dailyRemaining !== null && (
-          <div className="usage-badge">
+          <div className="usage-badge" style={{ top: 64 }}>
             {t('usage.remainingAttempts')} {dailyRemaining}
           </div>
         )}
@@ -153,6 +181,7 @@ const AppContent: React.FC = () => {
               <ContactPage />
             </React.Suspense>
           } />
+          <Route path="/change-password" element={<ChangePasswordPage />} />
         </Routes>
       </div>
       <footer className="footer">

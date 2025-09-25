@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import reminderRouter from './controllers/reminder_controller';
+import authRouter from './controllers/auth_controller';
 import { AppDataSource } from './config/database';
 import { SessionMiddleware } from './middleware/session_middleware';
 import { requestLogger } from './middleware/request_logger';
@@ -27,6 +28,7 @@ application.use(requestLogger);
 application.use(sessionMiddleware.extractSessionId);
 application.use(sessionMiddleware.checkBlocked);
 
+application.use('/auth', authRouter);
 application.use('/', reminderRouter);
 application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   logger.error('Error handler called', { error: (err && err.message) || String(err) });

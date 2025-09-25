@@ -17,10 +17,12 @@
   "description": "",
   "dependencies": {
     "@types/cors": "^2.8.19",
+    "bcryptjs": "^3.0.2",
     "chrono-node": "^2.8.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "luxon": "^3.7.1",
     "mysql2": "^3.14.2",
     "openai": "^5.10.2",
@@ -29,6 +31,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/luxon": "^3.7.1",
     "@types/node": "^24.0.14",
     "ts-node": "^10.9.2",

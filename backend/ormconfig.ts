@@ -1,6 +1,7 @@
 import { DataSource } from "typeorm";
 import { Reminder } from "./src/entities/Reminder";
 import { UserSession } from "./src/entities/UserSession";
+import { User } from "./src/entities/User";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -14,7 +15,7 @@ export default new DataSource({
   database: process.env.DB_DATABASE || "reminder_app",
   synchronize: false,
   logging: process.env.NODE_ENV === "development",
-  entities: [Reminder, UserSession],
+  entities: [Reminder, UserSession, User],
   migrations: ["src/migrations/*.ts"],
   subscribers: [],
 }); 

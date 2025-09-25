@@ -2,6 +2,8 @@ import { MigrationInterface, QueryRunner, Table } from "typeorm";
 
 export class CreateTrashTable1755350794540 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
+        const hasTable = await queryRunner.hasTable('trash_items');
+        if (hasTable) return;
         await queryRunner.createTable(
             new Table({
                 name: "trash_items",

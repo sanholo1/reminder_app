@@ -521,7 +521,7 @@ Odpowiedz tylko w formacie JSON.`;
   
   private getNextDayOfWeekLuxon(targetDayIndex: number, hours: number, minutes: number, timeZone: string): DateTime {
     const now = DateTime.now().setZone(timeZone);
-    const currentDayIndex = now.weekday === 7 ? 6 : now.weekday - 1; // Convert Sunday=7 to Sunday=6
+    const currentDayIndex = now.weekday === 7 ? 6 : now.weekday - 1;
     
     let daysToAdd = targetDayIndex - currentDayIndex;
     if (daysToAdd <= 0) daysToAdd += 7;

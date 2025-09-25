@@ -4,7 +4,10 @@ export class AddCategoryColumn1755350794539 implements MigrationInterface {
     name = 'AddCategoryColumn1755350794539'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE \`reminders\` ADD \`category\` varchar(100) NULL`);
+        const hasCategory = await queryRunner.hasColumn('reminders', 'category');
+        if (!hasCategory) {
+            await queryRunner.query(`ALTER TABLE \`reminders\` ADD \`category\` varchar(100) NULL`);
+        }
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
