@@ -97,15 +97,14 @@ export const HamburgerMenu: React.FC<Props> = ({ username, onLogout }) => {
               border: '1px solid #ddd',
               background: 'rgba(0,0,0,0.03)'
             }}>{t('menu.changePassword')}</Link>
-            <button onClick={onLogout} style={{
+            <button className="menu-logout-button" onClick={onLogout} style={{
               textAlign: 'left',
               background: 'rgba(0,0,0,0.03)',
               border: '1px solid #ddd',
-              color: '#ff4444',
               cursor: 'pointer',
               padding: '8px 12px',
               borderRadius: 20,
-              fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+              fontFamily: 'inherit'
             }}>{t('menu.logout')}</button>
           </div>
         </div>

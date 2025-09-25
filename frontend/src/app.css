@@ -1542,6 +1542,16 @@ body:not(.light-theme) .login-error {
   color: #000000;
 }
 
+/* Menu logout button theming */
+.menu-logout-button {
+  color: #6366f1;
+  font-weight: bold;
+  font-size: 19.2px;
+}
+body.dark-theme .menu-logout-button {
+  color: #00ffcc;
+}
+
 /* Change Password Page */
 .change-password-page {
   width: 100%;
