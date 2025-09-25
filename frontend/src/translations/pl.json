@@ -122,6 +122,14 @@
     "light": "Jasny",
     "dark": "Ciemny"
   },
+  "menu": {
+    "settings": "Ustawienia",
+    "language": "Język",
+    "theme": "Motyw",
+    "changePassword": "Zmiana hasła",
+    "logout": "Wyloguj",
+    "openMenu": "Menu"
+  },
   "contact": {
     "title": "Kontakt",
     "description": "Masz pytania lub sugestie dotyczące aplikacji? Skontaktuj się z nami!",
@@ -133,5 +141,28 @@
     "activity": "Aktywność",
     "datetime": "Data i Czas",
     "timeNotRecognized": "Czas nie został rozpoznany"
+  },
+  "changePassword": {
+    "title": "Zmiana hasła",
+    "oldPassword": "Stare hasło",
+    "newPassword": "Nowe hasło",
+    "confirmPassword": "Powtórz nowe hasło",
+    "submit": "Zmień hasło",
+    "saving": "Zapisywanie...",
+    "success": "Hasło zmienione",
+    "mismatch": "Hasła nie są takie same",
+    "error": "Błąd zmiany hasła"
+  },
+  "login": {
+    "title": "Logowanie",
+    "subtitle": "Zaloguj się, aby kontynuować",
+    "username": "Login",
+    "password": "Hasło",
+    "submit": "Zaloguj",
+    "logging": "Logowanie...",
+    "error": "Błąd logowania",
+    "networkError": "Błąd sieci",
+    "invalidResponse": "Nieprawidłowa odpowiedź serwera",
+    "invalidCredentials": "Nieprawidłowe dane logowania"
   }
 }

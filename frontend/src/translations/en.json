@@ -122,6 +122,14 @@
     "light": "Light",
     "dark": "Dark"
   },
+  "menu": {
+    "settings": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "changePassword": "Change password",
+    "logout": "Logout",
+    "openMenu": "Menu"
+  },
   "contact": {
     "title": "Contact",
     "description": "Have questions or suggestions about the app? Contact us!",
@@ -133,5 +141,28 @@
     "activity": "Activity",
     "datetime": "Date and Time",
     "timeNotRecognized": "Time was not recognized"
+  },
+  "changePassword": {
+    "title": "Change password",
+    "oldPassword": "Old password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat new password",
+    "submit": "Change password",
+    "saving": "Saving...",
+    "success": "Password changed",
+    "mismatch": "Passwords are not the same",
+    "error": "Password change error"
+  },
+  "login": {
+    "title": "Log in",
+    "subtitle": "Log in to continue",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Log in",
+    "logging": "Logging in...",
+    "error": "Login error",
+    "networkError": "Network error",
+    "invalidResponse": "Invalid server response",
+    "invalidCredentials": "Invalid login credentials"
   }
 }

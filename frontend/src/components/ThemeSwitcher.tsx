@@ -15,14 +15,16 @@ const ThemeSwitcher: React.FC<Props> = ({ inline }) => {
         onClick={() => setTheme('light')}
         title={`${t('theme.light')} mode`}
       >
-        ☀️ {t('theme.light')}
+        <span className="switcher-icon" aria-hidden>☀️</span>
+        <span className="switcher-label">{t('theme.light')}</span>
       </button>
       <button
         className={`theme-button ${theme === 'dark' ? 'active' : ''}`}
         onClick={() => setTheme('dark')}
         title={`${t('theme.dark')} mode`}
       >
-        🌙 {t('theme.dark')}
+        <span className="switcher-icon" aria-hidden>🌙</span>
+        <span className="switcher-label">{t('theme.dark')}</span>
       </button>
     </div>
   );

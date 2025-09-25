@@ -17,14 +17,16 @@ const LanguageSwitcher: React.FC<Props> = ({ inline }) => {
         onClick={() => handleLanguageChange('pl')}
         title={t('language.polish')}
       >
-        🇵🇱 PL
+        <span className="switcher-icon" aria-hidden>🇵🇱</span>
+        <span className="switcher-label">PL</span>
       </button>
       <button
         className={`language-button ${language === 'en' ? 'active' : ''}`}
         onClick={() => handleLanguageChange('en')}
         title={t('language.english')}
       >
-        🇬🇧 EN
+        <span className="switcher-icon" aria-hidden>🇬🇧</span>
+        <span className="switcher-label">EN</span>
       </button>
     </div>
   );
