@@ -1,14 +1,14 @@
-import OpenAI from 'openai';
 import { DateTime } from 'luxon';
-import { 
-  InvalidGPTConversationError, 
-  NoTimeError, 
-  NoActivityError, 
-  PastTimeError, 
-  NoActivityAndTimeError,
-  InvalidTimeFormatError,
+import OpenAI from 'openai';
+import {
+  AbuseError,
   DuplicateDataError,
-  AbuseError
+  InvalidGPTConversationError,
+  InvalidTimeFormatError,
+  NoActivityAndTimeError,
+  NoActivityError,
+  NoTimeError,
+  PastTimeError
 } from '../exceptions/exception_handler';
 import { UserSessionService } from './user_session_service';
 
@@ -108,36 +108,65 @@ export class LLMParserService {
         messages: [
           {
             role: 'system',
-            content: `Jesteś ekspertem w wykrywaniu nadużyć w aplikacji przypomnień. Twoim zadaniem jest sprawdzenie, czy użytkownik używa aplikacji zgodnie z jej przeznaczeniem.
+            content: 
+            `Jesteś ekspertem w wykrywaniu nadużyć w aplikacji przypomnień. 
+            Twoim zadaniem jest sprawdzenie, czy użytkownik używa aplikacji zgodnie z jej przeznaczeniem. 
+            Przeznaczenie aplikacji to tworzenie przypomnień na podstawie ludzkiego języka. 
+            Kazda próba komunikacji, która nie ma NIC wspólnego z ustawianiem przypomnień jest naduzyciem.
 
 Aplikacja służy TYLKO do ustawiania przypomnień. Użytkownik powinien podawać:
 - Aktywność do wykonania
 - Czas wykonania (za X godzin/minut, jutro o X, w poniedziałek o X, etc.)
 
-WAŻNE: Jeśli użytkownik próbuje ustawić przypomnienie w przeszłości (np. "wczoraj", "ubiegły poniedziałek"), to NIE jest to nadużycie - to jest błąd, który zostanie obsłużony przez główny parser.
+Nadużycie to pytania i żądania niezwiązane z ustawianiem przypomnień.
+Naduzycie to wszelka proba komunikacji z gpt oraz wszelka prosba o odpowiedz na dowolne pytanie.
+Naduzycie to wyrazanie opinii na dowolny temat.
+Naduzycie to oczekiwanie wyrazenia opinii na dowolny temat.
+Naduzycie to pisanie bezsensownych bzdur lub dowolnego ciągu znaków, który nie ma sensu.
 
-Nadużycie to tylko pytania/żądania niezwiązane z ustawianiem przypomnień.
+WAŻNE: NIE WSZYSTKO JEST NADUŻYCIEM
 
-Odpowiedz TYLKO w formacie JSON:
-{"isAbuse": true/false}
+Jeśli użytkownik próbuje ustawić przypomnienie w przeszłości (np. "wczoraj", "ubiegły poniedziałek"), 
+to NIE jest to nadużycie - to jest błąd, który zostanie obsłużony przez główny parser.
+Jeśli użytkownik podal aktywnosc, ktora nie ma dla gpt sensu, to NIE jest to naduzycie, uzytkownik 
+ma prawo do nazwanie przypomnienia w czytelny tylko dla niego sposób.
+Jeśli uzytkownik nie podał jakiegoś fragmentu przypomnienia to nie jest to naduzycie 
+i taki błąd zostanie obsluzony przez główny parser.
 
-Przykłady nadużyć:
+PRZYKŁADY NADUŻYĆ:
 - "Jak się masz?" - pytania osobiste
 - "Opowiedz mi żart" - prośby o rozrywkę
 - "Pomóż mi z matematyką" - prośby o pomoc
 - "Co myślisz o polityce?" - pytania o opinie
 - "Przetłumacz to" - prośby o tłumaczenie
 - "Napisz mi wiersz" - prośby o kreatywność
+- "Narysuj mi obrazek" - prośba o kreatywność
 - "Oblicz 2+2" - prośby o obliczenia
 - "Jak napisać kod?" - prośby o pomoc programistyczną
+- "Jaka jest pogoda?" - pytanie o informację
+- "Jaki mamy dzień tygodnia?" - pytanie o informację
+- "Jaki jest wynik meczu?" - pytanie o informację
+- "asdadwasdwd" - bezsensowny ciąg znaków
+- "123123123QSWDSD)(*(@))" - bezsensowny ciąg znaków
 
-Przykłady prawidłowego użycia (NIE nadużycia):
+Przykłady prawidłowego użycia (TO NIE SA NADUZYCIA):
 - "Przypomnij mi za godzinę" - OK
 - "Zadzwoń do mamy jutro o 15:00" - OK
 - "Kup chleb za 30 minut" - OK
 - "Spotkanie w poniedziałek o 9:00" - OK
-- "wczoraj o 15:00 spotkanie" - OK (błąd przeszłości, ale nie nadużycie)
-- "ubiegły poniedziałek o 10:00" - OK (błąd przeszłości, ale nie nadużycie)`
+- "wczoraj o 15:00 spotkanie" - OK 
+- "ubiegły poniedziałek o 10:00" - OK 
+- "jutro" - OK
+- "Pobiegaj" - OK
+- "Narysuj obraz jutro o 14" - OK
+
+ZWROC UWAGE, CZY UZYTKOWNIK FAKTYCZNIE MA NA CELU NADUZYCIE, CZY JEGO CELEM JEST USTAWIENIE PRZYPOMNIENIA, ALE TO TY BLEDNIE INTERPRETUJESZ
+TO JAKO NADUZYCIE.
+
+!!!NIGDY!!! NIE ZWRACAJ TRUE JEZELI NIE JESTES CALKOWICIE PEWNY ZLYCH INTENCJI UZYKOWNIKA.
+
+Odpowiedz TYLKO w formacie JSON:
+{"isAbuse": true/false}`
           },
           {
             role: 'user',
@@ -155,7 +184,7 @@ Przykłady prawidłowego użycia (NIE nadużycia):
       const parsed = JSON.parse(cleanResponse);
 
       if (parsed.isAbuse && sessionId) {
-        // Record the abuse attempt
+        
         const attemptResult = await this.userSessionService.recordAttempt(sessionId, true);
         
         if (attemptResult.isBlocked) {
@@ -190,20 +219,14 @@ Przykłady prawidłowego użycia (NIE nadużycia):
     return `Przeanalizuj poniższy tekst i wyciągnij informacje o aktywności oraz wzorcu czasowym.
 
 WAŻNE ZASADY:
-1. Zwróć DOKŁADNIE wzorzec czasowy z listy poniżej, nie naturalny język
-2. Jeśli użytkownik nie poda godziny, zwróć błąd: {"error": "NO_TIME"}
-3. Jeśli użytkownik nie poda aktywności, zwróć błąd: {"error": "NO_ACTIVITY"}
-4. Jeśli użytkownik poda tylko godzinę bez dnia (np. "spotkanie o 15"), sprawdź czy godzina już minęła - jeśli tak, ustaw na tą godzinę, ale na jutro
-5. Jeśli użytkownik nie poda ani aktywności ani czasu, zwróć błąd: {"error": "NO_ACTIVITY_AND_TIME"}
-6. Jeśli w zdaniu jest coś, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek", "pół godziny temu"), zwróć błąd: {"error": "PAST_TIME"}
+1. Zwróć DOKŁADNIE wzorzec czasowy z listy o nazwie DOKŁADNE WZORCE CZASOWE ponizej, nie naturalny język.
+2. Jeśli użytkownik nie poda ani aktywności ani czasu, zwróć błąd: {"error": "NO_ACTIVITY_AND_TIME"}.
+3. Jeśli użytkownik nie poda godziny, zwróć błąd: {"error": "NO_TIME"}.
+4. Jeśli użytkownik nie poda aktywności, zwróć błąd: {"error": "NO_ACTIVITY"}.
+5. Jeśli użytkownik poda tylko godzinę bez dnia (np. "spotkanie o 15"), sprawdź czy godzina już minęła - jeśli tak, ustaw na tą godzinę, ale na jutro.
+6. Jeśli w zdaniu jest cokolwiek, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek", "pół godziny temu"), zwróć błąd: {"error": "PAST_TIME"}.
 7. Jeśli użytkownik poda nieprawidłowy format godziny, zwróć błąd: {"error": "INVALID_TIME_FORMAT"}
 8. Jeśli użytkownik poda kilka różnych aktywności lub czasów lub dni, zwróć błąd: {"error": "DUPLICATE_DATA"}
-
-FORMAT ODPOWIEDZI:
-- Zwróć tylko czysty JSON bez dodatkowego tekstu i bez backticków
-- Używaj małych liter i polskich znaków zgodnie z listą wzorców poniżej
-
-
 
 WALIDACJA FORMATU GODZINY:
 - Prawidłowe formaty: "14", "14:00", "15:30", "09:15", "23:45"
@@ -213,9 +236,6 @@ WALIDACJA FORMATU GODZINY:
 - Jeśli podano tylko godzinę bez minut (np. "14"), automatycznie dodaj ":00"
 
 Tekst: "${text}"
-
-Odpowiedz w formacie JSON:
-{"activity": "nazwa aktywności", "timePattern": "wzorzec czasowy"}
 
  DOKŁADNE WZORCE CZASOWE (używaj tylko tych):
 - "+HH:MM" - za określoną liczbę godzin i minut (np. "+00:30", "+02:15", "+05:05")
@@ -235,7 +255,7 @@ Odpowiedz w formacie JSON:
  - "za tydzień dzień HH:MM" - za tydzień w konkretny dzień o HH:MM (np. "za tydzień poniedziałek 12:00")
  - "za X tygodnie dzień HH:MM" - za X tygodni w konkretny dzień o HH:MM (np. "za 2 tygodnie poniedziałek 12:00")
 
-PRZYKŁADY KONWERSJI:
+PRZYKŁADY KONWERSJI CZASU:
 - "za dwie godziny" → "+02:00"
 - "za godzinę" → "+01:00"
 - "za trzy godziny" → "+03:00"
@@ -252,9 +272,6 @@ PRZYKŁADY KONWERSJI:
 - "pojutrze o 15:00" → "pojutrze 15:00"
 - "dziś o 8" → "dziś 08:00"
 - "w poniedziałek o 8:00" → "poniedziałek 08:00"
-
-
-
 - "w sobote za dwa tygodnie o 12" → "za 2 tygodnie sobota 12:00"
 - "za tydzień w poniedziałek o 9" → "za tydzień poniedziałek 09:00"
 - "za 3 tygodnie w piątek o 18" → "za 3 tygodnie piątek 18:00"
@@ -263,7 +280,9 @@ PRZYKŁADY KONWERSJI:
 - "za 2 tygodnie w poniedziałek o 8" → "za 2 tygodnie poniedziałek 08:00"
 - "za 5 tygodni w czwartek o 14" → "za 5 tygodnie czwartek 14:00"
 
-
+FORMAT ODPOWIEDZI:
+- Zwróć tylko czysty JSON bez dodatkowego tekstu i bez backticków
+- Używaj małych liter i polskich znaków zgodnie z listą wzorców poniżej
 
 Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(minute)}):
 - "za godzinę i 30 minut wyłączyć pralkę" → {"activity": "wyłączyć pralkę", "timePattern": "+01:30"}
@@ -318,6 +337,9 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 SPECJALNE PRZYPADKI DLA GODZINY BEZ DNIA:
 - Jeśli teraz jest przed 15:00, "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"}
 - Jeśli teraz jest po 15:00, "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "jutro 15:00"}
+
+Odpowiedz w formacie JSON:
+{"activity": "nazwa aktywności", "timePattern": "wzorzec czasowy"}
 
 PAMIĘTAJ: Używaj tylko dokładnych wzorców z listy powyżej!
 
