@@ -22,9 +22,12 @@ interface TrashItem {
   id: string;
   activity: string;
   datetime: string;
+  datetimeISO?: string;
   category?: string | null;
   deleted_at: string;
+  deleted_atISO?: string;
   created_at: string;
+  created_atISO?: string;
 }
 
 type HomePageProps = {
@@ -100,15 +103,15 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       const locale = language === 'pl' ? 'pl-PL' : 'en-US';
       setTrashItems(trashItems.map(item => ({
         ...item,
-        datetime: new Date(item.datetime).toLocaleString(locale, {
+        datetime: item.datetimeISO ? new Date(item.datetimeISO).toLocaleString(locale, {
           weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
-        }),
-        deleted_at: new Date(item.deleted_at).toLocaleString(locale, {
+        }) : item.datetime,
+        deleted_at: item.deleted_atISO ? new Date(item.deleted_atISO).toLocaleString(locale, {
           year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
-        }),
-        created_at: item.created_at ? new Date(item.created_at).toLocaleString(locale, {
+        }) : item.deleted_at,
+        created_at: item.created_atISO ? new Date(item.created_atISO).toLocaleString(locale, {
           year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
-        }) : ''
+        }) : item.created_at
       })));
     }
   }, [language]);
@@ -183,6 +186,9 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       const locale = language === 'pl' ? 'pl-PL' : 'en-US';
       const trashItemsWithLocalTime = data.trashItems.map((item: any) => ({
         ...item,
+        datetimeISO: item.datetime,
+        deleted_atISO: item.deleted_at,
+        created_atISO: item.created_at,
         datetime: new Date(item.datetime).toLocaleString(locale, {
           weekday: 'long',
           month: 'long',
@@ -208,7 +214,6 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
           hour12: false
         }) : ''
       }));
-      
       setTrashItems(trashItemsWithLocalTime || []);
     } catch (err: any) {
       if (err instanceof ConnectionError) {
