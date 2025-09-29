@@ -3,6 +3,7 @@ import { NotFoundError } from '../exceptions/exception_handler';
 
 export interface DeleteReminderCommand {
   id: string;
+  userId: string;
 }
 
 export interface DeleteReminderResult {
@@ -19,8 +20,7 @@ export class DeleteReminderHandler {
 
   async execute(command: DeleteReminderCommand): Promise<DeleteReminderResult> {
     try {
-      await this.reminderRepository.delete(command.id);
-      
+      await this.reminderRepository.delete(command.id, command.userId);
       return {
         success: true,
         message: 'Przypomnienie zostało pomyślnie usunięte'

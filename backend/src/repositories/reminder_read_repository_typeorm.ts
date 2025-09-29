@@ -13,9 +13,11 @@ export class ReminderReadRepositoryTypeORM {
     this.repository = AppDataSource.getRepository(Reminder);
   }
 
-  async findAll(): Promise<ReminderEntity[]> {
+  async findAll(userId?: string): Promise<ReminderEntity[]> {
     try {
+      const where = userId ? { userId } : {};
       const reminders = await this.repository.find({
+        where,
         order: { datetime: 'ASC' }
       });
       return reminders.map(reminder => ({
@@ -24,6 +26,7 @@ export class ReminderReadRepositoryTypeORM {
         datetime: reminder.datetime,
         category: reminder.category,
         sessionId: reminder.sessionId,
+        userId: reminder.userId,
         created_at: reminder.created_at
       }));
     } catch (error) {
@@ -41,6 +44,7 @@ export class ReminderReadRepositoryTypeORM {
         datetime: reminder.datetime,
         category: reminder.category,
         sessionId: reminder.sessionId,
+        userId: reminder.userId,
         created_at: reminder.created_at
       };
     } catch (error) {
@@ -60,6 +64,7 @@ export class ReminderReadRepositoryTypeORM {
         datetime: reminder.datetime,
         category: reminder.category,
         sessionId: reminder.sessionId,
+        userId: reminder.userId,
         created_at: reminder.created_at
       }));
     } catch (error) {
@@ -94,12 +99,13 @@ export class ReminderReadRepositoryTypeORM {
         .getMany();
 
       return activeReminders.map(reminder => ({
-        id: reminder.id,
-        activity: reminder.activity,
-        datetime: reminder.datetime,
-        category: reminder.category,
-        sessionId: reminder.sessionId,
-        created_at: reminder.created_at
+  id: reminder.id,
+  activity: reminder.activity,
+  datetime: reminder.datetime,
+  category: reminder.category,
+  sessionId: reminder.sessionId,
+  userId: reminder.userId,
+  created_at: reminder.created_at
       }));
     } catch (error) {
       throw new DatabaseQueryError('Błąd podczas pobierania aktywnych przypomnień z bazy danych');

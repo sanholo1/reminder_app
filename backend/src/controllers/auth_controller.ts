@@ -7,6 +7,8 @@ import { requireAuth } from '../middleware/auth_middleware';
 
 const router = Router();
 
+// Endpoint do rejestracji nowego użytkownika
+
 router.post('/login', async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body || {};

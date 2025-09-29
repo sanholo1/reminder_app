@@ -30,10 +30,12 @@ const updateReminderHandler = new UpdateReminderHandler();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const sessionId = (req as any).sessionId;
+  const sessionId = (req as any).sessionId;
+  const userId = (req as any).user?.sub || '';
     const result = await createReminderHandler.execute({ 
       text: req.body.text,
       sessionId: sessionId,
+      userId: userId,
       category: req.body.category || null
     });
     
@@ -76,10 +78,11 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
 
 reminderRouter.get('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await getRemindersHandler.execute({});
+  const userId = (req as any).user?.sub || '';
+    const result = await getRemindersHandler.execute({ userId });
     res.json(result);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -121,11 +124,11 @@ reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: N
 
 reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
-    if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
-    
-    const result = await deleteReminderHandler.execute({ id });
-    res.json(result);
+  const { id } = req.params;
+  if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
+  const userId = (req as any).user?.sub || '';
+  const result = await deleteReminderHandler.execute({ id, userId });
+  res.json(result);
   } catch (error) {
     next(error);
   }
@@ -164,7 +167,8 @@ reminderRouter.delete('/categories/:category', async (req: Request, res: Respons
 
 reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await getTrashItemsHandler.execute({});
+  const userId = (req as any).user?.sub || '';
+    const result = await getTrashItemsHandler.execute({ userId });
     res.json(result);
   } catch (error) {
     next(error);

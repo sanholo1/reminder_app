@@ -4,6 +4,7 @@ export interface ReminderEntity {
   datetime: Date;
   category?: string | null;
   sessionId: string;
+  userId: string;
   created_at?: Date;
 }
 

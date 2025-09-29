@@ -3,6 +3,7 @@ import { ReminderEntity } from '../repositories/reminder_types';
 import { InternalServerError } from '../exceptions/exception_handler';
 
 export interface GetRemindersQuery {
+  userId: string;
 }
 
 export interface GetRemindersResult {
@@ -24,8 +25,7 @@ export class GetRemindersHandler {
 
   async execute(query: GetRemindersQuery): Promise<GetRemindersResult> {
     try {
-      const reminders = await this.reminderRepository.findAll();
-      
+      const reminders = await this.reminderRepository.findAll(query.userId);
       return {
         reminders: reminders.map(reminder => ({
           id: reminder.id,

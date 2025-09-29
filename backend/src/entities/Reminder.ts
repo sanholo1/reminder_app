@@ -14,17 +14,21 @@ export class Reminder {
   @Column("varchar", { length: 255 })
   sessionId!: string;
 
+  @Column("varchar", { length: 255 })
+  userId!: string;
+
   @Column("datetime")
   datetime!: Date;
 
   @CreateDateColumn()
   created_at!: Date;
 
-  constructor(id: string, activity: string, datetime: Date, category?: string | null, sessionId?: string) {
+  constructor(id: string, activity: string, datetime: Date, category?: string | null, sessionId?: string, userId?: string) {
     this.id = id;
     this.activity = activity;
     this.datetime = datetime;
     this.category = category || null;
     this.sessionId = sessionId || '';
+    this.userId = userId || '';
   }
 } 

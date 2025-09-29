@@ -16,16 +16,16 @@ export class ReminderWriteRepositoryTypeORM {
 
   async create(reminder: ReminderEntity): Promise<void> {
     try {
-      const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId);
-      await this.repository.save(newReminder);
+  const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId, reminder.userId);
+  await this.repository.save(newReminder);
     } catch (error) {
       throw new DatabaseConnectionError('Błąd podczas tworzenia przypomnienia w bazie danych');
     }
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, userId: string): Promise<void> {
     try {
-      const reminder = await this.repository.findOne({ where: { id } });
+      const reminder = await this.repository.findOne({ where: { id, userId } });
       if (!reminder) {
         throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
       }
@@ -35,6 +35,7 @@ export class ReminderWriteRepositoryTypeORM {
         datetime: reminder.datetime,
         category: reminder.category,
         sessionId: reminder.sessionId,
+        userId: reminder.userId,
         deleted_at: new Date(),
         created_at: reminder.created_at
       });
@@ -61,6 +62,7 @@ export class ReminderWriteRepositoryTypeORM {
           datetime: reminder.datetime,
           category: reminder.category,
           sessionId: reminder.sessionId,
+          userId: reminder.userId,
           deleted_at: new Date(),
           created_at: reminder.created_at
         });

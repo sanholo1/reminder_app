@@ -6,6 +6,7 @@ import { LLMParserService, LLMErrorResult, LLMAbuseResult } from '../services/ll
 export interface CreateReminderCommand {
   text: string;
   sessionId?: string;
+  userId: string;
   category?: string | null;
 }
 
@@ -54,11 +55,12 @@ export class CreateReminderHandler {
     }
 
     const reminder: ReminderEntity = {
-      id: this.generateId(),
-      activity: llmResult.activity,
-      datetime: new Date(llmResult.datetime),
-      category: command.category || null,
-      sessionId: command.sessionId || ''
+  id: this.generateId(),
+  activity: llmResult.activity,
+  datetime: new Date(llmResult.datetime),
+  category: command.category || null,
+  sessionId: command.sessionId || '',
+  userId: command.userId
     };
     await this.reminderRepository.create(reminder);
     return {

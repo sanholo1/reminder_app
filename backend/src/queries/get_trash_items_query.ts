@@ -3,6 +3,9 @@ import { InternalServerError } from '../exceptions/exception_handler';
 import { TrashItemEntity } from '../repositories/trash_repository_typeorm';
 
 export interface GetTrashItemsQuery {}
+export interface GetTrashItemsQuery {
+  userId: string;
+}
 
 export interface TrashItemDTO {
   id: string;
@@ -28,8 +31,9 @@ export class GetTrashItemsHandler {
   async execute(_query: GetTrashItemsQuery): Promise<GetTrashItemsResult> {
     try {
       const items: TrashItemEntity[] = await this.reminderRepository.getTrashItems();
+      const filtered = items.filter(i => i.userId === _query.userId);
       return {
-        trashItems: items.map(i => ({
+        trashItems: filtered.map(i => ({
           id: i.id,
           activity: i.activity,
           datetime: i.datetime.toISOString(),

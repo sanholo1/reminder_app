@@ -9,6 +9,7 @@ export interface TrashItemEntity {
   datetime: Date;
   category?: string | null;
   sessionId: string;
+  userId: string;
   deleted_at: Date;
   created_at?: Date;
 }
@@ -22,7 +23,7 @@ export class TrashRepositoryTypeORM {
 
   async addToTrash(reminder: TrashItemEntity): Promise<void> {
     try {
-      const trashItem = new TrashItem(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId);
+      const trashItem = new TrashItem(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId, reminder.userId);
       await this.repository.save(trashItem);
     } catch (error) {
       throw new DatabaseQueryError('Błąd podczas dodawania do kosza');
@@ -39,13 +40,14 @@ export class TrashRepositoryTypeORM {
       });
       
       return trashItems.map(item => ({
-        id: item.id,
-        activity: item.activity,
-        datetime: item.datetime,
-        category: item.category,
-        sessionId: item.sessionId,
-        deleted_at: item.deleted_at,
-        created_at: item.created_at
+  id: item.id,
+  activity: item.activity,
+  datetime: item.datetime,
+  category: item.category,
+  sessionId: item.sessionId,
+  userId: item.userId,
+  deleted_at: item.deleted_at,
+  created_at: item.created_at
       }));
     } catch (error) {
       throw new DatabaseQueryError('Błąd podczas pobierania elementów z kosza');
@@ -63,13 +65,14 @@ export class TrashRepositoryTypeORM {
       }
       
       const itemToRestore = {
-        id: trashItem.id,
-        activity: trashItem.activity,
-        datetime: trashItem.datetime,
-        category: trashItem.category,
-        sessionId: trashItem.sessionId,
-        deleted_at: trashItem.deleted_at,
-        created_at: trashItem.created_at
+  id: trashItem.id,
+  activity: trashItem.activity,
+  datetime: trashItem.datetime,
+  category: trashItem.category,
+  sessionId: trashItem.sessionId,
+  userId: trashItem.userId,
+  deleted_at: trashItem.deleted_at,
+  created_at: trashItem.created_at
       };
       
       await this.repository.remove(trashItem);
