@@ -293,6 +293,7 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 - "za 5 godzin i 5 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+05:05"}
 - "za 30 minut sprawdź piekarnik" → {"activity": "sprawdź piekarnik", "timePattern": "+00:30"}
 - "jutro o 9 rano kupić chleb" → {"activity": "kupić chleb", "timePattern": "jutro 09:00"}
+- "Pojedz do sklepu o 14 za 3 dni " → {"activity": "Pojedz do sklepu", "timePattern": "za 3 dni 14:00"} (jeśli dziś jest poniedziałek, to za 3 dni to czwartek)
 - "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"} (jeśli przed 15:00) lub {"activity": "spotkanie", "timePattern": "jutro 15:00"} (jeśli po 15:00)
 - "w poniedziałek o 8:00 spotkanie" → {"activity": "spotkanie", "timePattern": "poniedziałek 08:00"}
 - "narysuj obraz w niedzielę za tydzień w południe" → {"activity": "narysuj obraz", "timePattern": "za tydzień niedziela 12:00"}

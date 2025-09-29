@@ -12,6 +12,7 @@ router.get('/', async (req, res) => {
   res.json(reminders);
 });
 
+// Przykład dodawania przypomnienia z userId
 router.post('/', async (req, res) => {
   const userId = req.user.id;
   const reminder = reminderRepository.create({ ...req.body, userId });

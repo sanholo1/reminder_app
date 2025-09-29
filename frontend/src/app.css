@@ -1342,6 +1342,17 @@ body.light-theme .category-input:hover {
   box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
 }
 
+/* Poprawiony gradient dla jasnego motywu */
+body.light-theme .restore-button {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+}
+
+body.light-theme .restore-button:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
 @keyframes pulse {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(50, 205, 50, 0.7);
