@@ -289,6 +289,8 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 - "za 15 minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "+00:15"}
 - "za dwie godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "+02:00"}
 - "podlej kwiaty za dwie godziny" → {"activity": "podlej kwiaty", "timePattern": "+02:00"}
+- "Pojedz do sklepu za 3 dni o 14" → {"activity": "Pojedz do sklepu", "timePattern": "za 3 dni 14:00"}
+- "Za 5 dni o 14 podlej kwiaty" → {"activity": "podlej kwiaty", "timePattern": "za 5 dni 14:00"}
 - "wyjdz z psem za 2 godziny" → {"activity": "wyjdz z psem", "timePattern": "+02:00"}
 - "za 5 godzin i 5 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+05:05"}
 - "za 30 minut sprawdź piekarnik" → {"activity": "sprawdź piekarnik", "timePattern": "+00:30"}
@@ -297,7 +299,7 @@ Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(min
 - "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"} (jeśli przed 15:00) lub {"activity": "spotkanie", "timePattern": "jutro 15:00"} (jeśli po 15:00)
 - "w poniedziałek o 8:00 spotkanie" → {"activity": "spotkanie", "timePattern": "poniedziałek 08:00"}
 - "narysuj obraz w niedzielę za tydzień w południe" → {"activity": "narysuj obraz", "timePattern": "za tydzień niedziela 12:00"}
-- "narysuj obraz w najbliższą niedzielę w południe" → {"activity": "narysuj obraz", "timePattern": "niedziela 12:00"}
+- "narysuj obraz w najbliższą nied  zielę w południe" → {"activity": "narysuj obraz", "timePattern": "niedziela 12:00"}
 - "odkurz mieszkanie dziś o 8" (jeśli jest już po 8) → {"activity": "odkurz mieszkanie", "timePattern": "jutro 08:00"}
 - "zadzwoń do taty za 15 minut" → {"activity": "zadzwoń do taty", "timePattern": "+00:15"}
 - "za trzy godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "+03:00"}

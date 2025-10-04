@@ -14,6 +14,9 @@ export class Reminder {
   @Column("varchar", { length: 64 })
   sessionId!: string;
 
+  @Column("timestamp")
+  datetime!: Date;
+
   @Index()
   @Column("varchar", { length: 64 })
   userId!: string;
