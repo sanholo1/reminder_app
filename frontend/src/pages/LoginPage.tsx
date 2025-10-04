@@ -12,6 +12,7 @@ const LoginPage: React.FC<Props> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
   useEffect(() => {
+    window.scrollTo(0, 0);
     const prevBodyOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -54,7 +55,19 @@ const LoginPage: React.FC<Props> = ({ onLogin }) => {
   };
 
   return (
-    <div className="login-page" style={{ height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+    <div
+      className="login-page"
+      style={{
+        minHeight: '100dvh',
+        height: '100dvh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        margin: 0,
+        padding: 0
+      }}
+    >
       <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <LanguageSwitcher inline />
         <ThemeSwitcher inline />
@@ -65,11 +78,11 @@ const LoginPage: React.FC<Props> = ({ onLogin }) => {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 12 }}>
               <label className="login-label" style={{ display: 'block', fontSize: 12, opacity: 0.8, marginBottom: 6 }}>{t('login.username')}</label>
-              <input className="login-input" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd' }} />
+              <input className="login-input" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '93%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd' }} />
             </div>
             <div style={{ marginBottom: 12 }}>
               <label className="login-label" style={{ display: 'block', fontSize: 12, opacity: 0.8, marginBottom: 6 }}>{t('login.password')}</label>
-              <input className="login-input" type="password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd' }} />
+              <input className="login-input" type="password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '93%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd' }} />
             </div>
             {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
             <button className="login-submit" type="submit" disabled={!username || !password || loading} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>{loading ? t('login.logging') : t('login.submit')}</button>

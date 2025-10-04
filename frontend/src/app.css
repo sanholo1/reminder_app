@@ -1,66 +1,37 @@
+/* Układ poziomy dla menu-row */
+.menu-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
 /* Light & Dark Theme - Modern Color Palette */
 
+/* Najważniejsze zmienne kolorów i tła */
 :root {
-  /* Dark Theme Color Palette - Default */
-  --dark-base: #0f1419;      /* Dark navy base */
-  --dark-medium: #1a2332;    /* Medium navy */
-  --dark-light: #2a3441;     /* Light navy */
-  --dark-accent: #4a90e2;    /* Blue accent */
-  --light-accent: #00d4aa;   /* Teal accent */
-  --light-accent-hover: #26e6c7;     /* Light teal */
-  --light-accent-dark: #00a085;      /* Dark teal */
-  --light-accent-fresh: #00ffcc;     /* Bright teal */
-  --text-primary: #e8f4f8;          /* Light text */
-  --text-secondary: #ffffff;          /* Pure white */
-  --background: #0f1419;          /* Dark navy background */
-  --overlay: rgba(15, 20, 25, 0.8); /* Navy transparent */
-  
-  /* Dark Theme Specific Colors */
-  --dark-accent-primary: #00ffcc;    /* Bright teal for dark theme */
-  --dark-accent-light: #26e6c7;      /* Light teal for dark theme */
-  --dark-accent-dark: #00a085;       /* Dark teal for dark theme */
-  --dark-accent-base: #00d4aa;       /* Base teal for dark theme */
-  --dark-accent-golden: #ffd700;     /* Golden accent for dark theme */
-  --dark-text-primary: #e8f4f8;      /* Primary text for dark theme */
-  --dark-text-secondary: #ffffff;    /* Secondary text for dark theme */
-  --dark-text-white: #ffffff;        /* Pure white text for dark theme */
-  --dark-background-primary: #0f1419; /* Primary background for dark theme */
-  --dark-background-secondary: #1a2332; /* Secondary background for dark theme */
-  --dark-background-overlay: rgba(15, 20, 25, 0.8); /* Overlay for dark theme */
-  
-  
-  /* Light Theme Specific Colors */
-  --light-accent-primary: #00d4aa;   /* Primary accent for light theme */
-  --light-accent-light: #26e6c7;     /* Light accent for light theme */
-  --light-accent-dark: #00a085;      /* Dark accent for light theme */
-  --light-accent-base: #00ffcc;      /* Base accent for light theme */
-  --light-accent-golden: #ffa500;    /* Golden accent for light theme */
-  --light-text-primary: #1a2332;     /* Primary text for light theme */
-  --light-text-secondary: #2a3441;   /* Secondary text for light theme */
-  --light-text-white: #ffffff;       /* White text for light theme */
-  --light-background-primary: #ffffff; /* Primary background for light theme */
-  --light-background-secondary: #f8f9fa; /* Secondary background for light theme */
-  --light-background-overlay: rgba(255, 255, 255, 0.95); /* Overlay for light theme */
-  
-
-  
-  /* Universal Theme Variables - These will be overridden by theme-specific styles */
-  --accent-primary: var(--dark-accent-primary);
-  --accent-light: var(--dark-accent-light);
-  --accent-dark: var(--dark-accent-dark);
-  --accent-base: var(--dark-accent-base);
-  --accent-golden: var(--dark-accent-golden);
-  --text-primary: var(--dark-text-primary);
-  --text-secondary: var(--dark-text-secondary);
-  --text-white: var(--dark-text-white);
-  --background-primary: var(--dark-background-primary);
-  --background-secondary: var(--dark-background-secondary);
-  --background-overlay: var(--dark-background-overlay);
-  
-
+  --dark-base: #0f1419;
+  --dark-medium: #1a2332;
+  --dark-light: #2a3441;
+  --light-accent: #00d4aa;
+  --light-accent-hover: #26e6c7;
+  --light-accent-dark: #00a085;
+  --light-accent-fresh: #00ffcc;
+  --text-primary: #e8f4f8;
+  --text-secondary: #ffffff;
+  --background: #0f1419;
+  --overlay: rgba(15, 20, 25, 0.8);
+  --accent-primary: var(--light-accent);
+  --accent-light: var(--light-accent-hover);
+  --accent-dark: var(--light-accent-dark);
+  --accent-base: var(--light-accent-fresh);
+  --accent-golden: #ffd700;
+  --text-white: #ffffff;
+  --background-primary: var(--dark-base);
+  --background-secondary: var(--dark-medium);
+  --background-overlay: var(--overlay);
 }
-
-/* Language and Theme Switchers Styles */
 .language-switcher {
   position: fixed;
   top: 20px;
@@ -78,6 +49,7 @@
 }
 
 /* Inline mode: used inside hamburger menu - no fixed positioning, compact buttons */
+/* Inline mode: used inside hamburger menu - no fixed positioning, compact buttons */
 .language-switcher.inline {
   position: static;
   top: auto;
@@ -91,30 +63,12 @@
   gap: 8px;
 }
 
-.theme-switcher {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  display: flex;
-  gap: 5px;
-  z-index: 1000;
-  background: var(--overlay);
-  padding: 8px;
-  border-radius: 25px;
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--light-accent);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  width: 170px;
-}
-
 /* Dropdown (hamburger) menu dark theme text colors */
 .menu-dropdown {
   color: var(--text-primary);
-}
-.menu-dropdown .menu-title,
-.menu-dropdown .menu-label,
-.menu-dropdown .switcher-label {
-  color: var(--text-primary);
+  min-width: 340px;
+  max-width: 420px;
+  width: 100%;
 }
 
 /* Dark theme: use dark-base for menu text to improve contrast on light menu bg */
@@ -138,6 +92,8 @@ body:not(.light-theme) .menu-dropdown .theme-button {
   width: auto;
   backdrop-filter: none;
   gap: 8px;
+  display: flex;
+  flex-direction: row;
 }
 
 /* Compact buttons inside inline switchers to avoid overlap */
@@ -163,7 +119,7 @@ body:not(.light-theme) .menu-dropdown .theme-button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  flex-direction: column;
+  flex-direction: row;
   width: 80px; /* ensure equal width across all 4 switcher buttons */
   min-height: 64px; /* visually consistent height */
   box-sizing: border-box;
@@ -226,28 +182,28 @@ body:not(.light-theme) .menu-dropdown .theme-button {
 /* Compact variant inside inline switchers still stacks icon over text */
 .language-switcher.inline .language-button,
 .theme-switcher.inline .theme-button {
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  gap: 8px;
 }
 
 .theme-button:hover {
-  background: var(--light-accent);
-  color: var(--background);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
-}
-
-.theme-button.active {
-  background: var(--light-accent);
-  color: var(--background);
-  box-shadow: 0 0 15px rgba(0, 212, 170, 0.6);
-}
-
-.theme-button:active {
-  transform: translateY(0);
-}
-
-* {
+  background: transparent;
+  border: 2px solid var(--light-accent);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-direction: row;
+  width: 80px; /* ensure equal width across all 4 switcher buttons */
+  min-height: 64px; /* visually consistent height */
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -1565,7 +1521,7 @@ body.dark-theme .menu-logout-button {
 
 /* Change Password Page */
 .change-password-page {
-  width: 100%;
+  width: 90%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1573,21 +1529,26 @@ body.dark-theme .menu-logout-button {
 }
 
 .change-password-card {
-  width: 100%;
-  max-width: 480px;
+  width: 90%;
+  max-width: 420px;
   background: var(--overlay);
   border: 1px solid rgba(93, 42, 42, 0.3);
   border-radius: 16px;
   box-shadow: 0 12px 32px rgba(0,0,0,0.2);
   padding: 24px;
   backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .cp-title {
-  margin: 0 0 6px;
-  font-size: 1.6rem;
+  margin: 0 0 16px;
+  font-size: 1.8rem;
   color: var(--light-accent-fresh);
   text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .cp-subtitle {
@@ -1599,13 +1560,17 @@ body.dark-theme .menu-logout-button {
 .change-password-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 320px;
 }
 
 .cp-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .cp-label {
@@ -1620,6 +1585,9 @@ body.dark-theme .menu-logout-button {
   border: 1px solid rgba(93, 42, 42, 0.4);
   background: rgba(93, 42, 42, 0.2);
   color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
 .cp-input:focus {
@@ -1630,10 +1598,20 @@ body.dark-theme .menu-logout-button {
 
 .cp-error {
   color: #ff6b6b;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  background-color: rgba(255, 107, 107, 0.1);
+  text-align: center;
 }
 
 .cp-success {
   color: #2ecc71;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  background-color: rgba(46, 204, 113, 0.1);
+  text-align: center;
 }
 
 .cp-submit {
@@ -1645,6 +1623,8 @@ body.dark-theme .menu-logout-button {
   cursor: pointer;
   font-weight: 700;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  width: 200px;
+  align-self: center;
 }
 
 .cp-submit:disabled {
@@ -1668,7 +1648,57 @@ body.light-theme .cp-submit:hover:not(:disabled) {
   box-shadow: 0 8px 22px rgba(99, 102, 241, 0.35);
 }
 
-/* Ensure white text for dark theme submit button */
+/* Ensure white text for all theme submit buttons */
 .cp-submit {
   color: white;
+  margin-top: 10px;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+  width: 100%;
+  max-width: 280px;
+  align-self: center;
+}
+
+/* Responsive styles for change password form */
+@media (max-width: 768px) {
+  .change-password-page {
+    padding: 16px;
+  }
+  
+  .change-password-card {
+    padding: 24px;
+    max-width: 400px;
+  }
+  
+  .change-password-form {
+    max-width: 300px;
+  }
+  
+  .cp-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .change-password-card {
+    padding: 20px;
+    max-width: 95%;
+  }
+  
+  .change-password-form {
+    max-width: 280px;
+  }
+  
+  .cp-input {
+    padding: 12px;
+  }
+  
+  .cp-title {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+  }
+  
+  .cp-submit {
+    width: 160px;
+  }
 }

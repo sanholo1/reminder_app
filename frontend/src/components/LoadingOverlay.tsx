@@ -12,6 +12,20 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   message = "Ładowanie...", 
   transparent = false 
 }) => {
+  React.useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isVisible]);
+
   if (!isVisible) return null;
 
   return (

@@ -6,6 +6,15 @@ interface LoadingPageProps {
 }
 
 const LoadingPage: React.FC<LoadingPageProps> = ({ message = "Ładowanie aplikacji..." }) => {
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
   return (
     <div className="loading-page">
       <div className="loading-container">

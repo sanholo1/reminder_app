@@ -1,25 +1,22 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn } from "typeorm";
+import { Entity, PrimaryColumn, Column, CreateDateColumn, Index } from "typeorm";
 
 @Entity("reminders")
 export class Reminder {
-  @PrimaryColumn("varchar", { length: 255 })
+  @PrimaryColumn("varchar", { length: 64 })
   id!: string;
 
-  @Column("varchar", { length: 500 })
+  @Column("varchar", { length: 200 })
   activity!: string;
 
-  @Column("varchar", { length: 100, nullable: true })
+  @Column("varchar", { length: 50, nullable: true })
   category!: string | null;
 
-  @Column("varchar", { length: 255 })
+  @Column("varchar", { length: 64 })
   sessionId!: string;
 
-  @Column("varchar", { length: 255 })
+  @Index()
+  @Column("varchar", { length: 64 })
   userId!: string;
-
-  @Column("datetime")
-  datetime!: Date;
-
   @CreateDateColumn()
   created_at!: Date;
 
