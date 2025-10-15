@@ -7,14 +7,14 @@ async function addUser() {
   const username = 'julia';
   const password = 'kochamkube';
 
-  // Hash the password
+
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  // Generate UUID
+
   const userId = randomUUID();
 
-  // Create database connection
+
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,

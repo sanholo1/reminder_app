@@ -136,7 +136,8 @@ export class ReminderRepositoryTypeORM {
         category: reminder.category,
         sessionId: reminder.sessionId,
         deleted_at: new Date(),
-        created_at: reminder.created_at
+        created_at: reminder.created_at,
+        userId: ""
       });
       
       await this.repository.remove(reminder);
@@ -168,7 +169,8 @@ export class ReminderRepositoryTypeORM {
           category: reminder.category,
           sessionId: reminder.sessionId,
           deleted_at: new Date(),
-          created_at: reminder.created_at
+          created_at: reminder.created_at,
+          userId: ""
         });
       }
       
