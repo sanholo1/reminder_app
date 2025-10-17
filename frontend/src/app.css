@@ -847,7 +847,7 @@ body.light-theme .reminder-activity {
 
 .category-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-dark) 100%);
+  background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(154, 155, 218) 100%);
   color: var(--text-white);
   padding: 0.25rem 0.75rem;
   border-radius: 15px;
@@ -855,7 +855,7 @@ body.light-theme .reminder-activity {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 255, 0, 0.3);
+  box-shadow: 0 2px 4px rgb(99, 102, 241);
 }
 
 .delete-button {
@@ -985,10 +985,16 @@ body.light-theme .reminder-activity {
   transition: all 0.3s ease;
 }
 
-.category-select:focus {
+body.light-theme .category-select:focus {
   outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3);
+  border-color: rgb(99, 102, 241) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3) !important;
+}
+
+body.dark-theme .category-select:focus {
+  outline: none;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3) !important;
 }
 
 .category-select option {
@@ -1037,15 +1043,21 @@ body.light-theme .reminder-activity {
 
 /* Light theme: purple hover for inline edit inputs */
 body.light-theme .category-input:hover {
-  border-color: #6366f1;
+  border-color: rgb(99, 102, 241);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   background: rgba(255, 255, 255, 0.95);
 }
 
-.category-input:focus {
+body.light-theme .category-input:focus {
   outline: none;
-  border-color: var(--light-accent-fresh);
-  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3);
+  border-color: rgb(99, 102, 241) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3) !important;
+}
+
+body.dark-theme .category-input:focus {
+  outline: none;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.3) !important;
 }
 
 .category-input::placeholder {
@@ -1309,12 +1321,12 @@ body.light-theme .category-input:hover {
 }
 
 .trash-category .category-badge {
-  background: rgba(0, 255, 0, 0.2);
-  color: var(--light-accent-fresh);
+  background: rgb(99, 102, 241);
+  color: rgb(99, 102, 241);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
-  border: 1px solid rgba(0, 255, 0, 0.3);
+  border: 1px solid rgb(99, 102, 241);
 }
 
 .trash-deleted-at {
