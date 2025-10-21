@@ -189,4 +189,4 @@ export class DailyUsageLimitExceededError extends HttpError {
     super(message, 429);
     this.name = 'DailyUsageLimitExceededError';
   }
-} 
+}

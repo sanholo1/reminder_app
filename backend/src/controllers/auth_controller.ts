@@ -1,8 +1,9 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 import { AppDataSource } from '../config/database';
+import { config } from '../config/environment';
 import { User } from '../entities/User';
 import * as bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth_middleware';
 
 const router = Router();
@@ -24,8 +25,7 @@ router.post('/login', async (req: Request, res: Response) => {
     if (!ok) {
       return res.status(401).json({ error: 'Nieprawidłowe dane logowania' });
     }
-    const secret = process.env.JWT_SECRET || 'dev-secret';
-    const token = jwt.sign({ sub: user.id, username: user.username }, secret, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user.id }, config.auth.jwtSecret, { expiresIn: '24h' });
     return res.json({ token });
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Błąd logowania' });
@@ -41,9 +41,13 @@ router.post('/change-password', requireAuth, async (req: Request, res: Response)
     }
     const repo = AppDataSource.getRepository(User);
     const user = await repo.findOne({ where: { id: userPayload.sub } });
-    if (!user) return res.status(404).json({ error: 'Użytkownik nie znaleziony' });
+    if (!user) {
+      return res.status(404).json({ error: 'Użytkownik nie znaleziony' });
+    }
     const ok = await bcrypt.compare(oldPassword, user.passwordHash);
-    if (!ok) return res.status(401).json({ error: 'Stare hasło nieprawidłowe' });
+    if (!ok) {
+      return res.status(401).json({ error: 'Stare hasło nieprawidłowe' });
+    }
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(newPassword, salt);
     await repo.save(user);
@@ -56,17 +60,15 @@ router.post('/change-password', requireAuth, async (req: Request, res: Response)
 // Dev-only: reset or create admin according to env
 router.post('/dev/reset-admin', async (req: Request, res: Response) => {
   try {
-    if ((process.env.NODE_ENV || 'development') !== 'development') {
+    if (config.app.nodeEnv !== 'development') {
       return res.status(403).json({ error: 'Niedostępne w tym środowisku' });
     }
-    const adminUser = process.env.ADMIN_USER || 'admin';
-    const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
     const repo = AppDataSource.getRepository(User);
-    let user = await repo.findOne({ where: { username: adminUser } });
+    let user = await repo.findOne({ where: { username: config.auth.adminUser } });
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(adminPass, salt);
+    const passwordHash = await bcrypt.hash(config.auth.adminPassword, salt);
     if (!user) {
-      user = repo.create({ username: adminUser, passwordHash });
+      user = repo.create({ username: config.auth.adminUser, passwordHash });
     } else {
       user.passwordHash = passwordHash;
     }
@@ -78,5 +80,3 @@ router.post('/dev/reset-admin', async (req: Request, res: Response) => {
 });
 
 export default router;
-
-

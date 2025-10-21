@@ -1,17 +1,16 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddCategoryColumn1755350794539 implements MigrationInterface {
-    name = 'AddCategoryColumn1755350794539'
+  name = 'AddCategoryColumn1755350794539';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        const hasCategory = await queryRunner.hasColumn('reminders', 'category');
-        if (!hasCategory) {
-            await queryRunner.query(`ALTER TABLE \`reminders\` ADD \`category\` varchar(100) NULL`);
-        }
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    const hasCategory = await queryRunner.hasColumn('reminders', 'category');
+    if (!hasCategory) {
+      await queryRunner.query(`ALTER TABLE \`reminders\` ADD \`category\` varchar(100) NULL`);
     }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE \`reminders\` DROP COLUMN \`category\``);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`ALTER TABLE \`reminders\` DROP COLUMN \`category\``);
+  }
 }

@@ -22,12 +22,10 @@ export class DeleteCategoryHandler {
       const deletedCount = await this.reminderRepository.deleteByCategory(command.category);
       return {
         message: `Usunięto kategorię "${command.category}" wraz z ${deletedCount} przypomnieniami`,
-        deletedCount
+        deletedCount,
       };
-    } catch (error) {
+          } catch (_error) {
       throw new InternalServerError('Błąd podczas usuwania kategorii z bazy danych');
     }
   }
 }
-
-

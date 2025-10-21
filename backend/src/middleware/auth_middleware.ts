@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { config } from '../config/environment';
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers['authorization'];
@@ -8,13 +9,10 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
   const token = auth.slice('Bearer '.length);
   try {
-    const secret = process.env.JWT_SECRET || 'dev-secret';
-    const payload = jwt.verify(token, secret) as any;
+    const payload = jwt.verify(token, config.auth.jwtSecret) as any;
     (req as any).user = payload;
     return next();
   } catch {
     return res.status(401).json({ error: 'Nieprawidłowy token' });
   }
 }
-
-

@@ -3,7 +3,11 @@ import { requireAuth } from '../middleware/auth_middleware';
 import { CreateReminderHandler } from '../commands/create_command';
 import { GetRemindersHandler } from '../queries/get_query';
 import { DeleteReminderHandler } from '../commands/delete_command';
-import { NotFoundError, BadRequestError, MethodNotAllowedError } from '../exceptions/exception_handler';
+import {
+  NotFoundError,
+  BadRequestError,
+  MethodNotAllowedError,
+} from '../exceptions/exception_handler';
 import { UserSessionService } from '../services/user_session_service';
 import { GetActiveRemindersHandler } from '../queries/get_active_reminders_query';
 import { GetCategoriesHandler } from '../queries/get_categories_query';
@@ -30,35 +34,35 @@ const updateReminderHandler = new UpdateReminderHandler();
 
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
-  const sessionId = (req as any).sessionId;
-  const userId = (req as any).user?.sub || '';
-    const result = await createReminderHandler.execute({ 
+    const sessionId = (req as any).sessionId;
+    const userId = (req as any).user?.sub || '';
+    const result = await createReminderHandler.execute({
       text: req.body.text,
-      sessionId: sessionId,
-      userId: userId,
-      category: req.body.category || null
+      sessionId,
+      userId,
+      category: req.body.category || null,
     });
-    
+
     if ('isBlocked' in result && 'remainingAttempts' in result) {
       const abuseResult = result as any;
-      
+
       res.setHeader('X-Remaining-Attempts', abuseResult.remainingAttempts.toString());
-      
+
       if (abuseResult.isBlocked) {
         return res.status(403).json({
           error: abuseResult.error,
           status: 403,
-          name: 'AbuseError'
+          name: 'AbuseError',
         });
       } else {
         return res.status(403).json({
           error: abuseResult.error,
           status: 403,
-          name: 'AbuseError'
+          name: 'AbuseError',
         });
       }
     }
-    
+
     if (sessionId) {
       try {
         const usageInfo = await userSessionService.getUsageInfo(sessionId);
@@ -66,10 +70,13 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
         res.setHeader('X-Daily-Max-Usage', usageInfo.maxDailyUsage.toString());
         res.setHeader('X-Daily-Remaining-Usage', usageInfo.remainingDailyUsage.toString());
       } catch (error) {
-        logger.warn('Error getting usage info for headers', { error: (error as any)?.message || String(error), sessionId });
+        logger.warn('Error getting usage info for headers', {
+          error: (error as any)?.message || String(error),
+          sessionId,
+        });
       }
     }
-    
+
     res.json(result);
   } catch (error) {
     next(error);
@@ -78,7 +85,7 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
 
 reminderRouter.get('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
-  const userId = (req as any).user?.sub || '';
+    const userId = (req as any).user?.sub || '';
     const result = await getRemindersHandler.execute({ userId });
     res.json(result);
   } catch (err) {
@@ -103,7 +110,9 @@ reminderRouter.get('/reminders/active', async (req: Request, res: Response, next
 reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    if (!id) throw new BadRequestError('errors.missingId');
+    if (!id) {
+      throw new BadRequestError('errors.missingId');
+    }
     throw new NotFoundError('errors.reminderNotFound');
   } catch (error) {
     next(error);
@@ -113,7 +122,9 @@ reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: N
 reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    if (!id) throw new BadRequestError('errors.missingId');
+    if (!id) {
+      throw new BadRequestError('errors.missingId');
+    }
     const { activity, datetime, category } = req.body || {};
     const result = await updateReminderHandler.execute({ id, activity, datetime, category });
     res.json(result);
@@ -124,11 +135,13 @@ reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: N
 
 reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-  const { id } = req.params;
-  if (!id) throw new BadRequestError('errors.missingId');
-  const userId = (req as any).user?.sub || '';
-  const result = await deleteReminderHandler.execute({ id, userId });
-  res.json(result);
+    const { id } = req.params;
+    if (!id) {
+      throw new BadRequestError('errors.missingId');
+    }
+    const userId = (req as any).user?.sub || '';
+    const result = await deleteReminderHandler.execute({ id, userId });
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -143,31 +156,41 @@ reminderRouter.get('/categories', async (req: Request, res: Response, next: Next
   }
 });
 
-reminderRouter.get('/reminders/category/:category', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { category } = req.params;
-    if (!category) throw new BadRequestError('errors.missingCategory');
-    const result = await getRemindersByCategoryHandler.execute({ category });
-    res.json(result);
-  } catch (error) {
-    next(error);
+reminderRouter.get(
+  '/reminders/category/:category',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { category } = req.params;
+      if (!category) {
+        throw new BadRequestError('errors.missingCategory');
+      }
+      const result = await getRemindersByCategoryHandler.execute({ category });
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-reminderRouter.delete('/categories/:category', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { category } = req.params;
-    if (!category) throw new BadRequestError('errors.missingCategory');
-    const result = await deleteCategoryHandler.execute({ category });
-    res.json(result);
-  } catch (error) {
-    next(error);
+reminderRouter.delete(
+  '/categories/:category',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { category } = req.params;
+      if (!category) {
+        throw new BadRequestError('errors.missingCategory');
+      }
+      const result = await deleteCategoryHandler.execute({ category });
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunction) => {
   try {
-  const userId = (req as any).user?.sub || '';
+    const userId = (req as any).user?.sub || '';
     const result = await getTrashItemsHandler.execute({ userId });
     res.json(result);
   } catch (error) {
@@ -175,16 +198,21 @@ reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunct
   }
 });
 
-reminderRouter.post('/trash/:id/restore', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    if (!id) throw new BadRequestError('errors.missingTrashId');
-    const result = await restoreFromTrashHandler.execute({ id });
-    res.json(result);
-  } catch (error) {
-    next(error);
+reminderRouter.post(
+  '/trash/:id/restore',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        throw new BadRequestError('errors.missingTrashId');
+      }
+      const result = await restoreFromTrashHandler.execute({ id });
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 reminderRouter.get('/usage', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -192,7 +220,7 @@ reminderRouter.get('/usage', async (req: Request, res: Response, next: NextFunct
     if (!sessionId) {
       return res.status(401).json({ error: 'Brak identyfikatora sesji' });
     }
-    
+
     const usageInfo = await userSessionService.getUsageInfo(sessionId);
     res.json(usageInfo);
   } catch (error) {
@@ -200,4 +228,4 @@ reminderRouter.get('/usage', async (req: Request, res: Response, next: NextFunct
   }
 });
 
-export default reminderRouter; 
+export default reminderRouter;

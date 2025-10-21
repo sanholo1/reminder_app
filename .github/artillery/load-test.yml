@@ -1,0 +1,50 @@
+config:
+  target: 'http://localhost:3001'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up phase"
+    - duration: 120
+      arrivalRate: 20
+      name: "Load test phase"
+    - duration: 60
+      arrivalRate: 50
+      name: "Stress test phase"
+  processor: "./load-test-helpers.js"
+
+scenarios:
+  - name: "Health check"
+    weight: 20
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+
+  - name: "API endpoints"
+    weight: 80
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "testpassword"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: [200, 401] # Allow both success and auth failure
+
+      - get:
+          url: "/api/reminders"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 401]
+
+      - get:
+          url: "/api/categories"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 401]

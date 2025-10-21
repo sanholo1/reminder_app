@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('user_sessions')
 export class UserSession {
@@ -38,4 +44,4 @@ export class UserSession {
 
   @UpdateDateColumn()
   updatedAt!: Date;
-} 
+}

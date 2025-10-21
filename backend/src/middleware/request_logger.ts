@@ -15,11 +15,9 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
       url: originalUrl,
       status,
       durationMs,
-      sessionId
+      sessionId,
     });
   });
 
   next();
 }
-
-

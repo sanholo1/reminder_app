@@ -20,13 +20,11 @@ export class RestoreFromTrashHandler {
     try {
       await this.reminderRepository.restoreFromTrash(command.id);
       return { message: 'Przypomnienie zostało przywrócone' };
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
+    } catch (_error) {
+      if (_error instanceof NotFoundError) {
+        throw _error;
       }
       throw new InternalServerError('Błąd podczas przywracania z kosza');
     }
   }
 }
-
-

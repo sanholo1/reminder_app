@@ -1,5 +1,10 @@
 import { ReminderWriteRepositoryTypeORM } from '../repositories/reminder_write_repository_typeorm';
-import { InternalServerError, NotFoundError, ValidationError, PastTimeEditError } from '../exceptions/exception_handler';
+import {
+  InternalServerError,
+  NotFoundError,
+  ValidationError,
+  PastTimeEditError,
+} from '../exceptions/exception_handler';
 
 export interface UpdateReminderCommand {
   id: string;
@@ -21,7 +26,9 @@ export class UpdateReminderHandler {
   }
 
   async execute(command: UpdateReminderCommand): Promise<UpdateReminderResult> {
-    if (!command.id) throw new ValidationError('errors.missingId');
+    if (!command.id) {
+      throw new ValidationError('errors.missingId');
+    }
     if (!command.activity && !command.datetime && typeof command.category === 'undefined') {
       throw new ValidationError('errors.missingData');
     }
@@ -29,7 +36,7 @@ export class UpdateReminderHandler {
     if (command.activity && command.activity.length > MAX_ACTIVITY_LENGTH) {
       throw new ValidationError(`errors.activityTooLong`);
     }
-    
+
     // Walidacja daty - nie można edytować przypomnienia na datę w przeszłości
     if (command.datetime) {
       const newDateTime = new Date(command.datetime);
@@ -38,21 +45,23 @@ export class UpdateReminderHandler {
         throw new PastTimeEditError();
       }
     }
-    
+
     try {
       await this.reminderRepository.update(command.id, {
         activity: command.activity,
         datetime: command.datetime ? new Date(command.datetime) : undefined,
-        category: typeof command.category !== 'undefined' ? command.category : undefined
+        category: typeof command.category !== 'undefined' ? command.category : undefined,
       });
       return { success: true, message: 'Przypomnienie zaktualizowane' };
-    } catch (error) {
-      if (error instanceof NotFoundError || error instanceof ValidationError || error instanceof PastTimeEditError) {
-        throw error;
+    } catch (_error) {
+      if (
+        _error instanceof NotFoundError ||
+        _error instanceof ValidationError ||
+        _error instanceof PastTimeEditError
+      ) {
+        throw _error;
       }
       throw new InternalServerError('errors.updateReminder');
     }
   }
 }
-
-

@@ -53,7 +53,9 @@ pnpm-lock.yaml
 tmp/
 temp/
 
-# Ignoruj wszystkie pliki README
+# Ignoruj wszystkie pliki markdown
+*.md
+**/**.md
 README*
 **/README*
 **/README*.md

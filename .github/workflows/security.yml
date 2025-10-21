@@ -1,0 +1,125 @@
+name: 🔒 Security Scan
+
+on:
+  schedule:
+    # Run security scans daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  dependency-security:
+    name: 🔒 Dependency Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 📦 Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🔒 Run npm audit (Backend)
+        working-directory: ./backend
+        run: |
+          npm audit --audit-level=moderate --json > backend-audit.json || true
+          npm audit --audit-level=moderate
+
+      - name: 🔒 Run npm audit (Frontend)
+        working-directory: ./frontend
+        run: |
+          npm audit --audit-level=moderate --json > frontend-audit.json || true
+          npm audit --audit-level=moderate
+
+      - name: 📊 Upload audit results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-audit-results
+          path: |
+            backend/backend-audit.json
+            frontend/frontend-audit.json
+
+  code-security:
+    name: 🔍 Code Security Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Run CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+
+      - name: 🔍 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  docker-security:
+    name: 🐳 Docker Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Build backend image for scanning
+        run: docker build -t reminder-app-backend:scan ./backend
+
+      - name: 🐳 Build frontend image for scanning
+        run: docker build -t reminder-app-frontend:scan ./frontend
+
+      - name: 🔒 Run Trivy vulnerability scanner (Backend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'reminder-app-backend:scan'
+          format: 'sarif'
+          output: 'backend-trivy-results.sarif'
+
+      - name: 🔒 Run Trivy vulnerability scanner (Frontend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'reminder-app-frontend:scan'
+          format: 'sarif'
+          output: 'frontend-trivy-results.sarif'
+
+      - name: 📊 Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: |
+            backend-trivy-results.sarif
+            frontend-trivy-results.sarif
+
+  secrets-scan:
+    name: 🔐 Secrets Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔐 Run TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified

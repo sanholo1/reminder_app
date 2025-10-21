@@ -2,7 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import reminderRouter from './controllers/reminder_controller';
 import authRouter from './controllers/auth_controller';
+import healthRouter from './routes/health';
 import { AppDataSource } from './config/database';
+import { config } from './config/environment';
 import { SessionMiddleware } from './middleware/session_middleware';
 import { requestLogger } from './middleware/request_logger';
 import { logger } from './utils/logger';
@@ -18,12 +20,14 @@ import {
 } from './exceptions/exception_handler';
 
 const application = express();
-const applicationPort = process.env.PORT || 3001;
 const sessionMiddleware = new SessionMiddleware();
 
 application.use(cors());
 application.use(express.json());
 application.use(requestLogger);
+
+// Health routes (no auth or session required)
+application.use('/', healthRouter);
 
 application.use(sessionMiddleware.extractSessionId);
 application.use(sessionMiddleware.checkBlocked);
@@ -60,8 +64,8 @@ application.use((err: any, req: Request, res: Response, next: NextFunction) => {
 AppDataSource.initialize()
   .then(() => {
     logger.info('Database connection established successfully');
-    application.listen(applicationPort, () => {
-      logger.info('Server is running', { port: applicationPort });
+    application.listen(config.app.port, () => {
+      logger.info('Server is running', { port: config.app.port });
     });
   })
   .catch((error) => {
@@ -86,8 +90,8 @@ AppDataSource.initialize()
       AppDataSource.initialize()
         .then(() => {
           logger.info('Database connection established successfully on retry');
-          application.listen(applicationPort, () => {
-            logger.info('Server is running', { port: applicationPort });
+          application.listen(config.app.port, () => {
+            logger.info('Server is running', { port: config.app.port });
           });
         })
         .catch((retryError) => {

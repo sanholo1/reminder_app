@@ -27,20 +27,20 @@ export class GetRemindersByCategoryHandler {
 
   async execute(query: GetRemindersByCategoryQuery): Promise<GetRemindersByCategoryResult> {
     try {
-      const reminders: ReminderEntity[] = await this.reminderRepository.findByCategory(query.category);
+      const reminders: ReminderEntity[] = await this.reminderRepository.findByCategory(
+        query.category
+      );
       return {
         reminders: reminders.map(r => ({
           id: r.id,
           activity: r.activity,
           datetime: r.datetime.toISOString(),
           category: r.category,
-          created_at: r.created_at ? r.created_at.toISOString() : undefined
-        }))
+          created_at: r.created_at ? r.created_at.toISOString() : undefined,
+        })),
       };
     } catch (error) {
       throw new InternalServerError('Błąd podczas pobierania przypomnień z kategorii');
     }
   }
 }
-
-

@@ -18,7 +18,7 @@ export class ReminderReadRepositoryTypeORM {
       const where = userId ? { userId } : {};
       const reminders = await this.repository.find({
         where,
-        order: { datetime: 'ASC' }
+        order: { datetime: 'ASC' },
       });
       return reminders.map(reminder => ({
         id: reminder.id,
@@ -27,9 +27,9 @@ export class ReminderReadRepositoryTypeORM {
         category: reminder.category,
         sessionId: reminder.sessionId,
         userId: reminder.userId,
-        created_at: reminder.created_at
+        created_at: reminder.created_at,
       }));
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseQueryError('Błąd podczas pobierania przypomnień z bazy danych');
     }
   }
@@ -37,7 +37,9 @@ export class ReminderReadRepositoryTypeORM {
   async findById(id: string): Promise<ReminderEntity | null> {
     try {
       const reminder = await this.repository.findOne({ where: { id } });
-      if (!reminder) return null;
+      if (!reminder) {
+        return null;
+      }
       return {
         id: reminder.id,
         activity: reminder.activity,
@@ -45,9 +47,9 @@ export class ReminderReadRepositoryTypeORM {
         category: reminder.category,
         sessionId: reminder.sessionId,
         userId: reminder.userId,
-        created_at: reminder.created_at
+        created_at: reminder.created_at,
       };
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseQueryError('Błąd podczas wyszukiwania przypomnienia w bazie danych');
     }
   }
@@ -56,7 +58,7 @@ export class ReminderReadRepositoryTypeORM {
     try {
       const reminders = await this.repository.find({
         where: { category },
-        order: { datetime: 'ASC' }
+        order: { datetime: 'ASC' },
       });
       return reminders.map(reminder => ({
         id: reminder.id,
@@ -65,9 +67,9 @@ export class ReminderReadRepositoryTypeORM {
         category: reminder.category,
         sessionId: reminder.sessionId,
         userId: reminder.userId,
-        created_at: reminder.created_at
+        created_at: reminder.created_at,
       }));
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseQueryError('Błąd podczas pobierania przypomnień z kategorii z bazy danych');
     }
   }
@@ -79,7 +81,7 @@ export class ReminderReadRepositoryTypeORM {
         .map(reminder => reminder.category)
         .filter((category): category is string => category !== null && category !== undefined)
         .filter((category, index, self) => self.indexOf(category) === index);
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseQueryError('Błąd podczas pobierania kategorii z bazy danych');
     }
   }
@@ -99,15 +101,15 @@ export class ReminderReadRepositoryTypeORM {
         .getMany();
 
       return activeReminders.map(reminder => ({
-  id: reminder.id,
-  activity: reminder.activity,
-  datetime: reminder.datetime,
-  category: reminder.category,
-  sessionId: reminder.sessionId,
-  userId: reminder.userId,
-  created_at: reminder.created_at
+        id: reminder.id,
+        activity: reminder.activity,
+        datetime: reminder.datetime,
+        category: reminder.category,
+        sessionId: reminder.sessionId,
+        userId: reminder.userId,
+        created_at: reminder.created_at,
       }));
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseQueryError('Błąd podczas pobierania aktywnych przypomnień z bazy danych');
     }
   }
@@ -116,10 +118,8 @@ export class ReminderReadRepositoryTypeORM {
     try {
       const trashRepository = new TrashRepositoryTypeORM();
       return await trashRepository.getTrashItems();
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseQueryError('Błąd podczas pobierania elementów z kosza');
     }
   }
 }
-
-

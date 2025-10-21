@@ -1,7 +1,7 @@
-import { Repository } from "typeorm";
-import { AppDataSource } from "../config/database";
-import { TrashItem } from "../entities/TrashItem";
-import { DatabaseQueryError, NotFoundError } from "../exceptions/exception_handler";
+import { Repository } from 'typeorm';
+import { AppDataSource } from '../config/database';
+import { TrashItem } from '../entities/TrashItem';
+import { DatabaseQueryError, NotFoundError } from '../exceptions/exception_handler';
 
 export interface TrashItemEntity {
   id: string;
@@ -23,7 +23,14 @@ export class TrashRepositoryTypeORM {
 
   async addToTrash(reminder: TrashItemEntity): Promise<void> {
     try {
-      const trashItem = new TrashItem(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId, reminder.userId);
+      const trashItem = new TrashItem(
+        reminder.id,
+        reminder.activity,
+        reminder.datetime,
+        reminder.category,
+        reminder.sessionId,
+        reminder.userId
+      );
       await this.repository.save(trashItem);
     } catch (error) {
       throw new DatabaseQueryError('Błąd podczas dodawania do kosza');
@@ -34,20 +41,20 @@ export class TrashRepositoryTypeORM {
     try {
       const trashItems = await this.repository.find({
         order: {
-          deleted_at: "DESC"
+          deleted_at: 'DESC',
         },
-        take: 10
+        take: 10,
       });
-      
+
       return trashItems.map(item => ({
-  id: item.id,
-  activity: item.activity,
-  datetime: item.datetime,
-  category: item.category,
-  sessionId: item.sessionId,
-  userId: item.userId,
-  deleted_at: item.deleted_at,
-  created_at: item.created_at
+        id: item.id,
+        activity: item.activity,
+        datetime: item.datetime,
+        category: item.category,
+        sessionId: item.sessionId,
+        userId: item.userId,
+        deleted_at: item.deleted_at,
+        created_at: item.created_at,
       }));
     } catch (error) {
       throw new DatabaseQueryError('Błąd podczas pobierania elementów z kosza');
@@ -57,26 +64,26 @@ export class TrashRepositoryTypeORM {
   async restoreFromTrash(id: string): Promise<TrashItemEntity | null> {
     try {
       const trashItem = await this.repository.findOne({
-        where: { id }
+        where: { id },
       });
-      
+
       if (!trashItem) {
         throw new NotFoundError('errors.trashItemNotFound');
       }
-      
+
       const itemToRestore = {
-  id: trashItem.id,
-  activity: trashItem.activity,
-  datetime: trashItem.datetime,
-  category: trashItem.category,
-  sessionId: trashItem.sessionId,
-  userId: trashItem.userId,
-  deleted_at: trashItem.deleted_at,
-  created_at: trashItem.created_at
+        id: trashItem.id,
+        activity: trashItem.activity,
+        datetime: trashItem.datetime,
+        category: trashItem.category,
+        sessionId: trashItem.sessionId,
+        userId: trashItem.userId,
+        deleted_at: trashItem.deleted_at,
+        created_at: trashItem.created_at,
       };
-      
+
       await this.repository.remove(trashItem);
-      
+
       return itemToRestore;
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -90,10 +97,10 @@ export class TrashRepositoryTypeORM {
     try {
       const allItems = await this.repository.find({
         order: {
-          deleted_at: "DESC"
-        }
+          deleted_at: 'DESC',
+        },
       });
-      
+
       if (allItems.length > 10) {
         const itemsToRemove = allItems.slice(10);
         await this.repository.remove(itemsToRemove);

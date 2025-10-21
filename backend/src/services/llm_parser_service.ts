@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import OpenAI from 'openai';
+import { config } from '../config/environment';
 import {
   AbuseError,
   DuplicateDataError,
@@ -8,7 +9,7 @@ import {
   NoActivityAndTimeError,
   NoActivityError,
   NoTimeError,
-  PastTimeError
+  PastTimeError,
 } from '../exceptions/exception_handler';
 import { UserSessionService } from './user_session_service';
 
@@ -37,25 +38,27 @@ export class LLMParserService {
   private userSessionService: UserSessionService;
 
   constructor() {
-    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.openai = new OpenAI({ apiKey: config.services.openaiApiKey });
     this.userSessionService = new UserSessionService();
   }
 
-  async parseReminderText(text: string, sessionId?: string): Promise<LLMParseResult | LLMErrorResult | LLMAbuseResult> {
+  async parseReminderText(
+    text: string,
+    sessionId?: string
+  ): Promise<LLMParseResult | LLMErrorResult | LLMAbuseResult> {
     try {
       const abuseCheck = await this.checkForAbuse(text, sessionId);
       if (abuseCheck) {
         return abuseCheck;
       }
 
-    
       if (sessionId) {
         const dailyUsageCheck = await this.userSessionService.checkDailyUsageLimit(sessionId);
         if (!dailyUsageCheck.canUse) {
           return {
             error: `Przekroczono dzienny limit użycia (${dailyUsageCheck.maxDailyUsage} na dzień). Limit zostanie zresetowany o północy. Możesz spróbować ponownie jutro.`,
             remainingAttempts: 0,
-            isBlocked: true
+            isBlocked: true,
           };
         }
       }
@@ -64,37 +67,46 @@ export class LLMParserService {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4.1',
         messages: [
-          { role: 'system', content: 'Jesteś ekspertem w parsowaniu tekstu. Twoim zadaniem jest wyciągnięcie z tekstu informacji o aktywności i wzorcu czasowym. Odpowiadaj TYLKO w formacie JSON.' },
-          { role: 'user', content: prompt }
+          {
+            role: 'system',
+            content:
+              'Jesteś ekspertem w parsowaniu tekstu. Twoim zadaniem jest wyciągnięcie z tekstu informacji o aktywności i wzorcu czasowym. Odpowiadaj TYLKO w formacie JSON.',
+          },
+          { role: 'user', content: prompt },
         ],
         temperature: 0.1,
-        max_tokens: 200
+        max_tokens: 200,
       });
       const content = response.choices[0]?.message?.content;
-      if (!content) throw new Error('Brak odpowiedzi od LLM');
+      if (!content) {
+        throw new Error('Brak odpowiedzi od LLM');
+      }
       const patternResult = this.parseLLMResponse(content);
-      if ('error' in patternResult) return patternResult;
-      
+      if ('error' in patternResult) {
+        return patternResult;
+      }
+
       const datetime = this.convertTimePatternToDateTime(patternResult.timePattern);
       if (!datetime) {
         return { error: 'Nie można ustawić przypomnienia w przeszłości' };
       }
-      
-      
+
       if (sessionId) {
         await this.userSessionService.recordDailyUsage(sessionId);
       }
-      
+
       return { activity: patternResult.activity, datetime };
     } catch (error) {
-      if (error instanceof InvalidGPTConversationError ||
-          error instanceof NoTimeError ||
-          error instanceof NoActivityError ||
-          error instanceof PastTimeError ||
-          error instanceof NoActivityAndTimeError ||
-          error instanceof InvalidTimeFormatError ||
-          error instanceof DuplicateDataError ||
-          error instanceof AbuseError) {
+      if (
+        error instanceof InvalidGPTConversationError ||
+        error instanceof NoTimeError ||
+        error instanceof NoActivityError ||
+        error instanceof PastTimeError ||
+        error instanceof NoActivityAndTimeError ||
+        error instanceof InvalidTimeFormatError ||
+        error instanceof DuplicateDataError ||
+        error instanceof AbuseError
+      ) {
         throw error;
       }
       throw new Error('Nie udało się sparsować tekstu przez AI');
@@ -108,8 +120,7 @@ export class LLMParserService {
         messages: [
           {
             role: 'system',
-            content: 
-            `Jesteś ekspertem w wykrywaniu nadużyć w aplikacji przypomnień. 
+            content: `Jesteś ekspertem w wykrywaniu nadużyć w aplikacji przypomnień. 
             Twoim zadaniem jest sprawdzenie, czy użytkownik używa aplikacji zgodnie z jej przeznaczeniem. 
             Przeznaczenie aplikacji to tworzenie przypomnień na podstawie ludzkiego języka. 
             Kazda próba komunikacji, która nie ma NIC wspólnego z ustawianiem przypomnień jest naduzyciem.
@@ -166,38 +177,39 @@ TO JAKO NADUZYCIE.
 !!!NIGDY!!! NIE ZWRACAJ TRUE JEZELI NIE JESTES CALKOWICIE PEWNY ZLYCH INTENCJI UZYKOWNIKA.
 
 Odpowiedz TYLKO w formacie JSON:
-{"isAbuse": true/false}`
+{"isAbuse": true/false}`,
           },
           {
             role: 'user',
-            content: `Sprawdź czy to nadużycie: "${text}"`
-          }
+            content: `Sprawdź czy to nadużycie: "${text}"`,
+          },
         ],
         temperature: 0.1,
-        max_tokens: 100
+        max_tokens: 100,
       });
 
       const content = response.choices[0]?.message?.content;
-      if (!content) return null;
+      if (!content) {
+        return null;
+      }
 
       const cleanResponse = content.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleanResponse);
 
       if (parsed.isAbuse && sessionId) {
-        
         const attemptResult = await this.userSessionService.recordAttempt(sessionId, true);
-        
+
         if (attemptResult.isBlocked) {
           return {
             error: 'Twoje konto zostało zablokowane na 24 godziny z powodu nieprawidłowego użycia.',
             remainingAttempts: 0,
-            isBlocked: true
+            isBlocked: true,
           };
         } else {
           return {
             error: `To pytanie nie dotyczy tworzenia przypomnień. Używaj aplikacji tylko do ustawiania przypomnień. Pozostało ${attemptResult.remainingAttempts} prób przed zablokowaniem.`,
             remainingAttempts: attemptResult.remainingAttempts,
-            isBlocked: false
+            isBlocked: false,
           };
         }
       }
@@ -351,9 +363,8 @@ Odpowiedz tylko w formacie JSON.`;
     try {
       const cleanResponse = response.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleanResponse);
-      
+
       if (parsed.error) {
-        
         switch (parsed.error) {
           case 'NO_TIME':
             throw new NoTimeError();
@@ -371,19 +382,21 @@ Odpowiedz tylko w formacie JSON.`;
             return { error: parsed.error };
         }
       }
-      
+
       if (!parsed.activity || !parsed.timePattern) {
         throw new NoActivityAndTimeError();
       }
-      
+
       return { activity: parsed.activity, timePattern: parsed.timePattern };
     } catch (error) {
-      if (error instanceof NoTimeError || 
-          error instanceof NoActivityError || 
-          error instanceof PastTimeError || 
-          error instanceof NoActivityAndTimeError ||
-          error instanceof InvalidTimeFormatError ||
-          error instanceof DuplicateDataError) {
+      if (
+        error instanceof NoTimeError ||
+        error instanceof NoActivityError ||
+        error instanceof PastTimeError ||
+        error instanceof NoActivityAndTimeError ||
+        error instanceof InvalidTimeFormatError ||
+        error instanceof DuplicateDataError
+      ) {
         throw error;
       }
       return { error: 'Nieprawidłowa odpowiedź od AI' };
@@ -395,16 +408,24 @@ Odpowiedz tylko w formacie JSON.`;
     const now = DateTime.now();
     const nowZoned = now.setZone(userTimeZone);
     const normalized = timePattern.trim().toLowerCase().replace(/\s+/g, ' ');
-    const dayNames = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela'];
-    
+    const dayNames = [
+      'poniedziałek',
+      'wtorek',
+      'środa',
+      'czwartek',
+      'piątek',
+      'sobota',
+      'niedziela',
+    ];
+
     const newFormatMatch = normalized.match(/^([+-])(\d{2}):(\d{2})$/);
-    
+
     if (newFormatMatch) {
       console.log(`[LLM Parser] Text matched new format pattern: ${timePattern}`);
       const sign = newFormatMatch[1];
       const hours = parseInt(newFormatMatch[2]);
       const minutes = parseInt(newFormatMatch[3]);
-      
+
       if (sign === '-') {
         console.log(`[LLM Parser] Past time detected: ${timePattern}`);
         return null;
@@ -413,7 +434,7 @@ Odpowiedz tylko w formacie JSON.`;
         return targetTime.toISO();
       }
     }
-    
+
     const tomorrowMatch = normalized.match(/^jutro (\d{1,2})(?::(\d{2}))?$/);
     if (tomorrowMatch) {
       console.log(`[LLM Parser] Text matched tomorrow pattern: ${timePattern}`);
@@ -423,34 +444,44 @@ Odpowiedz tylko w formacie JSON.`;
       const targetTime = tomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       return targetTime.toISO();
     }
-    
+
     const dayAfterTomorrowMatch = normalized.match(/^po jutrze (\d{1,2})(?::(\d{2}))?$/);
     if (dayAfterTomorrowMatch) {
       console.log(`[LLM Parser] Text matched day after tomorrow pattern: ${timePattern}`);
       const hours = parseInt(dayAfterTomorrowMatch[1]);
       const minutes = dayAfterTomorrowMatch[2] ? parseInt(dayAfterTomorrowMatch[2]) : 0;
       const dayAfterTomorrow = nowZoned.plus({ days: 2 });
-      const targetTime = dayAfterTomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      const targetTime = dayAfterTomorrow.set({
+        hour: hours,
+        minute: minutes,
+        second: 0,
+        millisecond: 0,
+      });
       return targetTime.toISO();
     }
-    
+
     const pojutrzeMatch = normalized.match(/^pojutrze (\d{1,2})(?::(\d{2}))?$/);
     if (pojutrzeMatch) {
       console.log(`[LLM Parser] Text matched pojutrze pattern: ${timePattern}`);
       const hours = parseInt(pojutrzeMatch[1]);
       const minutes = pojutrzeMatch[2] ? parseInt(pojutrzeMatch[2]) : 0;
       const dayAfterTomorrow = nowZoned.plus({ days: 2 });
-      const targetTime = dayAfterTomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      const targetTime = dayAfterTomorrow.set({
+        hour: hours,
+        minute: minutes,
+        second: 0,
+        millisecond: 0,
+      });
       return targetTime.toISO();
     }
-    
+
     const todayMatch = normalized.match(/^dzi(?:ś|s(?:iaj)?) (\d{1,2})(?::(\d{2}))?$/);
     if (todayMatch) {
       console.log(`[LLM Parser] Text matched today pattern: ${timePattern}`);
       const hours = parseInt(todayMatch[1]);
       const minutes = todayMatch[2] ? parseInt(todayMatch[2]) : 0;
       let targetTime = nowZoned.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
-      
+
       if (targetTime <= nowZoned) {
         targetTime = targetTime.plus({ days: 1 });
       }
@@ -458,7 +489,6 @@ Odpowiedz tylko w formacie JSON.`;
       return targetTime.toISO();
     }
 
-    
     const plainTimeMatch = normalized.match(/^(\d{1,2}):(\d{2})$/);
     if (plainTimeMatch) {
       console.log(`[LLM Parser] Text matched plain time pattern: ${timePattern}`);
@@ -485,8 +515,10 @@ Odpowiedz tylko w formacie JSON.`;
 
       return targetTime.toISO();
     }
-    
-    const weeksMatch = normalized.match(/^za (\d+) tygodnie (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/);
+
+    const weeksMatch = normalized.match(
+      /^za (\d+) tygodnie (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/
+    );
     if (weeksMatch) {
       console.log(`[LLM Parser] Text matched weeks day pattern: ${timePattern}`);
       const weeks = parseInt(weeksMatch[1]);
@@ -494,61 +526,77 @@ Odpowiedz tylko w formacie JSON.`;
       const hours = parseInt(weeksMatch[3]);
       const minutes = weeksMatch[4] ? parseInt(weeksMatch[4]) : 0;
       const dayIndex = dayNames.indexOf(dayName);
-      
+
       if (dayIndex !== -1) {
         const nextDay = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
         const targetTime = nextDay.plus({ weeks });
         return targetTime.toISO();
       }
     }
-    
+
     const weekMatch = normalized.match(/^za tydzień (\d{1,2})(?::(\d{2}))?$/);
     if (weekMatch) {
       console.log(`[LLM Parser] Text matched week pattern: ${timePattern}`);
       const hours = parseInt(weekMatch[1]);
       const minutes = weekMatch[2] ? parseInt(weekMatch[2]) : 0;
-      const targetTime = now.plus({ weeks: 1 }).setZone(userTimeZone).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      const targetTime = now
+        .plus({ weeks: 1 })
+        .setZone(userTimeZone)
+        .set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       return targetTime.toISO();
     }
-    
-    const weekDayMatch = normalized.match(/^za tydzień (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/);
+
+    const weekDayMatch = normalized.match(
+      /^za tydzień (poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/
+    );
     if (weekDayMatch) {
       console.log(`[LLM Parser] Text matched week day pattern: ${timePattern}`);
       const dayName = weekDayMatch[1];
       const hours = parseInt(weekDayMatch[2]);
       const minutes = weekDayMatch[3] ? parseInt(weekDayMatch[3]) : 0;
       const dayIndex = dayNames.indexOf(dayName);
-      
+
       if (dayIndex !== -1) {
         const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
         return targetTime.toISO();
       }
     }
-    
-    const dayMatch = normalized.match(/^(poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/);
+
+    const dayMatch = normalized.match(
+      /^(poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela) (\d{1,2})(?::(\d{2}))?$/
+    );
     if (dayMatch) {
       console.log(`[LLM Parser] Text matched day of week pattern: ${timePattern}`);
       const dayName = dayMatch[1];
       const hours = parseInt(dayMatch[2]);
       const minutes = dayMatch[3] ? parseInt(dayMatch[3]) : 0;
       const dayIndex = dayNames.indexOf(dayName);
-      
+
       if (dayIndex !== -1) {
         const targetTime = this.getNextDayOfWeekLuxon(dayIndex, hours, minutes, userTimeZone);
         return targetTime.toISO();
       }
     }
-    
+
     return null;
   }
-  
-  private getNextDayOfWeekLuxon(targetDayIndex: number, hours: number, minutes: number, timeZone: string): DateTime {
+
+  private getNextDayOfWeekLuxon(
+    targetDayIndex: number,
+    hours: number,
+    minutes: number,
+    timeZone: string
+  ): DateTime {
     const now = DateTime.now().setZone(timeZone);
     const currentDayIndex = now.weekday === 7 ? 6 : now.weekday - 1;
-    
+
     let daysToAdd = targetDayIndex - currentDayIndex;
-    if (daysToAdd <= 0) daysToAdd += 7;
-    
-    return now.plus({ days: daysToAdd }).set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+    if (daysToAdd <= 0) {
+      daysToAdd += 7;
+    }
+
+    return now
+      .plus({ days: daysToAdd })
+      .set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
   }
 }

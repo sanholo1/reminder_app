@@ -1,0 +1,339 @@
+name: 🔄 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: reminder-app
+
+jobs:
+  # 🧪 Testing Jobs
+  test-backend:
+    name: 🧪 Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: reminder_app_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 🏗️ Build TypeScript
+        working-directory: ./backend
+        run: npm run build
+
+      - name: 🧪 Run tests
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: reminder_app_test
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          JWT_SECRET: test_jwt_secret_that_is_32_characters_long_for_testing_purposes
+        run: npm test
+
+      - name: 📊 Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+
+  test-frontend:
+    name: 🧪 Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🧪 Run tests
+        working-directory: ./frontend
+        run: npm test -- --coverage --watchAll=false
+
+      - name: 🏗️ Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: 📊 Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+  # 🔍 Code Quality Jobs
+  lint-and-security:
+    name: 🔍 Code Quality & Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 📦 Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🔍 Lint backend
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: 🔍 Lint frontend
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: 🔒 Security audit backend
+        working-directory: ./backend
+        run: npm audit --audit-level=moderate
+
+      - name: 🔒 Security audit frontend
+        working-directory: ./frontend
+        run: npm audit --audit-level=moderate
+
+      - name: 📝 TypeScript check backend
+        working-directory: ./backend
+        run: npm run type-check
+
+      - name: 📝 TypeScript check frontend
+        working-directory: ./frontend
+        run: npm run type-check
+
+  # 🐳 Docker Build Jobs
+  build-images:
+    name: 🐳 Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, lint-and-security]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract metadata for backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/backend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: 🏷️ Extract metadata for frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/frontend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: 🏗️ Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏗️ Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 🚀 Deployment Jobs
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          echo "Backend image: ${{ env.REGISTRY }}/${{ github.repository }}/backend:develop"
+          echo "Frontend image: ${{ env.REGISTRY }}/${{ github.repository }}/frontend:develop"
+          # Add your staging deployment commands here
+          # Examples:
+          # - SSH to staging server and update docker-compose
+          # - Use kubectl to update Kubernetes deployments
+          # - Call cloud provider APIs (AWS ECS, Azure Container Instances, etc.)
+
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to production
+        run: |
+          echo "🚀 Deploying to production environment..."
+          echo "Backend image: ${{ env.REGISTRY }}/${{ github.repository }}/backend:main"
+          echo "Frontend image: ${{ env.REGISTRY }}/${{ github.repository }}/frontend:main"
+          # Add your production deployment commands here
+          # Examples:
+          # - SSH to production server and update docker-compose
+          # - Use kubectl to update Kubernetes deployments
+          # - Call cloud provider APIs (AWS ECS, Azure Container Instances, etc.)
+
+  # 🏷️ Release Jobs
+  create-release:
+    name: 🏷️ Create Release
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]')
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🏷️ Get version from package.json
+        id: package-version
+        run: |
+          VERSION=$(node -p "require('./backend/package.json').version")
+          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 🏷️ Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.package-version.outputs.version }}
+          release_name: Release ${{ steps.package-version.outputs.version }}
+          body: |
+            ## 🚀 Release ${{ steps.package-version.outputs.version }}
+            
+            ### Changes
+            - Auto-generated release from main branch
+            - Backend image: `${{ env.REGISTRY }}/${{ github.repository }}/backend:${{ steps.package-version.outputs.version }}`
+            - Frontend image: `${{ env.REGISTRY }}/${{ github.repository }}/frontend:${{ steps.package-version.outputs.version }}`
+            
+            ### Deployment
+            ```bash
+            # Pull latest images
+            docker pull ${{ env.REGISTRY }}/${{ github.repository }}/backend:${{ steps.package-version.outputs.version }}
+            docker pull ${{ env.REGISTRY }}/${{ github.repository }}/frontend:${{ steps.package-version.outputs.version }}
+            
+            # Update docker-compose.yml with new image tags
+            # Then restart services
+            docker-compose up -d
+            ```
+          draft: false
+          prerelease: false
+
+  # 🧹 Cleanup Jobs
+  cleanup:
+    name: 🧹 Cleanup Old Images
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [deploy-production]
+
+    steps:
+      - name: 🧹 Delete old container images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'reminder-app/backend'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: true
+
+      - name: 🧹 Delete old container images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'reminder-app/frontend'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: true

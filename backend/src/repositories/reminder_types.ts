@@ -7,5 +7,3 @@ export interface ReminderEntity {
   userId: string;
   created_at?: Date;
 }
-
-

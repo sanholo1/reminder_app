@@ -32,11 +32,11 @@ export class GetRemindersHandler {
           activity: reminder.activity,
           datetime: reminder.datetime.toISOString(),
           category: reminder.category,
-          created_at: reminder.created_at ? reminder.created_at.toISOString() : ''
-        }))
+          created_at: reminder.created_at ? reminder.created_at.toISOString() : '',
+        })),
       };
     } catch (error) {
       throw new InternalServerError('Błąd podczas pobierania przypomnień z bazy danych');
     }
   }
-} 
+}

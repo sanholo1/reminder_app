@@ -15,7 +15,7 @@ export interface ActiveReminderDTO {
 
 export interface GetActiveRemindersResult {
   activeReminders: ActiveReminderDTO[];
-  currentTime: string;
+  _currentTime: string;
 }
 
 export class GetActiveRemindersHandler {
@@ -36,14 +36,12 @@ export class GetActiveRemindersHandler {
           activity: reminder.activity,
           datetime: reminder.datetime.toISOString(),
           category: reminder.category,
-          created_at: reminder.created_at ? reminder.created_at.toISOString() : undefined
+          created_at: reminder.created_at ? reminder.created_at.toISOString() : undefined,
         })),
-        currentTime: now.toISOString()
+        _currentTime: now.toISOString(),
       };
     } catch (error) {
       throw new InternalServerError('Błąd podczas pobierania aktywnych przypomnień z bazy danych');
     }
   }
 }
-
-

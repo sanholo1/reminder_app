@@ -23,11 +23,11 @@ export class DeleteReminderHandler {
       await this.reminderRepository.delete(command.id, command.userId);
       return {
         success: true,
-        message: 'Przypomnienie zostało pomyślnie usunięte'
+        message: 'Przypomnienie zostało pomyślnie usunięte',
       };
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
+    } catch (_error) {
+      if (_error instanceof NotFoundError) {
+        throw _error;
       }
       throw new Error('Błąd podczas usuwania przypomnienia');
     }

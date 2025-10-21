@@ -1,0 +1,193 @@
+name: 📊 Performance & Monitoring
+
+on:
+  schedule:
+    # Run performance tests weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    name: 🏃 Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: reminder_app_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install and start backend
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: reminder_app_test
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          JWT_SECRET: test_jwt_secret_that_is_32_characters_long_for_testing_purposes
+        run: |
+          npm ci
+          npm run build
+          npm start &
+          sleep 10
+
+      - name: 📦 Install and build frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: 🌐 Serve frontend
+        working-directory: ./frontend
+        run: |
+          npx serve -s build -l 3000 &
+          sleep 5
+
+      - name: 🏃 Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            http://localhost:3000
+          configPath: './.github/lighthouse/lighthouse.config.js'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  load-testing:
+    name: 🚀 Load Testing
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: reminder_app_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install and start backend
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: reminder_app_test
+          DB_USER: root
+          DB_PASSWORD: testpassword
+          JWT_SECRET: test_jwt_secret_that_is_32_characters_long_for_testing_purposes
+        run: |
+          npm ci
+          npm run build
+          npm start &
+          sleep 10
+
+      - name: 🚀 Install Artillery.js
+        run: npm install -g artillery@latest
+
+      - name: 🚀 Run load tests
+        run: |
+          artillery run ./.github/artillery/load-test.yml
+        
+      - name: 📊 Upload load test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: load-test-results
+          path: artillery-report.json
+
+  bundle-analysis:
+    name: 📦 Bundle Size Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 📦 Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: 📊 Analyze bundle size
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const buildDir = './frontend/build/static/js';
+            const files = fs.readdirSync(buildDir);
+            const jsFiles = files.filter(file => file.endsWith('.js'));
+            
+            let totalSize = 0;
+            let results = '## 📦 Bundle Size Analysis\n\n';
+            results += '| File | Size | Gzipped |\n';
+            results += '|------|------|---------|\n';
+            
+            for (const file of jsFiles) {
+              const filePath = path.join(buildDir, file);
+              const stats = fs.statSync(filePath);
+              const sizeKB = (stats.size / 1024).toFixed(2);
+              totalSize += stats.size;
+              results += `| ${file} | ${sizeKB} KB | - |\n`;
+            }
+            
+            results += `\n**Total JavaScript size:** ${(totalSize / 1024).toFixed(2)} KB\n`;
+            
+            console.log(results);
+            
+            // Comment on PR if this is a pull request
+            if (context.payload.pull_request) {
+              github.rest.issues.createComment({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: results
+              });
+            }

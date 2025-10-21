@@ -40,13 +40,11 @@ export class GetTrashItemsHandler {
           category: i.category,
           sessionId: i.sessionId,
           deleted_at: i.deleted_at.toISOString(),
-          created_at: i.created_at ? i.created_at.toISOString() : undefined
-        }))
+          created_at: i.created_at ? i.created_at.toISOString() : undefined,
+        })),
       };
     } catch (error) {
       throw new InternalServerError('Błąd podczas pobierania elementów z kosza');
     }
   }
 }
-
-
