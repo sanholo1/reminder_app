@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
 interface ReminderFormProps {
   input: string;
@@ -16,6 +17,31 @@ interface ReminderFormProps {
 const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, handleSubmit, dailyUsageInfo }) => {
   
   const { t } = useLanguage();
+  const {
+    isListening,
+    transcript,
+    error: speechError,
+    startListening,
+    stopListening,
+    isSupported,
+    resetTranscript
+  } = useSpeechRecognition();
+
+  // Aktualizacja input gdy dostaniemy transcript z rozpoznawania mowy
+  useEffect(() => {
+    if (transcript && !isListening) {
+      setInput(transcript.trim());
+      resetTranscript();
+    }
+  }, [transcript, isListening, setInput, resetTranscript]);
+
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
   
 
   return (
@@ -66,14 +92,47 @@ const ReminderForm: React.FC<ReminderFormProps> = ({ input, setInput, loading, h
         <div className="input-container">
           <input
             type="text"
-            value={input}
+            value={input || transcript}
             onChange={e => setInput(e.target.value)}
             placeholder={t('form.placeholder')}
             maxLength={200}
             className="input"
           />
           
+          {/* Przycisk mikrofonu */}
+          {isSupported && (
+            <button
+              type="button"
+              onClick={handleVoiceToggle}
+              disabled={loading}
+              className={`voice-button ${isListening ? 'listening' : ''}`}
+              title={isListening ? t('voice.clickToStop') : t('voice.clickToSpeak')}
+            >
+              {isListening ? '🔴' : '🎤'}
+            </button>
+          )}
         </div>
+
+        {/* Status głosowy */}
+        {isListening && (
+          <div className="voice-status-indicator">
+            🎤 {t('voice.listening')}
+          </div>
+        )}
+
+        {/* Podgląd rozpoznanego tekstu */}
+        {transcript && isListening && (
+          <div className="voice-preview">
+            <strong>{t('voice.recognized')}</strong> {transcript}
+          </div>
+        )}
+
+        {/* Błędy rozpoznawania mowy */}
+        {speechError && (
+          <div className="error">
+            {speechError}
+          </div>
+        )}
         
         <button
           type="submit"

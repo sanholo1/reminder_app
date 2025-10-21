@@ -2,18 +2,34 @@ require('dotenv').config();
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const { randomUUID } = require('crypto');
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
+
+// Parse command-line arguments
+const argv = yargs(hideBin(process.argv))
+  .option('username', {
+    alias: 'u',
+    type: 'string',
+    demandOption: true,
+    describe: 'Username for the new user'
+  })
+  .option('password', {
+    alias: 'p',
+    type: 'string',
+    demandOption: true,
+    describe: 'Password for the new user'
+  })
+  .help()
+  .argv;
 
 async function addUser() {
-  const username = 'blazej';
-  const password = 'jamrozik';
-
+  const username = argv.username;
+  const password = argv.password;
 
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-
   const userId = randomUUID();
-
 
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST,
@@ -43,3 +59,5 @@ async function addUser() {
 }
 
 addUser();
+
+// node add_user.js --username=janek --password=haslo123

@@ -443,6 +443,38 @@ a:hover {
   transition: all 0.3s ease;
 }
 
+.voice-button {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.voice-button:hover {
+  opacity: 1;
+  background: var(--bg-surface-hover);
+}
+
+.voice-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.voice-button.listening {
+  opacity: 1;
+  animation: pulse 1.5s infinite;
+  background: rgba(220, 20, 60, 0.1);
+}
+
 .input:focus {
   outline: none;
   border-color: var(--accent-primary);
