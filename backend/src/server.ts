@@ -29,10 +29,13 @@ application.use(requestLogger);
 // Health routes (no auth or session required)
 application.use('/', healthRouter);
 
+// Auth routes (no session blocking required)
+application.use('/auth', authRouter);
+
+// Apply session middleware for other routes
 application.use(sessionMiddleware.extractSessionId);
 application.use(sessionMiddleware.checkBlocked);
 
-application.use('/auth', authRouter);
 application.use('/', reminderRouter);
 application.use((err: any, req: Request, res: Response, next: NextFunction) => {
   logger.error('Error handler called', { error: (err && err.message) || String(err) });

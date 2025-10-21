@@ -25,7 +25,7 @@ router.post('/login', async (req: Request, res: Response) => {
     if (!ok) {
       return res.status(401).json({ error: 'Nieprawidłowe dane logowania' });
     }
-    const token = jwt.sign({ userId: user.id }, config.auth.jwtSecret, { expiresIn: '24h' });
+    const token = jwt.sign({ userId: user.id, username: user.username }, config.auth.jwtSecret, { expiresIn: '24h' });
     return res.json({ token });
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Błąd logowania' });

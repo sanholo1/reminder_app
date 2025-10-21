@@ -35,8 +35,8 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
-      DB_HOST: database
-      DB_PORT: 3306
+      DB_HOST: ${DB_HOST:-database}
+      DB_PORT: ${DB_PORT:-3306}
       DB_NAME: ${DB_NAME:-reminder_app}
       DB_USER: ${DB_USER:-reminder_user}
       DB_USERNAME: ${DB_USERNAME:-reminder_user}
