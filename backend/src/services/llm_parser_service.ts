@@ -63,14 +63,15 @@ export class LLMParserService {
         }
       }
 
-      const prompt = this.buildPrompt(text);
+      const normalizedText = this.normalizeInput(text);
+      const prompt = this.buildPrompt(normalizedText);
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4.1',
         messages: [
           {
             role: 'system',
             content:
-              'Jesteś ekspertem w parsowaniu tekstu. Twoim zadaniem jest wyciągnięcie z tekstu informacji o aktywności i wzorcu czasowym. Odpowiadaj TYLKO w formacie JSON.',
+              'You are an expert text parser for reminder applications. Your task is to extract the activity and time pattern from user input. Return ONLY valid JSON - no additional text, no code blocks, no explanations. Format: {"activity": "...", "timePattern": "..."}. If there is an error, return {"error": "ERROR_CODE"} where ERROR_CODE is one of: NO_ACTIVITY_AND_TIME, NO_TIME, NO_ACTIVITY, INVALID_TIME_FORMAT, PAST_TIME, DUPLICATE_DATA.',
           },
           { role: 'user', content: prompt },
         ],
@@ -113,6 +114,51 @@ export class LLMParserService {
     }
   }
 
+  private normalizeInput(text: string): string {
+    // Convert Polish and English number words to digits
+    const numberMappings: { [key: string]: number } = {
+      // English
+      'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+      'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+      'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+      'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20,
+      'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60,
+      // Polish
+      'jeden': 1, 'dwa': 2, 'trzy': 3, 'cztery': 4, 'pięć': 5,
+      'sześć': 6, 'siedem': 7, 'osiem': 8, 'dziewięć': 9, 'dziesięć': 10,
+      'jedenaście': 11, 'dwanaście': 12, 'trzynaście': 13, 'czternaście': 14, 'piętnaście': 15,
+      'szesnaście': 16, 'siedemnaście': 17, 'osiemnaście': 18, 'dziewiętnaście': 19, 'dwadzieścia': 20,
+      'trzydzieści': 30, 'czterdzieści': 40, 'pięćdziesiąt': 50, 'sześćdziesiąt': 60,
+    };
+
+    let normalized = text.toLowerCase().trim();
+    
+    // Handle special fractions (half, pół, etc.)
+    normalized = normalized.replace(/\bhalf\s*(hour|godzina)\b/gi, '0:30');
+    normalized = normalized.replace(/\bpół\s*(godziny|godzin|godzinie)\b/gi, '0:30');
+    normalized = normalized.replace(/\bpół\b(?=\s*(?:godziny|godzin|godzinie))/gi, '30 minutes');
+
+    // Replace number words with digits
+    for (const [word, num] of Object.entries(numberMappings)) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      normalized = normalized.replace(regex, num.toString());
+    }
+
+    // Replace common time expressions
+    normalized = normalized.replace(/\bo'clock\b/gi, '');
+    normalized = normalized.replace(/\bam\b|\bpm\b/gi, '');
+    normalized = normalized.replace(/\ba\.m\.\b|\bp\.m\.\b/gi, '');
+    normalized = normalized.replace(/\brano\b|\bwieczorem\b|\bnoc\b/gi, '');
+    
+    // Normalize spacing (multiple spaces to single space)
+    normalized = normalized.replace(/\s+/g, ' ');
+    
+    // Handle edge cases with slash or dash separated times
+    normalized = normalized.replace(/(\d{1,2})[\/\-:](\d{1,2})\s*(am|pm)?/gi, '$1:$2');
+
+    return normalized;
+  }
+
   private async checkForAbuse(text: string, sessionId?: string): Promise<LLMAbuseResult | null> {
     try {
       const response = await this.openai.chat.completions.create({
@@ -120,68 +166,43 @@ export class LLMParserService {
         messages: [
           {
             role: 'system',
-            content: `Jesteś ekspertem w wykrywaniu nadużyć w aplikacji przypomnień. 
-            Twoim zadaniem jest sprawdzenie, czy użytkownik używa aplikacji zgodnie z jej przeznaczeniem. 
-            Przeznaczenie aplikacji to tworzenie przypomnień na podstawie ludzkiego języka. 
-            Kazda próba komunikacji, która nie ma NIC wspólnego z ustawianiem przypomnień jest naduzyciem.
+            content: `You are an expert at detecting abuse in a reminder application.
+Your task is to determine if the user is using the application as intended (creating reminders).
+The application is designed ONLY for creating reminders based on natural language input.
 
-Aplikacja służy TYLKO do ustawiania przypomnień. Użytkownik powinien podawać:
-- Aktywność do wykonania
-- Czas wykonania (za X godzin/minut, jutro o X, w poniedziałek o X, etc.)
+APPLICATION PURPOSE:
+The app allows users to set reminders by specifying:
+- An activity/task to be reminded about
+- A time for the reminder (in X hours/minutes, tomorrow at X, next Monday at X, etc.)
 
-Nadużycie to pytania i żądania niezwiązane z ustawianiem przypomnień.
-Naduzycie to wszelka proba komunikacji z gpt oraz wszelka prosba o odpowiedz na dowolne pytanie.
-Naduzycie to wyrazanie opinii na dowolny temat.
-Naduzycie to oczekiwanie wyrazenia opinii na dowolny temat.
-Naduzycie to pisanie bezsensownych bzdur lub dowolnego ciągu znaków, który nie ma sensu.
+WHAT CONSTITUTES ABUSE:
+Abuse includes attempts to use the app for purposes OTHER than creating reminders:
+- Personal questions ("How are you?", "Tell me a joke")
+- Requests for help unrelated to reminders ("Help me with math", "How do I code?")
+- Requests for information ("What's the weather?", "What day is it?")
+- Opinion requests ("What do you think about politics?")
+- Creative requests unrelated to reminders ("Write me a poem", "Draw a picture")
+- Random/nonsensical input ("asdadwasdwd", "123123QSWDSD")
+- Any attempt to interact with the AI beyond reminder creation
+- Calculations or translations
 
-WAŻNE: NIE WSZYSTKO JEST NADUŻYCIEM
+WHAT IS NOT ABUSE (These are valid reminder attempts - handle them as errors in the main parser):
+- Attempting to set a reminder in the past ("remind me yesterday at 3pm") → VALID ATTEMPT, NOT ABUSE
+- Attempting to set a reminder with missing info ("remind me tomorrow") → VALID ATTEMPT, NOT ABUSE
+- Ambiguous activity names ("do the thing tomorrow at 5pm") → VALID ATTEMPT, NOT ABUSE
+- Any input where the user's INTENT is clearly to create a reminder, even if the format is wrong
 
-Jeśli użytkownik próbuje ustawić przypomnienie w przeszłości (np. "wczoraj", "ubiegły poniedziałek"), 
-to NIE jest to nadużycie - to jest błąd, który zostanie obsłużony przez główny parser.
-Jeśli użytkownik podal aktywnosc, ktora nie ma dla gpt sensu, to NIE jest to naduzycie, uzytkownik 
-ma prawo do nazwanie przypomnienia w czytelny tylko dla niego sposób.
-Jeśli uzytkownik nie podał jakiegoś fragmentu przypomnienia to nie jest to naduzycie 
-i taki błąd zostanie obsluzony przez główny parser.
+CRITICAL RULE:
+Only return true if you are 100% certain the user is trying to abuse the system.
+Default to false (not abuse) when in doubt. Users have freedom in how they describe their reminders.
 
-PRZYKŁADY NADUŻYĆ:
-- "Jak się masz?" - pytania osobiste
-- "Opowiedz mi żart" - prośby o rozrywkę
-- "Pomóż mi z matematyką" - prośby o pomoc
-- "Co myślisz o polityce?" - pytania o opinie
-- "Przetłumacz to" - prośby o tłumaczenie
-- "Napisz mi wiersz" - prośby o kreatywność
-- "Narysuj mi obrazek" - prośba o kreatywność
-- "Oblicz 2+2" - prośby o obliczenia
-- "Jak napisać kod?" - prośby o pomoc programistyczną
-- "Jaka jest pogoda?" - pytanie o informację
-- "Jaki mamy dzień tygodnia?" - pytanie o informację
-- "Jaki jest wynik meczu?" - pytanie o informację
-- "asdadwasdwd" - bezsensowny ciąg znaków
-- "123123123QSWDSD)(*(@))" - bezsensowny ciąg znaków
-
-Przykłady prawidłowego użycia (TO NIE SA NADUZYCIA):
-- "Przypomnij mi za godzinę" - OK
-- "Zadzwoń do mamy jutro o 15:00" - OK
-- "Kup chleb za 30 minut" - OK
-- "Spotkanie w poniedziałek o 9:00" - OK
-- "wczoraj o 15:00 spotkanie" - OK 
-- "ubiegły poniedziałek o 10:00" - OK 
-- "jutro" - OK
-- "Pobiegaj" - OK
-- "Narysuj obraz jutro o 14" - OK
-
-ZWROC UWAGE, CZY UZYTKOWNIK FAKTYCZNIE MA NA CELU NADUZYCIE, CZY JEGO CELEM JEST USTAWIENIE PRZYPOMNIENIA, ALE TO TY BLEDNIE INTERPRETUJESZ
-TO JAKO NADUZYCIE.
-
-!!!NIGDY!!! NIE ZWRACAJ TRUE JEZELI NIE JESTES CALKOWICIE PEWNY ZLYCH INTENCJI UZYKOWNIKA.
-
-Odpowiedz TYLKO w formacie JSON:
+RESPONSE FORMAT:
+Return ONLY valid JSON with no additional text:
 {"isAbuse": true/false}`,
           },
           {
             role: 'user',
-            content: `Sprawdź czy to nadużycie: "${text}"`,
+            content: `Check if this is abuse: "${text}"`,
           },
         ],
         temperature: 0.1,
@@ -228,135 +249,111 @@ Odpowiedz TYLKO w formacie JSON:
     const hour = now.getHours();
     const minute = now.getMinutes();
 
-    return `Przeanalizuj poniższy tekst i wyciągnij informacje o aktywności oraz wzorcu czasowym.
+    return `Extract reminder activity and time pattern from the user input.
 
-WAŻNE ZASADY:
-1. Zwróć DOKŁADNIE wzorzec czasowy z listy o nazwie DOKŁADNE WZORCE CZASOWE ponizej, nie naturalny język.
-2. Jeśli użytkownik nie poda ani aktywności ani czasu, zwróć błąd: {"error": "NO_ACTIVITY_AND_TIME"}.
-3. Jeśli użytkownik nie poda godziny, zwróć błąd: {"error": "NO_TIME"}.
-4. Jeśli użytkownik nie poda aktywności, zwróć błąd: {"error": "NO_ACTIVITY"}.
-5. Jeśli użytkownik poda tylko godzinę bez dnia (np. "spotkanie o 15"), sprawdź czy godzina już minęła - jeśli tak, ustaw na tą godzinę, ale na jutro.
-6. Jeśli w zdaniu jest cokolwiek, co wskazuje na przeszłość (np. "wczoraj", "ubiegły poniedziałek", "pół godziny temu"), zwróć błąd: {"error": "PAST_TIME"}.
-7. Jeśli użytkownik poda nieprawidłowy format godziny, zwróć błąd: {"error": "INVALID_TIME_FORMAT"}
-8. Jeśli użytkownik poda kilka różnych aktywności lub czasów lub dni, zwróć błąd: {"error": "DUPLICATE_DATA"}
+YOUR TASK:
+1. Extract the ACTIVITY (what the user wants to be reminded about)
+2. Extract the TIME PATTERN (when the reminder should occur)
+3. Return ONLY valid JSON format - no additional text
 
-WALIDACJA FORMATU GODZINY:
-- Prawidłowe formaty: "14", "14:00", "15:30", "09:15", "23:45"
-- Nieprawidłowe formaty: "134", "25:00", "14:60", "99", "14:99", "25:30", "14:70"
-- Godzina musi być w zakresie 0-23
-- Minuty muszą być w zakresie 0-59
-- Jeśli podano tylko godzinę bez minut (np. "14"), automatycznie dodaj ":00"
+MANDATORY VALIDATION RULES:
+1. Return ONLY exact time patterns from the ALLOWED TIME PATTERNS list below
+2. If both activity AND time are missing → error: "NO_ACTIVITY_AND_TIME"
+3. If time is missing → error: "NO_TIME"
+4. If activity is missing → error: "NO_ACTIVITY"
+5. If time format is invalid → error: "INVALID_TIME_FORMAT"
+6. If user specifies multiple different activities OR multiple different times/dates → error: "DUPLICATE_DATA"
+7. If time indicates the PAST (yesterday, last Monday, 30 minutes ago, etc.) → error: "PAST_TIME"
+8. If hour is specified alone without a date and that hour already passed today → set for tomorrow at that hour
 
-Tekst: "${text}"
+TIME FORMAT VALIDATION RULES:
+- Valid hour formats: 0-23 (24-hour format)
+- Valid minute formats: 0-59
+- If only hour given without minutes (e.g., "at 14") → convert to "14:00"
+- Invalid formats: "25:00", "14:60", "99", "25:30", "-5:00", "25h", etc.
 
- DOKŁADNE WZORCE CZASOWE (używaj tylko tych):
-- "+HH:MM" - za określoną liczbę godzin i minut (np. "+00:30", "+02:15", "+05:05")
-- "-HH:MM" - dla czasu w przeszłości (np. "-03:30")
-- "jutro HH:MM" - jutro o konkretnej godzinie (np. "jutro 15:00", "jutro 09:00")
-- "po jutrze HH:MM" - pojutrze o konkretnej godzinie (np. "po jutrze 15:00", "po jutrze 09:00")
-- "pojutrze HH:MM" - pojutrze o konkretnej godzinie (np. "pojutrze 15:00", "pojutrze 09:00")
-- "dziś HH:MM" - dziś o konkretnej godzinie (np. "dziś 15:00", "dziś 08:00")
-- "poniedziałek HH:MM" - najbliższy poniedziałek o HH:MM
-- "wtorek HH:MM" - najbliższy wtorek o HH:MM
-- "środa HH:MM" - najbliższa środa o HH:MM
-- "czwartek HH:MM" - najbliższy czwartek o HH:MM
-- "piątek HH:MM" - najbliższy piątek o HH:MM
-- "sobota HH:MM" - najbliższa sobota o HH:MM
-- "niedziela HH:MM" - najbliższa niedziela o HH:MM
-- "za tydzień HH:MM" - za tydzień o HH:MM
- - "za tydzień dzień HH:MM" - za tydzień w konkretny dzień o HH:MM (np. "za tydzień poniedziałek 12:00")
- - "za X tygodnie dzień HH:MM" - za X tygodni w konkretny dzień o HH:MM (np. "za 2 tygodnie poniedziałek 12:00")
+ALLOWED TIME PATTERNS (use ONLY these - no other variations):
+- "+HH:MM" - in X hours and minutes (e.g., "+00:30", "+02:15", "+05:05")
+- "jutro HH:MM" - tomorrow at specific time (e.g., "jutro 15:00", "jutro 09:00")
+- "po jutrze HH:MM" - day after tomorrow at time (e.g., "po jutrze 15:00")
+- "pojutrze HH:MM" - day after tomorrow at time (e.g., "pojutrze 15:00")
+- "dziś HH:MM" - today at specific time (e.g., "dziś 15:00", "dziś 08:00")
+- "za X dni HH:MM" - in X days at time (e.g., "za 3 dni 14:00", "za 5 dni 10:30")
+- "poniedziałek HH:MM" through "niedziela HH:MM" - specific day of week at time (e.g., "poniedziałek 08:00")
+- "za tydzień HH:MM" - in one week at time (e.g., "za tydzień 15:00")
+- "za tydzień dzień HH:MM" - in one week on specific day (e.g., "za tydzień poniedziałek 12:00")
+- "za X tygodnie dzień HH:MM" - in X weeks on day at time (e.g., "za 2 tygodnie piątek 18:00")
 
-PRZYKŁADY KONWERSJI CZASU:
-- "za dwie godziny" → "+02:00"
-- "za godzinę" → "+01:00"
-- "za trzy godziny" → "+03:00"
-- "za 15 minut" → "+00:15"
-- "za godzinę i 30 minut" → "+01:30"
-- "za dwie godziny i piętnaście minut" → "+02:15"
-- "za 5 godzin i 5 minut" → "+05:05"
-- "za 30 minut" → "+00:30"
-- "jutro o 9 rano" → "jutro 09:00"
-- "jutro o 15:00" → "jutro 15:00"
-- "po jutrze o 9 rano" → "po jutrze 09:00"
-- "po jutrze o 15:00" → "po jutrze 15:00"
-- "pojutrze o 9 rano" → "pojutrze 09:00"
-- "pojutrze o 15:00" → "pojutrze 15:00"
-- "dziś o 8" → "dziś 08:00"
-- "w poniedziałek o 8:00" → "poniedziałek 08:00"
-- "w sobote za dwa tygodnie o 12" → "za 2 tygodnie sobota 12:00"
-- "za tydzień w poniedziałek o 9" → "za tydzień poniedziałek 09:00"
-- "za 3 tygodnie w piątek o 18" → "za 3 tygodnie piątek 18:00"
-- "za tydzień w środę o 10" → "za tydzień środa 10:00"
-- "za 4 tygodnie w niedzielę o 15" → "za 4 tygodnie niedziela 15:00"
-- "za 2 tygodnie w poniedziałek o 8" → "za 2 tygodnie poniedziałek 08:00"
-- "za 5 tygodni w czwartek o 14" → "za 5 tygodnie czwartek 14:00"
+TIME CONVERSION EXAMPLES:
+- "in 2 hours" / "za 2 godziny" → "+02:00"
+- "in 1 hour" / "za godzinę" → "+01:00"
+- "in 15 minutes" / "za 15 minut" → "+00:15"
+- "in 1.5 hours" / "za godzinę i 30 minut" → "+01:30"
+- "tomorrow at 9am" / "jutro o 9 rano" → "jutro 09:00"
+- "Monday at 8am" / "w poniedziałek o 8" → "poniedziałek 08:00"
+- "in 3 days at 2pm" / "za 3 dni o 14" → "za 3 dni 14:00"
+- "in 2 weeks on Friday at 6pm" / "za 2 tygodnie w piątek o 18" → "za 2 tygodnie piątek 18:00"
 
-FORMAT ODPOWIEDZI:
-- Zwróć tylko czysty JSON bez dodatkowego tekstu i bez backticków
-- Używaj małych liter i polskich znaków zgodnie z listą wzorców poniżej
+EDGE CASE - Hour without date:
+- "meeting at 3pm" when current time is 2pm → "dziś 15:00"
+- "meeting at 3pm" when current time is 4pm → "jutro 15:00"
+- "remind me at 14" when current time is 13:30 → "dziś 14:00"
+- "remind me at 14" when current time is 14:30 → "jutro 14:00"
 
-Przykłady (zakładając, że teraz jest ${today} godzina ${pad(hour)}:${pad(minute)}):
-- "za godzinę i 30 minut wyłączyć pralkę" → {"activity": "wyłączyć pralkę", "timePattern": "+01:30"}
-- "za 15 minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "+00:15"}
-- "za dwie godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "+02:00"}
-- "podlej kwiaty za dwie godziny" → {"activity": "podlej kwiaty", "timePattern": "+02:00"}
-- "wyjdz z psem za 2 godziny" → {"activity": "wyjdz z psem", "timePattern": "+02:00"}
-- "za 5 godzin i 5 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+05:05"}
-- "za 30 minut sprawdź piekarnik" → {"activity": "sprawdź piekarnik", "timePattern": "+00:30"}
-- "jutro o 9 rano kupić chleb" → {"activity": "kupić chleb", "timePattern": "jutro 09:00"}
-- "Pojedz do sklepu o 14 za 3 dni " → {"activity": "Pojedz do sklepu", "timePattern": "za 3 dni 14:00"} (jeśli dziś jest poniedziałek, to za 3 dni to czwartek)
-- "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"} (jeśli przed 15:00) lub {"activity": "spotkanie", "timePattern": "jutro 15:00"} (jeśli po 15:00)
-- "w poniedziałek o 8:00 spotkanie" → {"activity": "spotkanie", "timePattern": "poniedziałek 08:00"}
-- "narysuj obraz w niedzielę za tydzień w południe" → {"activity": "narysuj obraz", "timePattern": "za tydzień niedziela 12:00"}
-- "narysuj obraz w najbliższą niedzielę w południe" → {"activity": "narysuj obraz", "timePattern": "niedziela 12:00"}
-- "odkurz mieszkanie dziś o 8" (jeśli jest już po 8) → {"activity": "odkurz mieszkanie", "timePattern": "jutro 08:00"}
-- "zadzwoń do taty za 15 minut" → {"activity": "zadzwoń do taty", "timePattern": "+00:15"}
-- "za trzy godziny wyprowadź psa" → {"activity": "wyprowadź psa", "timePattern": "+03:00"}
-- "za pięć minut sprawdź piekarnik" → {"activity": "sprawdź piekarnik", "timePattern": "+00:05"}
-- "za 10 minut podlać kwiaty" → {"activity": "podlać kwiaty", "timePattern": "+00:10"}
-- "za dwie godziny i piętnaście minut zadzwonić do mamy" → {"activity": "zadzwonić do mamy", "timePattern": "+02:15"}
-- "za 2 godziny i 30 minut kupić chleb" → {"activity": "kupić chleb", "timePattern": "+02:30"}
-- "po jutrze o 9 rano kupić chleb" → {"activity": "kupić chleb", "timePattern": "po jutrze 09:00"}
-- "pojutrze o 15:00 spotkanie" → {"activity": "spotkanie", "timePattern": "pojutrze 15:00"}
-- "po jutrze o 8 rano pobudka" → {"activity": "pobudka", "timePattern": "po jutrze 08:00"}
-- "pojutrze o 12:30 obiad" → {"activity": "obiad", "timePattern": "pojutrze 12:30"}
- - "w przyszły piątek o 17:00 kino" → {"activity": "kino", "timePattern": "za tydzień piątek 17:00"}
-- "w sobote za dwa tygodnie o 12 wyprowadz psa" → {"activity": "wyprowadz psa", "timePattern": "za 2 tygodnie sobota 12:00"}
-- "za tydzień w poniedziałek o 9 spotkanie" → {"activity": "spotkanie", "timePattern": "za tydzień poniedziałek 09:00"}
-- "za 3 tygodnie w piątek o 18 kino" → {"activity": "kino", "timePattern": "za 3 tygodnie piątek 18:00"}
-- "za 4 tygodnie w niedzielę o 15 obiad" → {"activity": "obiad", "timePattern": "za 4 tygodnie niedziela 15:00"}
-- "przypomnij mi" → {"error": "NO_ACTIVITY_AND_TIME"}
-- "zrób zakupy wczoraj o 12" → {"error": "PAST_TIME"}
-- "dodaj przypomnienie jutro" → {"error": "NO_TIME"}
-- "za godzinę" → {"error": "NO_ACTIVITY"}
-- "jutro o 15:00" → {"error": "NO_ACTIVITY"}
-- "spotkanie o 134" → {"error": "INVALID_TIME_FORMAT"}
-- "zadzwoń o 25:00" → {"error": "INVALID_TIME_FORMAT"}
-- "kup chleb o 14:60" → {"error": "INVALID_TIME_FORMAT"}
-- "wyprowadź psa o 99" → {"error": "INVALID_TIME_FORMAT"}
-- "obiad o 14:99" → {"error": "INVALID_TIME_FORMAT"}
-- "spotkanie o 25:30" → {"error": "INVALID_TIME_FORMAT"}
-- "kino o 14:70" → {"error": "INVALID_TIME_FORMAT"}
-- "spotkanie i kino za godzinę" → {"error": "DUPLICATE_DATA"}
-- "zadzwoń do mamy i taty za 2 godziny" → {"error": "DUPLICATE_DATA"}
-- "kup chleb za godzinę i za 2 godziny" → {"error": "DUPLICATE_DATA"}
-- "spotkanie jutro i w poniedziałek" → {"error": "DUPLICATE_DATA"}
-- "zadzwoń do mamy za godzinę i kup chleb za 2 godziny" → {"error": "DUPLICATE_DATA"}
-- "spotkanie o 15:00 i kino o 18:00" → {"error": "DUPLICATE_DATA"}
-- "zadzwoń do mamy i taty jutro o 10:00" → {"activity": "zadzwoń do mamy i taty", "timePattern": "jutro 10:00"}
-- "spotkanie i kino jutro o 15:00" → {"activity": "spotkanie i kino", "timePattern": "jutro 15:00"}
+RESPONSE FORMAT:
+- Return ONLY valid JSON, no markdown code blocks, no extra text
+- Use lowercase for time patterns
+- Use Polish characters as specified in patterns above
 
-SPECJALNE PRZYPADKI DLA GODZINY BEZ DNIA:
-- Jeśli teraz jest przed 15:00, "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "dziś 15:00"}
-- Jeśli teraz jest po 15:00, "spotkanie o 15:00" → {"activity": "spotkanie", "timePattern": "jutro 15:00"}
+Current date/time for context: ${today} ${pad(hour)}:${pad(minute)}
 
-Odpowiedz w formacie JSON:
-{"activity": "nazwa aktywności", "timePattern": "wzorzec czasowy"}
+User input: "${text}"
 
-PAMIĘTAJ: Używaj tylko dokładnych wzorców z listy powyżej!
+EXAMPLES:
 
-Odpowiedz tylko w formacie JSON.`;
+Input: "remind me to feed the cat in 2 hours"
+Output: {"activity": "feed the cat", "timePattern": "+02:00"}
+
+Input: "buy groceries tomorrow at 10am"
+Output: {"activity": "buy groceries", "timePattern": "jutro 10:00"}
+
+Input: "meeting on Monday at 9"
+Output: {"activity": "meeting", "timePattern": "poniedziałek 09:00"}
+
+Input: "call mom in 3 days at 2pm"
+Output: {"activity": "call mom", "timePattern": "za 3 dni 14:00"}
+
+Input: "gym session day after tomorrow at 6pm"
+Output: {"activity": "gym session", "timePattern": "po jutrze 18:00"}
+
+Input: "in 2 weeks on Friday dinner at 7pm"
+Output: {"activity": "dinner", "timePattern": "za 2 tygodnie piątek 19:00"}
+
+Input: "remind me"
+Output: {"error": "NO_ACTIVITY_AND_TIME"}
+
+Input: "meeting tomorrow"
+Output: {"error": "NO_TIME"}
+
+Input: "at 3pm"
+Output: {"error": "NO_ACTIVITY"}
+
+Input: "was supposed to do this yesterday at 5"
+Output: {"error": "PAST_TIME"}
+
+Input: "meeting at 25:00"
+Output: {"error": "INVALID_TIME_FORMAT"}
+
+Input: "meeting at 14:60"
+Output: {"error": "INVALID_TIME_FORMAT"}
+
+Input: "lunch at 12 and dinner at 19"
+Output: {"error": "DUPLICATE_DATA"}
+
+Input: "workout tomorrow and next Monday"
+Output: {"error": "DUPLICATE_DATA"}
+
+Return ONLY JSON.`;
   }
 
   private parseLLMResponse(response: string): LLMTimePattern | LLMErrorResult {
@@ -426,6 +423,12 @@ Odpowiedz tylko w formacie JSON.`;
       const hours = parseInt(newFormatMatch[2]);
       const minutes = parseInt(newFormatMatch[3]);
 
+      // Validate hours and minutes
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       if (sign === '-') {
         console.log(`[LLM Parser] Past time detected: ${timePattern}`);
         return null;
@@ -440,8 +443,31 @@ Odpowiedz tylko w formacie JSON.`;
       console.log(`[LLM Parser] Text matched tomorrow pattern: ${timePattern}`);
       const hours = parseInt(tomorrowMatch[1]);
       const minutes = tomorrowMatch[2] ? parseInt(tomorrowMatch[2]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       const tomorrow = nowZoned.plus({ days: 1 });
       const targetTime = tomorrow.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
+      return targetTime.toISO();
+    }
+
+    const daysMatch = normalized.match(/^za (\d+) dni (\d{1,2})(?::(\d{2}))?$/);
+    if (daysMatch) {
+      console.log(`[LLM Parser] Text matched days pattern: ${timePattern}`);
+      const days = parseInt(daysMatch[1]);
+      const hours = parseInt(daysMatch[2]);
+      const minutes = daysMatch[3] ? parseInt(daysMatch[3]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
+      const targetDate = nowZoned.plus({ days });
+      const targetTime = targetDate.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
       return targetTime.toISO();
     }
 
@@ -450,6 +476,12 @@ Odpowiedz tylko w formacie JSON.`;
       console.log(`[LLM Parser] Text matched day after tomorrow pattern: ${timePattern}`);
       const hours = parseInt(dayAfterTomorrowMatch[1]);
       const minutes = dayAfterTomorrowMatch[2] ? parseInt(dayAfterTomorrowMatch[2]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       const dayAfterTomorrow = nowZoned.plus({ days: 2 });
       const targetTime = dayAfterTomorrow.set({
         hour: hours,
@@ -465,6 +497,12 @@ Odpowiedz tylko w formacie JSON.`;
       console.log(`[LLM Parser] Text matched pojutrze pattern: ${timePattern}`);
       const hours = parseInt(pojutrzeMatch[1]);
       const minutes = pojutrzeMatch[2] ? parseInt(pojutrzeMatch[2]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       const dayAfterTomorrow = nowZoned.plus({ days: 2 });
       const targetTime = dayAfterTomorrow.set({
         hour: hours,
@@ -480,6 +518,12 @@ Odpowiedz tylko w formacie JSON.`;
       console.log(`[LLM Parser] Text matched today pattern: ${timePattern}`);
       const hours = parseInt(todayMatch[1]);
       const minutes = todayMatch[2] ? parseInt(todayMatch[2]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       let targetTime = nowZoned.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
 
       if (targetTime <= nowZoned) {
@@ -494,6 +538,12 @@ Odpowiedz tylko w formacie JSON.`;
       console.log(`[LLM Parser] Text matched plain time pattern: ${timePattern}`);
       const hours = parseInt(plainTimeMatch[1]);
       const minutes = parseInt(plainTimeMatch[2]);
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       let targetTime = nowZoned.set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
 
       if (targetTime <= nowZoned) {
@@ -507,6 +557,12 @@ Odpowiedz tylko w formacie JSON.`;
     if (plainHourMatch) {
       console.log(`[LLM Parser] Text matched plain hour pattern: ${timePattern}`);
       const hours = parseInt(plainHourMatch[1]);
+      
+      if (hours < 0 || hours > 23) {
+        console.log(`[LLM Parser] Invalid hour value: ${hours}`);
+        return null;
+      }
+
       let targetTime = nowZoned.set({ hour: hours, minute: 0, second: 0, millisecond: 0 });
 
       if (targetTime <= nowZoned) {
@@ -525,6 +581,12 @@ Odpowiedz tylko w formacie JSON.`;
       const dayName = weeksMatch[2];
       const hours = parseInt(weeksMatch[3]);
       const minutes = weeksMatch[4] ? parseInt(weeksMatch[4]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       const dayIndex = dayNames.indexOf(dayName);
 
       if (dayIndex !== -1) {
@@ -539,6 +601,12 @@ Odpowiedz tylko w formacie JSON.`;
       console.log(`[LLM Parser] Text matched week pattern: ${timePattern}`);
       const hours = parseInt(weekMatch[1]);
       const minutes = weekMatch[2] ? parseInt(weekMatch[2]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       const targetTime = now
         .plus({ weeks: 1 })
         .setZone(userTimeZone)
@@ -554,6 +622,12 @@ Odpowiedz tylko w formacie JSON.`;
       const dayName = weekDayMatch[1];
       const hours = parseInt(weekDayMatch[2]);
       const minutes = weekDayMatch[3] ? parseInt(weekDayMatch[3]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       const dayIndex = dayNames.indexOf(dayName);
 
       if (dayIndex !== -1) {
@@ -570,6 +644,12 @@ Odpowiedz tylko w formacie JSON.`;
       const dayName = dayMatch[1];
       const hours = parseInt(dayMatch[2]);
       const minutes = dayMatch[3] ? parseInt(dayMatch[3]) : 0;
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.log(`[LLM Parser] Invalid time values: ${hours}:${minutes}`);
+        return null;
+      }
+
       const dayIndex = dayNames.indexOf(dayName);
 
       if (dayIndex !== -1) {
