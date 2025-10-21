@@ -19,7 +19,7 @@ export class ReminderWriteRepositoryTypeORM {
   const newReminder = new Reminder(reminder.id, reminder.activity, reminder.datetime, reminder.category, reminder.sessionId, reminder.userId);
   await this.repository.save(newReminder);
     } catch (error) {
-      throw new DatabaseConnectionError('Błąd podczas tworzenia przypomnienia w bazie danych');
+      throw new DatabaseConnectionError('errors.createReminder');
     }
   }
 
@@ -27,7 +27,7 @@ export class ReminderWriteRepositoryTypeORM {
     try {
       const reminder = await this.repository.findOne({ where: { id, userId } });
       if (!reminder) {
-        throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
+        throw new NotFoundError('errors.reminderNotFound');
       }
       await this.trashRepository.addToTrash({
         id: reminder.id,
@@ -45,7 +45,7 @@ export class ReminderWriteRepositoryTypeORM {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new DatabaseQueryError('Błąd podczas usuwania przypomnienia z bazy danych');
+      throw new DatabaseQueryError('errors.deleteReminder');
     }
   }
 
@@ -71,7 +71,7 @@ export class ReminderWriteRepositoryTypeORM {
       await this.trashRepository.clearOldItems();
       return reminders.length;
     } catch (error) {
-      throw new DatabaseQueryError('Błąd podczas usuwania kategorii z bazy danych');
+      throw new DatabaseQueryError('errors.deleteCategory');
     }
   }
 
@@ -79,20 +79,22 @@ export class ReminderWriteRepositoryTypeORM {
     try {
       const itemToRestore = await this.trashRepository.restoreFromTrash(id);
       if (!itemToRestore) {
-        throw new NotFoundError('Element nie został znaleziony w koszu');
+        throw new NotFoundError('errors.trashItemNotFound');
       }
       const restoredReminder = new Reminder(
         itemToRestore.id,
         itemToRestore.activity,
         itemToRestore.datetime,
-        itemToRestore.category
+        itemToRestore.category,
+        itemToRestore.sessionId,
+        itemToRestore.userId
       );
       await this.repository.save(restoredReminder);
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new DatabaseQueryError('Błąd podczas przywracania z kosza');
+      throw new DatabaseQueryError('errors.restoreFromTrash');
     }
   }
 
@@ -100,7 +102,7 @@ export class ReminderWriteRepositoryTypeORM {
     try {
       const reminder = await this.repository.findOne({ where: { id } });
       if (!reminder) {
-        throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
+        throw new NotFoundError('errors.reminderNotFound');
       }
       if (typeof data.activity !== 'undefined') reminder.activity = data.activity;
       if (typeof data.datetime !== 'undefined') reminder.datetime = data.datetime;
@@ -110,7 +112,7 @@ export class ReminderWriteRepositoryTypeORM {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new DatabaseQueryError('Błąd podczas aktualizacji przypomnienia');
+      throw new DatabaseQueryError('errors.updateReminder');
     }
   }
 }

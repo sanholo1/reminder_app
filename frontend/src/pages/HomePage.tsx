@@ -8,6 +8,9 @@ import TrashList from '../components/TrashList';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { NotificationService } from '../services/NotificationService';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getErrorMessage } from '../utils/errorHandler';
+
+// Helper function to handle error translation - moved to utils/errorHandler.ts
 
 interface Reminder {
   id: string;
@@ -265,11 +268,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
 
       await fetchTrashItems();
     } catch (err: any) {
-      if (err instanceof ConnectionError) {
-        setError(err.message);
-      } else {
-        setError(t('errors.deleteReminder'));
-      }
+      setError(getErrorMessage(err, t, 'errors.deleteReminder'));
     } finally {
       setShowLoadingOverlay(false);
     }
@@ -328,11 +327,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       setShowDeleteModal(false);
       setDeletingCategory(null);
     } catch (err: any) {
-      if (err instanceof ConnectionError) {
-        setError(err.message);
-      } else {
-        setError(t('errors.deleteCategory'));
-      }
+      setError(getErrorMessage(err, t, 'errors.deleteCategory'));
     } finally {
       setIsDeletingCategory(false);
       setShowLoadingOverlay(false);
@@ -354,11 +349,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
       await fetchReminders();
       await fetchTrashItems();
     } catch (err: any) {
-      if (err instanceof ConnectionError) {
-        setError(err.message);
-      } else {
-        setError(t('errors.restoreFromTrash'));
-      }
+      setError(getErrorMessage(err, t, 'errors.restoreFromTrash'));
     } finally {
       setShowLoadingOverlay(false);
     }
@@ -437,16 +428,13 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
         if (onRefreshUsage) onRefreshUsage();
       }
     } catch (err: any) {
-      if (err instanceof ConnectionError) {
-        setError(err.message);
-        if (err.message.includes('Pozostało') && err.message.includes('prób')) {
-          const match = err.message.match(/Pozostało (\d+) prób/);
-          if (match) {
-            setRemainingAttempts(parseInt(match[1]));
-          }
+      const errorMessage = getErrorMessage(err, t);
+      setError(errorMessage);
+      if (err instanceof ConnectionError && err.message.includes('Pozostało') && err.message.includes('prób')) {
+        const match = err.message.match(/Pozostało (\d+) prób/);
+        if (match) {
+          setRemainingAttempts(parseInt(match[1]));
         }
-      } else {
-        setError(err.message || t('errors.unknown'));
       }
     } finally {
       if (onRefreshUsage) onRefreshUsage();
@@ -577,7 +565,7 @@ const HomePage: React.FC<HomePageProps> = ({ onRefreshUsage }) => {
               await connectionService.updateReminder(id, payload);
               await fetchReminders();
             } catch (e: any) {
-              setError(e?.message || 'Błąd podczas aktualizacji przypomnienia');
+              setError(getErrorMessage(e, t));
             }
           }}
         />

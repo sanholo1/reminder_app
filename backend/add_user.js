@@ -4,8 +4,8 @@ const bcrypt = require('bcryptjs');
 const { randomUUID } = require('crypto');
 
 async function addUser() {
-  const username = 'julia';
-  const password = 'kochamkube';
+  const username = 'blazej';
+  const password = 'jamrozik';
 
 
   const saltRounds = 10;

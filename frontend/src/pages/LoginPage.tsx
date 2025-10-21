@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getErrorMessage } from '../utils/errorHandler';
 
 type Props = { onLogin: (token: string) => void };
 
@@ -47,7 +48,7 @@ const LoginPage: React.FC<Props> = ({ onLogin }) => {
         setError(t('login.invalidResponse'));
       }
     } catch (e: any) {
-      setError(e?.message || t('login.networkError'));
+      setError(getErrorMessage(e, t, 'login.networkError'));
     } finally {
       setLoading(false);
     }

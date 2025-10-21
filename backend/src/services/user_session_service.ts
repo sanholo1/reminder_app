@@ -50,10 +50,10 @@ export class UserSessionService {
       if (error && typeof error === 'object' && 'code' in error) {
         const dbError = error as { code: string };
         if (dbError.code === 'ECONNREFUSED' || dbError.code === 'ENOTFOUND') {
-          throw new DatabaseConnectionError('Błąd połączenia z bazą danych sesji użytkownika');
+          throw new DatabaseConnectionError('errors.userSession');
         }
       }
-      throw new DatabaseQueryError('Błąd podczas pobierania sesji użytkownika');
+      throw new DatabaseQueryError('errors.userSession');
     }
   }
 
@@ -85,7 +85,7 @@ export class UserSessionService {
       if (error instanceof DatabaseConnectionError || error instanceof DatabaseQueryError) {
         throw error;
       }
-      throw new DatabaseQueryError('Błąd podczas sprawdzania blokady użytkownika');
+      throw new DatabaseQueryError('errors.userBlocked');
     }
   }
 
@@ -133,7 +133,7 @@ export class UserSessionService {
       if (error instanceof DatabaseConnectionError || error instanceof DatabaseQueryError) {
         throw error;
       }
-      throw new DatabaseQueryError('Błąd podczas sprawdzania dziennego limitu użycia');
+      throw new DatabaseQueryError('errors.dailyLimit');
     }
   }
 

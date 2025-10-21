@@ -61,7 +61,7 @@ export class TrashRepositoryTypeORM {
       });
       
       if (!trashItem) {
-        throw new NotFoundError('Element nie został znaleziony w koszu');
+        throw new NotFoundError('errors.trashItemNotFound');
       }
       
       const itemToRestore = {
@@ -82,7 +82,7 @@ export class TrashRepositoryTypeORM {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new DatabaseQueryError('Błąd podczas przywracania z kosza');
+      throw new DatabaseQueryError('errors.restoreFromTrash');
     }
   }
 

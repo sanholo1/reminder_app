@@ -103,8 +103,8 @@ reminderRouter.get('/reminders/active', async (req: Request, res: Response, next
 reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
-    throw new NotFoundError('Przypomnienie o podanym identyfikatorze nie istnieje');
+    if (!id) throw new BadRequestError('errors.missingId');
+    throw new NotFoundError('errors.reminderNotFound');
   } catch (error) {
     next(error);
   }
@@ -113,7 +113,7 @@ reminderRouter.get('/reminders/:id', async (req: Request, res: Response, next: N
 reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
+    if (!id) throw new BadRequestError('errors.missingId');
     const { activity, datetime, category } = req.body || {};
     const result = await updateReminderHandler.execute({ id, activity, datetime, category });
     res.json(result);
@@ -125,7 +125,7 @@ reminderRouter.put('/reminders/:id', async (req: Request, res: Response, next: N
 reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
   const { id } = req.params;
-  if (!id) throw new BadRequestError('Brak identyfikatora przypomnienia');
+  if (!id) throw new BadRequestError('errors.missingId');
   const userId = (req as any).user?.sub || '';
   const result = await deleteReminderHandler.execute({ id, userId });
   res.json(result);
@@ -146,7 +146,7 @@ reminderRouter.get('/categories', async (req: Request, res: Response, next: Next
 reminderRouter.get('/reminders/category/:category', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { category } = req.params;
-    if (!category) throw new BadRequestError('Brak nazwy kategorii');
+    if (!category) throw new BadRequestError('errors.missingCategory');
     const result = await getRemindersByCategoryHandler.execute({ category });
     res.json(result);
   } catch (error) {
@@ -157,7 +157,7 @@ reminderRouter.get('/reminders/category/:category', async (req: Request, res: Re
 reminderRouter.delete('/categories/:category', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { category } = req.params;
-    if (!category) throw new BadRequestError('Brak nazwy kategorii');
+    if (!category) throw new BadRequestError('errors.missingCategory');
     const result = await deleteCategoryHandler.execute({ category });
     res.json(result);
   } catch (error) {
@@ -178,7 +178,7 @@ reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunct
 reminderRouter.post('/trash/:id/restore', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    if (!id) throw new BadRequestError('Brak identyfikatora elementu');
+    if (!id) throw new BadRequestError('errors.missingTrashId');
     const result = await restoreFromTrashHandler.execute({ id });
     res.json(result);
   } catch (error) {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getErrorMessage } from '../utils/errorHandler';
 
 const ChangePasswordPage: React.FC = () => {
   const [oldPassword, setOldPassword] = useState('');
@@ -36,7 +37,7 @@ const ChangePasswordPage: React.FC = () => {
       setNewPassword('');
       setConfirm('');
     } catch (e: any) {
-      setError(e?.message || t('changePassword.error'));
+      setError(getErrorMessage(e, t, 'changePassword.error'));
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,12 @@
 import { logger } from './utils/logger';
 export class ConnectionError extends Error {
-  constructor(message: string) {
+  name: string;
+  translationKey?: string;
+  
+  constructor(message: string, name?: string, translationKey?: string) {
     super(message);
-    this.name = 'ConnectionError';
+    this.name = name || 'ConnectionError';
+    this.translationKey = translationKey;
   }
 }
 
@@ -26,10 +30,20 @@ export class ConnectionService {
       const res = await fetch(url, { ...(options || {}), headers });
       if (!res.ok) {
         let errorMessage = `Błąd połączenia: ${res.status} ${res.statusText}`;
+        let errorName = 'ConnectionError';
+        let translationKey: string | undefined;
+        
         try {
           const errorData = await res.json();
           if (errorData && errorData.error) {
             errorMessage = errorData.error;
+          }
+          if (errorData && errorData.name) {
+            errorName = errorData.name;
+          }
+          // Sprawdź czy message to klucz tłumaczenia
+          if (errorMessage && errorMessage.startsWith('errors.')) {
+            translationKey = errorMessage;
           }
         } catch (parseError) {
           if (res.status >= 500) {
@@ -37,7 +51,7 @@ export class ConnectionService {
           }
         }
         logger.warn('HTTP error', { url, status: res.status, statusText: res.statusText });
-        throw new ConnectionError(errorMessage);
+        throw new ConnectionError(errorMessage, errorName, translationKey);
       }
       const data = await res.json();
       const durationMs = Math.round(performance.now() - startedAt);

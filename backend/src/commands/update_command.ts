@@ -1,5 +1,5 @@
 import { ReminderWriteRepositoryTypeORM } from '../repositories/reminder_write_repository_typeorm';
-import { InternalServerError, NotFoundError, ValidationError } from '../exceptions/exception_handler';
+import { InternalServerError, NotFoundError, ValidationError, PastTimeEditError } from '../exceptions/exception_handler';
 
 export interface UpdateReminderCommand {
   id: string;
@@ -21,14 +21,24 @@ export class UpdateReminderHandler {
   }
 
   async execute(command: UpdateReminderCommand): Promise<UpdateReminderResult> {
-    if (!command.id) throw new ValidationError('Brak identyfikatora przypomnienia');
+    if (!command.id) throw new ValidationError('errors.missingId');
     if (!command.activity && !command.datetime && typeof command.category === 'undefined') {
-      throw new ValidationError('Brak danych do aktualizacji');
+      throw new ValidationError('errors.missingData');
     }
     const MAX_ACTIVITY_LENGTH = 200;
     if (command.activity && command.activity.length > MAX_ACTIVITY_LENGTH) {
-      throw new ValidationError(`Aktywność przekracza maksymalną długość ${MAX_ACTIVITY_LENGTH} znaków`);
+      throw new ValidationError(`errors.activityTooLong`);
     }
+    
+    // Walidacja daty - nie można edytować przypomnienia na datę w przeszłości
+    if (command.datetime) {
+      const newDateTime = new Date(command.datetime);
+      const now = new Date();
+      if (newDateTime < now) {
+        throw new PastTimeEditError();
+      }
+    }
+    
     try {
       await this.reminderRepository.update(command.id, {
         activity: command.activity,
@@ -37,10 +47,10 @@ export class UpdateReminderHandler {
       });
       return { success: true, message: 'Przypomnienie zaktualizowane' };
     } catch (error) {
-      if (error instanceof NotFoundError || error instanceof ValidationError) {
+      if (error instanceof NotFoundError || error instanceof ValidationError || error instanceof PastTimeEditError) {
         throw error;
       }
-      throw new InternalServerError('Błąd podczas aktualizacji przypomnienia');
+      throw new InternalServerError('errors.updateReminder');
     }
   }
 }
