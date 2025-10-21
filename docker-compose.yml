@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # MySQL Database
   database:
     image: mysql:8.0
     container_name: reminder_app_db
@@ -25,7 +24,6 @@ services:
       interval: 10s
       start_period: 40s
 
-  # Backend API
   backend:
     build:
       context: ./backend
@@ -63,7 +61,6 @@ services:
       interval: 30s
       start_period: 40s
 
-  # Frontend React App
   frontend:
     build:
       context: ./frontend
@@ -84,7 +81,6 @@ services:
       interval: 30s
       start_period: 20s
 
-  # Redis for session storage (optional)
   redis:
     image: redis:7-alpine
     container_name: reminder_app_redis
