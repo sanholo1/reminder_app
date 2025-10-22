@@ -34,13 +34,13 @@ router.post('/login', async (req: Request, res: Response) => {
 
 router.post('/change-password', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userPayload = (req as any).user as { sub: string };
+    const userPayload = (req as any).user as { userId: string };
     const { oldPassword, newPassword } = req.body || {};
     if (!oldPassword || !newPassword) {
       return res.status(400).json({ error: 'Brak starego lub nowego hasła' });
     }
     const repo = AppDataSource.getRepository(User);
-    const user = await repo.findOne({ where: { id: userPayload.sub } });
+    const user = await repo.findOne({ where: { id: userPayload.userId } });
     if (!user) {
       return res.status(404).json({ error: 'Użytkownik nie znaleziony' });
     }

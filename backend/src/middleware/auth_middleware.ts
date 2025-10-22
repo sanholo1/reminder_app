@@ -16,3 +16,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: 'Nieprawidłowy token' });
   }
 }
+
+export function extractUserId(req: Request): string | undefined {
+  return (req as any).user?.userId;
+}

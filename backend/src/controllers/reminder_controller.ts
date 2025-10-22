@@ -35,7 +35,7 @@ const updateReminderHandler = new UpdateReminderHandler();
 reminderRouter.post('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sessionId = (req as any).sessionId;
-    const userId = (req as any).user?.sub || '';
+    const userId = (req as any).user?.userId || '';
     const result = await createReminderHandler.execute({
       text: req.body.text,
       sessionId,
@@ -85,7 +85,7 @@ reminderRouter.post('/reminders', async (req: Request, res: Response, next: Next
 
 reminderRouter.get('/reminders', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user?.sub || '';
+    const userId = (req as any).user?.userId || '';
     const result = await getRemindersHandler.execute({ userId });
     res.json(result);
   } catch (err) {
@@ -139,7 +139,7 @@ reminderRouter.delete('/reminders/:id', async (req: Request, res: Response, next
     if (!id) {
       throw new BadRequestError('errors.missingId');
     }
-    const userId = (req as any).user?.sub || '';
+    const userId = (req as any).user?.userId || '';
     const result = await deleteReminderHandler.execute({ id, userId });
     res.json(result);
   } catch (error) {
@@ -190,7 +190,7 @@ reminderRouter.delete(
 
 reminderRouter.get('/trash', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user?.sub || '';
+    const userId = (req as any).user?.userId || '';
     const result = await getTrashItemsHandler.execute({ userId });
     res.json(result);
   } catch (error) {
